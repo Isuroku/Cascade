@@ -1,30 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 
 namespace Parser
 {
-    public class CTreeBuilder
+    public static class CTreeBuilder
     {
-        CLoger _loger;
+        enum EMultiArrayType { NotMultiArray, List, MultiArray }
 
-        CKey _root;
-        public CKey Root { get { return _root; } }
-
-        public CTreeBuilder(CLoger inLoger)
+        public static CKey Build(List<CTokenLine> inLines, CLoger inLoger)
         {
-            _loger = inLoger;
+            var root = new CKey();
+            DivideByRecords(root, inLines, 0, inLines.Count, 0, inLoger);
+            return root;
         }
 
-        public void Build(List<CTokenLine> inLines)
-        {
-            _root = new CKey();
-            DivideByRecords(_root, inLines, 0, inLines.Count, 0);
-        }
-
-        private void DivideByRecords(CKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, int inCurrRank)
+        private static void DivideByRecords(CKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, int inCurrRank, CLoger inLoger)
         {
             int index = -1;
             while(inStartLine < BorderLine)
@@ -38,14 +27,14 @@ namespace Parser
                     parent = new CArrayKey(inParent, new SPosition(inStartLine, 0), index);
                 }
 
-                BuildRecord(parent, inLines, inStartLine, rec_divider_line_number, inCurrRank);
+                BuildRecord(parent, inLines, inStartLine, rec_divider_line_number, inCurrRank, inLoger);
                 inStartLine = rec_divider_line_number + 1;
             }
         }
 
-        private void BuildRecord(CBaseKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, int inCurrRank)
+        private static void BuildRecord(CBaseKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, int inCurrRank, CLoger inLoger)
         {
-            _loger.Trace(string.Format("{0} - {1}", inStartLine, BorderLine));
+            inLoger.Trace(string.Format("{0} - {1}", inStartLine, BorderLine));
 
             int i = inStartLine;
             
@@ -55,7 +44,7 @@ namespace Parser
 
                 if(curr_line.Rank != inCurrRank)
                 {
-                    _loger.LogError(EErrorCode.UnwaitedRank, curr_line);
+                    inLoger.LogError(EErrorCode.UnwaitedRank, curr_line);
                 }
 
                 int ti = i;
@@ -70,11 +59,11 @@ namespace Parser
                 { 
                     if (!curr_line.IsTailEmpty)
                     {
-                        CKey key = new CKey(inParent, curr_line, _loger);
+                        CKey key = new CKey(inParent, curr_line, inLoger);
                     }
                     else
                     {
-                        CKey key = new CKey(inParent, curr_line.Head, _loger);
+                        CKey key = new CKey(inParent, curr_line.Head, inLoger);
 
                         int next_i = i + 1;
                         int next_eq_line = FindRecEnd(curr_line.Rank, inLines, next_i, BorderLine);
@@ -83,16 +72,16 @@ namespace Parser
                         {
                             EMultiArrayType is_array = CheckMultilineArray(inLines, next_i, next_eq_line);
                             if (is_array == EMultiArrayType.NotMultiArray)
-                                DivideByRecords(key, inLines, next_i, next_eq_line, inCurrRank + 1);
+                                DivideByRecords(key, inLines, next_i, next_eq_line, inCurrRank + 1, inLoger);
                             else if (is_array == EMultiArrayType.MultiArray)
-                                AddMultilineArray(key, inLines, next_i, next_eq_line);
+                                AddMultilineArray(key, inLines, next_i, next_eq_line, inLoger);
                             else if (is_array == EMultiArrayType.List)
-                                AddMultilineList(key, inLines, next_i, next_eq_line);
+                                AddMultilineList(key, inLines, next_i, next_eq_line, inLoger);
                         }
                         else
                         {
                             var v = new CBoolValue(key, curr_line.Head.Position, true);
-                            _loger.LogWarning(EErrorCode.HeadWithoutValues, curr_line.Head);
+                            inLoger.LogWarning(EErrorCode.HeadWithoutValues, curr_line.Head);
                         }
 
                         i = next_eq_line;
@@ -102,11 +91,11 @@ namespace Parser
                 {
                     if(curr_line.TailLength == 1)
                     {
-                        CKey key = new CKey(inParent, curr_line.Tail[0], _loger);
+                        CKey key = new CKey(inParent, curr_line.Tail[0], inLoger);
                         var v = new CBoolValue(key, curr_line.Tail[0].Position, true);
                     }
                     else
-                        _loger.LogError(EErrorCode.UndefinedLine, curr_line);
+                        inLoger.LogError(EErrorCode.UndefinedLine, curr_line);
                 }
 
                 if (ti == i)
@@ -114,7 +103,7 @@ namespace Parser
             }
         }
 
-        int FindRecDiv(List<CTokenLine> inLines, int inStartLine, int BorderLine)
+        static int FindRecDiv(List<CTokenLine> inLines, int inStartLine, int BorderLine)
         {
             int curr_rank = inLines[inStartLine].Rank;
             for(int i = inStartLine; i < BorderLine && inLines[i].Rank <= curr_rank; ++i)
@@ -125,7 +114,7 @@ namespace Parser
             return BorderLine;
         }
 
-        int FindRecEnd(int rank, List<CTokenLine> inLines, int inStartLine, int BorderLine)
+        static int FindRecEnd(int rank, List<CTokenLine> inLines, int inStartLine, int BorderLine)
         {
             int i = inStartLine;
             while (i < BorderLine && inLines[i].Rank > rank)
@@ -133,8 +122,7 @@ namespace Parser
             return i;
         }
 
-        enum EMultiArrayType { NotMultiArray, List, MultiArray }
-        EMultiArrayType CheckMultilineArray(List<CTokenLine> inLines, int inStartLine, int BorderLine)
+        static EMultiArrayType CheckMultilineArray(List<CTokenLine> inLines, int inStartLine, int BorderLine)
         {
             int curr_rank = inLines[inStartLine].Rank;
             bool lst = true;
@@ -150,23 +138,23 @@ namespace Parser
             return lst ? EMultiArrayType.List: EMultiArrayType.MultiArray;
         }
 
-        void AddMultilineArray(CBaseKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine)
+        static void AddMultilineArray(CBaseKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, CLoger inLoger)
         {
             for (int i = inStartLine; i < BorderLine; ++i)
             {
                 CTokenLine curr_line = inLines[i];
                 CArrayKey key = new CArrayKey(inParent, curr_line.Position, i - inStartLine);
-                key.AddTokenTail(curr_line, _loger);
+                key.AddTokenTail(curr_line, inLoger);
             }
         }
 
-        void AddMultilineList(CBaseKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine)
+        static void AddMultilineList(CBaseKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, CLoger inLoger)
         {
             for (int i = inStartLine; i < BorderLine; ++i)
             {
                 CTokenLine curr_line = inLines[i];
                 if(!curr_line.IsEmpty())
-                    inParent.AddTokenTail(curr_line, _loger);
+                    inParent.AddTokenTail(curr_line, inLoger);
             }
         }
     }

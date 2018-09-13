@@ -143,10 +143,8 @@ namespace Parser
             
             tbResult.Text = sb.ToString();
 
-            CTreeBuilder tree = new CTreeBuilder(_loger);
-            tree.Build(_lines);
+            CKey k = CTreeBuilder.Build(_lines, _loger);
 
-            CKey k = tree.Root;
             AddToTree(k, tvTree.Nodes);
             tvTree.ExpandAll();
         }
