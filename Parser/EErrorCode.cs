@@ -15,6 +15,10 @@ namespace Parser
         HeadWithoutValues,
         UndefinedLine,
         UnwaitedRank,
+        EmptyCommand,
+        CommandMustHaveOneParam,
+        UnknownCommand,
+        UnknownCommandName,
     }
 
     public enum EInternalErrorCode

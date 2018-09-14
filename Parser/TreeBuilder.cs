@@ -6,6 +6,11 @@ namespace Parser
     {
         enum EMultiArrayType { NotMultiArray, List, MultiArray }
 
+        class CBuildObjects
+        {
+
+        }
+
         public static CKey Build(List<CTokenLine> inLines, CLoger inLoger)
         {
             var root = new CKey();
@@ -54,6 +59,15 @@ namespace Parser
                 }
                 else if (curr_line.IsCommandLine())
                 {
+                    if(curr_line.Command == ECommands.Name)
+                    {
+                        if(curr_line.CommandParams.Length < 1)
+                            inLoger.LogError(EErrorCode.EmptyCommand, curr_line);
+                        else
+                        {
+                            inParent.SetName(curr_line.CommandParams[0]);
+                        }
+                    }
                 }
                 else if (curr_line.Head != null)
                 { 

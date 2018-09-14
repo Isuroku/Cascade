@@ -42,6 +42,9 @@ namespace Parser
 
     public abstract class CBaseKey : CBaseElement
     {
+        protected string _name = string.Empty;
+        public virtual string Name { get { return _name; } }
+
         List<CBaseElement> _elements = new List<CBaseElement>();
 
         public int ElementCount { get { return _elements.Count; } }
@@ -54,26 +57,26 @@ namespace Parser
             }
         }
 
-        public abstract string GetName();
-
         public CBaseKey(CBaseKey parent, SPosition pos): base(parent, pos) { }
 
         public override string ToString()
         {
             if (_elements.Count == 0)
-                return string.Format("{0} {1}", base.ToString(), GetName());
+                return string.Format("{0} {1}", base.ToString(), Name);
 
             StringBuilder sb = new StringBuilder(": ");
 
             _elements.ForEach(e => sb.AppendFormat("{0} ", e.GetDebugText()));
 
-            return string.Format("{0} {1}{2}", base.ToString(), GetName(), sb);
+            return string.Format("{0} {1}{2}", base.ToString(), Name, sb);
         }
 
         public override string GetDebugText()
         {
-            return string.Format("{0} {1}", base.ToString(), GetName());
+            return string.Format("{0} {1}", base.ToString(), Name);
         }
+
+        public void SetName(string name) { _name = name; }
 
         public void AddChild(CBaseElement inElement)
         {
@@ -113,10 +116,6 @@ namespace Parser
     {
         public override EElementType GetElementType() { return EElementType.Key; }
 
-        string _name;
-
-        public override string GetName() { return _name; }
-
         public CKey() : base(null, new SPosition())
         {
             _name = "Root";
@@ -139,8 +138,18 @@ namespace Parser
         public override EElementType GetElementType() { return EElementType.ArrayKey; }
 
         int _index;
-        public override string GetName() { return _index.ToString(); }
+        public int Index { get { return _index; } }
 
+        public override string Name
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(_name))
+                    return _index.ToString();
+                return _name;
+            }
+        }
+        
         public CArrayKey(CBaseKey parent, SPosition pos, int index) : base(parent, pos)
         {
             _index = index;

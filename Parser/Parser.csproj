@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ECommands.cs" />
     <Compile Include="EErrorCode.cs" />
     <Compile Include="ETokenType.cs" />
     <Compile Include="Form1.cs">

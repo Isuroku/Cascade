@@ -24,6 +24,11 @@ namespace Parser
         public bool IsTailEmpty { get { return _tail == null || _tail.Length == 0; } }
         public int TailLength { get { return _tail == null ? 0 : _tail.Length; } }
 
+        ECommands _command;
+        public ECommands Command { get { return _command; } }
+        string[] _command_params;
+        public string[] CommandParams { get { return _command_params; } }
+
         int _error_count;
         public int ErrorCount { get { return _error_count; } }
 
@@ -43,6 +48,7 @@ namespace Parser
             _sentense = sentense;
             BuildTokens(sentense, inLoger);
             FindHeadAndTail(inLoger);
+            FindCommandParams(inLoger);
         }
 
         void BuildTokens(CSentense sentense, CLoger inLoger)
@@ -64,6 +70,9 @@ namespace Parser
         void FindHeadAndTail(CLoger inLoger)
         {
             if (_tokens.Length == 0)
+                return;
+
+            if (_tokens[0].TokenType == ETokenType.Sharp)
                 return;
 
             if (_tokens.Length == 1)
@@ -93,6 +102,42 @@ namespace Parser
             _tail = lst.ToArray();
         }
 
+        void FindCommandParams(CLoger inLoger)
+        {
+            if (_tokens.Length == 0)
+                return;
+
+            if (_tokens[0].TokenType != ETokenType.Sharp)
+                return;
+
+            if (_tokens.Length < 2)
+            {
+                inLoger.LogError(EErrorCode.UnknownCommand, this);
+                return;
+            }
+
+            ECommands[] coms = (ECommands[])Enum.GetValues(typeof(ECommands));
+            for (int i = 0; i < coms.Length && _command == ECommands.None; ++i)
+            {
+                if (string.Equals(coms[i].ToString(), _tokens[1].Text, StringComparison.InvariantCultureIgnoreCase))
+                    _command = coms[i];
+            }
+
+            if (_command == ECommands.None)
+            {
+                inLoger.LogError(EErrorCode.UnknownCommandName, this);
+                return;
+            }
+
+            List<string> lst = new List<string>();
+            for (int i = 2; i < _tokens.Length; ++i)
+            {
+                if (IsDataType(_tokens[i].TokenType))
+                    lst.Add(_tokens[i].Text);
+            }
+            _command_params = lst.ToArray();
+        }
+
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
@@ -118,7 +163,7 @@ namespace Parser
 
         public bool IsCommandLine()
         {
-            return _tokens.Length > 0 && _tokens[0].TokenType == ETokenType.Sharp;
+            return _command != ECommands.None;
         }
 
         public bool IsEmpty()
