@@ -13,9 +13,7 @@ namespace Parser
 
         string _selected_file;
 
-        CSentenseDivider _sentenser = new CSentenseDivider();
-
-        CLoger _loger;
+        CParserManager _parser;
 
         public Form1()
         {
@@ -79,7 +77,7 @@ namespace Parser
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            _loger = new CLoger(this);
+            _parser = new CParserManager(this);
 
             string path = Path.Combine(Application.StartupPath, _path_to_data);
             string[] files = Directory.GetFiles(path, "*.txt", SearchOption.TopDirectoryOnly);
@@ -117,35 +115,18 @@ namespace Parser
 
             tvTree.Nodes.Clear();
 
-            _sentenser.ParseText(tbSourceText.Text, _loger);
-
-            List<CTokenLine> _lines = new List<CTokenLine>();
-            int ecount = 0;
-
-            for (int i = 0; i < _sentenser.SentenseCount; i++)
-            {
-                CSentense sentense = _sentenser[i];
-
-                CTokenLine tl = new CTokenLine();
-                tl.Init(sentense, _loger);
-
-                ecount += tl.ErrorCount;
-
-                _lines.Add(tl);
-            }
+            _parser.Parse(tbSourceText.Text);
 
             StringBuilder sb = new StringBuilder();
 
-            for (int i = 0; i < _lines.Count; i++)
+            for (int i = 0; i < _parser.Lines.Count; i++)
             {
-                sb.Append(string.Format("{0}: {1}{2}", i.ToString("D4"), _lines[i], Environment.NewLine));
+                sb.Append(string.Format("{0}: {1}{2}", i.ToString("D4"), _parser.GetLine(i), Environment.NewLine));
             }
             
             tbResult.Text = sb.ToString();
 
-            CKey k = CTreeBuilder.Build(_lines, _loger);
-
-            AddToTree(k, tvTree.Nodes);
+            AddToTree(_parser.Root, tvTree.Nodes);
             tvTree.ExpandAll();
         }
 

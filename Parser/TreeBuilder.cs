@@ -16,6 +16,7 @@ namespace Parser
         {
             var root = new CKey();
             Collect(root, inLines, 0, inLoger);
+            root.CheckOnOneArray(inLoger);
             return root;
         }
 
@@ -49,7 +50,7 @@ namespace Parser
                     else
                     {
                         i = Collect(last_key, inLines, i, inLoger);
-                        last_key.CheckOnOneArray();
+                        last_key.CheckOnOneArray(inLoger);
                     }
                 }
                 else

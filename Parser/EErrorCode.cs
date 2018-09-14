@@ -17,6 +17,7 @@ namespace Parser
         NotEvenQuoteCount,
         TooDeepRank,
         RecordBeforeRecordDividerDoesntPresent,
+        CantTransferName,
     }
 
     public enum EInternalErrorCode

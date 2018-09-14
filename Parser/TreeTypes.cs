@@ -140,7 +140,7 @@ namespace Parser
 
         public CKey() : base(null, new SPosition(), -1)
         {
-            _name = "Root";
+            _name = string.Empty;
         }
 
         public CKey(CBaseKey parent, CTokenLine line, CLoger inLoger) : base(parent, line.Head.Position, parent.Rank + 1)
@@ -154,11 +154,22 @@ namespace Parser
             _name = head.Text;
         }
 
-        internal void CheckOnOneArray()
+        internal void CheckOnOneArray(CLoger inLoger)
         {
             if(ElementCount == 1 && _elements[0].GetElementType() == EElementType.ArrayKey)
             {
                 CArrayKey arr = _elements[0] as CArrayKey;
+
+                if(!string.IsNullOrEmpty(arr.RealName))
+                {
+                    if (string.IsNullOrEmpty(_name))
+                        _name = arr.RealName;
+                    else
+                    {
+                        inLoger.LogError(EErrorCode.CantTransferName, this);
+                    }
+                }
+
                 List<CBaseElement> lst = new List<CBaseElement>(arr.GetElemets());
                 _elements.Clear();
 
@@ -176,6 +187,8 @@ namespace Parser
 
         int _index;
         public int Index { get { return _index; } }
+
+        public string RealName { get { return _name; } }
 
         public override string Name
         {
