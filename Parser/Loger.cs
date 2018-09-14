@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
+﻿
 namespace Parser
 {
     public enum ELogLevel
@@ -23,6 +18,9 @@ namespace Parser
     {
         ILogPrinter _printer;
 
+        int _error_count;
+        public int ErrorCount { get { return _error_count; } }
+
         public CLoger(ILogPrinter printer)
         {
             _printer = printer;
@@ -36,30 +34,35 @@ namespace Parser
 
         public void LogError(EErrorCode inErrorCode, string inText, int inLineNumber)
         {
+            _error_count++;
             string text = string.Format("{0}. [{1}]: {2}", inErrorCode, inLineNumber, inText);
             _printer.AddLogToConsole(text, ELogLevel.Error);
         }
 
         public void LogError(EErrorCode inErrorCode, CBaseKey inKey)
         {
+            _error_count++;
             string text = string.Format("{0}. {1}", inErrorCode, inKey);
             _printer.AddLogToConsole(text, ELogLevel.Error);
         }
 
         public void LogError(EErrorCode inErrorCode, CToken inToken)
         {
+            _error_count++;
             string text = string.Format("{0}. Token {1}. Position {2}", inErrorCode, inToken, inToken.Position);
             _printer.AddLogToConsole(text, ELogLevel.Error);
         }
 
         public void LogError(EErrorCode inErrorCode, CTokenLine inLine)
         {
+            _error_count++;
             string text = string.Format("{0}. Line {1}.", inErrorCode, inLine);
             _printer.AddLogToConsole(text, ELogLevel.Error);
         }
 
         public void LogInternalError(EInternalErrorCode inErrorCode, string inDebugText)
         {
+            _error_count++;
             string text = string.Format("{0}. {1}", inErrorCode, inDebugText);
             _printer.AddLogToConsole(text, ELogLevel.InternalError);
         }

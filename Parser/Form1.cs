@@ -143,7 +143,7 @@ namespace Parser
             
             tbResult.Text = sb.ToString();
 
-            CKey k = CTreeBuilder.Build2(_lines, _loger);
+            CKey k = CTreeBuilder.Build(_lines, _loger);
 
             AddToTree(k, tvTree.Nodes);
             tvTree.ExpandAll();
