@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace Parser
 {
@@ -14,162 +15,123 @@ namespace Parser
         public static CKey Build(List<CTokenLine> inLines, CLoger inLoger)
         {
             var root = new CKey();
-            DivideByRecords(root, inLines, 0, inLines.Count, 0, inLoger);
+            Collect(root, inLines, 0, inLoger);
             return root;
         }
 
-        private static void DivideByRecords(CKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, int inCurrRank, CLoger inLoger)
+        static int Collect(CKey inParent, List<CTokenLine> inLines, int inStartIndex, CLoger inLoger)
         {
-            int index = -1;
-            while(inStartLine < BorderLine)
+            CArrayKey ar_key = null;
+            CKey last_key = null;
+
+            int curr_rank = inParent.Rank + 1;
+
+            int i = inStartIndex;
+            while (i < inLines.Count)
             {
-                int rec_divider_line_number = FindRecDiv(inLines, inStartLine, BorderLine);
-
-                CBaseKey parent = inParent;
-                if (rec_divider_line_number < BorderLine || index >= 0)
+                int t = i;
+                CTokenLine line = inLines[i];
+                if (line.Rank < curr_rank)
                 {
-                    index++;
-                    parent = new CArrayKey(inParent, new SPosition(inStartLine, 0), index);
+                    CheckEmptyKey(last_key, inLoger);
+                    return i;
                 }
-
-                BuildRecord(parent, inLines, inStartLine, rec_divider_line_number, inCurrRank, inLoger);
-                inStartLine = rec_divider_line_number + 1;
-            }
-        }
-
-        private static void BuildRecord(CBaseKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, int inCurrRank, CLoger inLoger)
-        {
-            inLoger.Trace(string.Format("{0} - {1}", inStartLine, BorderLine));
-
-            int i = inStartLine;
-            
-            while(i < BorderLine)
-            {
-                CTokenLine curr_line = inLines[i];
-
-                if(curr_line.Rank != inCurrRank)
+                else if (line.Rank > curr_rank)
                 {
-                    inLoger.LogError(EErrorCode.UnwaitedRank, curr_line);
-                }
-
-                int ti = i;
-
-                if (curr_line.IsEmpty())
-                {
-                }
-                else if (curr_line.IsCommandLine())
-                {
-                    if(curr_line.Command == ECommands.Name)
+                    if (last_key == null)
                     {
-                        if(curr_line.CommandParams.Length < 1)
-                            inLoger.LogError(EErrorCode.EmptyCommand, curr_line);
-                        else
-                        {
-                            inParent.SetName(curr_line.CommandParams[0]);
-                        }
-                    }
-                }
-                else if (curr_line.Head != null)
-                { 
-                    if (!curr_line.IsTailEmpty)
-                    {
-                        CKey key = new CKey(inParent, curr_line, inLoger);
+                        inLoger.LogError(EErrorCode.TooDeepRank, line);
+
+                        Tuple<CArrayKey, CKey> res = AddLine(inParent, ar_key, line, inLoger);
+                        ar_key = res.Item1;
+                        last_key = res.Item2;
                     }
                     else
                     {
-                        CKey key = new CKey(inParent, curr_line.Head, inLoger);
-
-                        int next_i = i + 1;
-                        int next_eq_line = FindRecEnd(curr_line.Rank, inLines, next_i, BorderLine);
-                        bool new_rec = next_eq_line > next_i;
-                        if (new_rec)
-                        {
-                            EMultiArrayType is_array = CheckMultilineArray(inLines, next_i, next_eq_line);
-                            if (is_array == EMultiArrayType.NotMultiArray)
-                                DivideByRecords(key, inLines, next_i, next_eq_line, inCurrRank + 1, inLoger);
-                            else if (is_array == EMultiArrayType.MultiArray)
-                                AddMultilineArray(key, inLines, next_i, next_eq_line, inLoger);
-                            else if (is_array == EMultiArrayType.List)
-                                AddMultilineList(key, inLines, next_i, next_eq_line, inLoger);
-                        }
-                        else
-                        {
-                            var v = new CBoolValue(key, curr_line.Head.Position, true);
-                            inLoger.LogWarning(EErrorCode.HeadWithoutValues, curr_line.Head);
-                        }
-
-                        i = next_eq_line;
+                        i = Collect(last_key, inLines, i, inLoger);
+                        last_key.CheckOnOneArray();
                     }
                 }
-                else if (!curr_line.IsTailEmpty)
+                else
                 {
-                    if(curr_line.TailLength == 1)
-                    {
-                        CKey key = new CKey(inParent, curr_line.Tail[0], inLoger);
-                        var v = new CBoolValue(key, curr_line.Tail[0].Position, true);
-                    }
-                    else
-                        inLoger.LogError(EErrorCode.UndefinedLine, curr_line);
+                    CheckEmptyKey(last_key, inLoger);
+
+                    Tuple<CArrayKey, CKey> res = AddLine(inParent, ar_key, line, inLoger);
+                    ar_key = res.Item1;
+                    last_key = res.Item2;
                 }
 
-                if (ti == i)
+                if (t == i)
                     i++;
             }
-        }
-
-        static int FindRecDiv(List<CTokenLine> inLines, int inStartLine, int BorderLine)
-        {
-            int curr_rank = inLines[inStartLine].Rank;
-            for(int i = inStartLine; i < BorderLine && inLines[i].Rank <= curr_rank; ++i)
-            {
-                if (inLines[i].IsRecordDivider())
-                    return i;
-            }
-            return BorderLine;
-        }
-
-        static int FindRecEnd(int rank, List<CTokenLine> inLines, int inStartLine, int BorderLine)
-        {
-            int i = inStartLine;
-            while (i < BorderLine && inLines[i].Rank > rank)
-                ++i;
             return i;
         }
 
-        static EMultiArrayType CheckMultilineArray(List<CTokenLine> inLines, int inStartLine, int BorderLine)
+        static void CheckEmptyKey(CBaseKey key, CLoger inLoger)
         {
-            int curr_rank = inLines[inStartLine].Rank;
-            bool lst = true;
-            for (int i = inStartLine; i < BorderLine; ++i)
-            {
-                CTokenLine curr_line = inLines[i];
-                if (curr_line.Rank != curr_rank || curr_line.Head != null)
-                    return EMultiArrayType.NotMultiArray;
-
-                if (lst && curr_line.TailLength > 1)
-                    lst = false;
-            }
-            return lst ? EMultiArrayType.List: EMultiArrayType.MultiArray;
+            if (key != null && key.ElementCount == 0)
+                inLoger.LogError(EErrorCode.HeadWithoutValues, key);
         }
 
-        static void AddMultilineArray(CBaseKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, CLoger inLoger)
+        static Tuple<CArrayKey, CKey> AddLine(CBaseKey inParent, CArrayKey arr_key, CTokenLine line, CLoger inLoger)
         {
-            for (int i = inStartLine; i < BorderLine; ++i)
+            CKey key = null;
+            CArrayKey res_arr_key = null;
+            if (line.IsEmpty())
             {
-                CTokenLine curr_line = inLines[i];
-                CArrayKey key = new CArrayKey(inParent, curr_line.Position, i - inStartLine);
-                key.AddTokenTail(curr_line, inLoger);
+                res_arr_key = arr_key;
             }
-        }
+            else if (line.IsRecordDivider())
+            {
+                int index = 0;
+                if (arr_key != null)
+                    index = arr_key.Index + 1;
+                else
+                    inLoger.LogError(EErrorCode.RecordBeforeRecordDividerDoesntPresent, line);
+                res_arr_key = new CArrayKey(inParent, line.Position, index);
+            }
+            else if (line.IsCommandLine())
+            {
+                if (arr_key == null)
+                    arr_key = new CArrayKey(inParent, line.Position, 0);
+                res_arr_key = arr_key;
 
-        static void AddMultilineList(CBaseKey inParent, List<CTokenLine> inLines, int inStartLine, int BorderLine, CLoger inLoger)
-        {
-            for (int i = inStartLine; i < BorderLine; ++i)
-            {
-                CTokenLine curr_line = inLines[i];
-                if(!curr_line.IsEmpty())
-                    inParent.AddTokenTail(curr_line, inLoger);
+                if (line.Command == ECommands.Name)
+                {
+                    if (line.CommandParams.Length < 1)
+                        inLoger.LogError(EErrorCode.EmptyCommand, line);
+                    else
+                        arr_key.SetName(line.CommandParams[0]);
+                }
             }
+            else if (line.Head != null)
+            {
+                if (arr_key == null)
+                    arr_key = new CArrayKey(inParent, line.Position, 0);
+                res_arr_key = arr_key;
+
+                key = new CKey(arr_key, line, inLoger);
+            }
+            else if(!line.IsTailEmpty)
+            {
+                if (line.TailLength > 1)
+                {
+                    int index = 0;
+                    if (arr_key != null)
+                        index = arr_key.Index + 1;
+                    res_arr_key = new CArrayKey(inParent, line.Position, index);
+                }
+                else
+                {
+                    if (arr_key == null)
+                        arr_key = new CArrayKey(inParent, line.Position, 0);
+                    res_arr_key = arr_key;
+                }
+
+                res_arr_key.AddTokenTail(line, inLoger);
+            }
+
+            return new Tuple<CArrayKey, CKey>(res_arr_key, key);
         }
     }
 }

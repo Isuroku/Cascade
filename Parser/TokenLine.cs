@@ -141,6 +141,7 @@ namespace Parser
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
+            sb.AppendFormat("[Line {0}, Rank {1}] ", Position.Line.ToString("D4"), Rank);
             for (int i = 0; i < _sentense.Rank; ++i)
                 sb.Append('\t');
 

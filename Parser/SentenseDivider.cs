@@ -95,7 +95,8 @@ namespace Parser
                     {
                         sub_line = line.Substring(start_pos, pos - start_pos);
 
-                        _sentenses.Add(new CSentense(sub_line, i));
+                        if (!string.IsNullOrEmpty(sub_line))
+                            _sentenses.Add(new CSentense(sub_line, i));
 
                         start_pos = pos + 1;
                     }

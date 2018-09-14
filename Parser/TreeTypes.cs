@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Parser
 {
@@ -25,6 +22,8 @@ namespace Parser
         public abstract EElementType GetElementType();
         public abstract string GetDebugText();
 
+        public SPosition Position { get { return _pos; } }
+
         public CBaseElement() { }
         public CBaseElement(CBaseKey parent, SPosition pos)
         {
@@ -34,18 +33,31 @@ namespace Parser
             _pos = pos;
         }
 
+        public void SetParent(CBaseKey parent)
+        {
+            if (_parent != null)
+                _parent.RemoveChild(this);
+
+            _parent = parent;
+            if (_parent != null)
+                _parent.AddChild(this);
+        }
+
         public override string ToString()
         {
-            return string.Format("{0}", GetElementType());
+            return string.Format("{0} [pos {1}]", GetElementType(), _pos);
         }
     }
 
     public abstract class CBaseKey : CBaseElement
     {
+        int _rank;
+        public int Rank { get { return _rank; } }
+
         protected string _name = string.Empty;
         public virtual string Name { get { return _name; } }
 
-        List<CBaseElement> _elements = new List<CBaseElement>();
+        protected List<CBaseElement> _elements = new List<CBaseElement>();
 
         public int ElementCount { get { return _elements.Count; } }
 
@@ -57,7 +69,15 @@ namespace Parser
             }
         }
 
-        public CBaseKey(CBaseKey parent, SPosition pos): base(parent, pos) { }
+        public IEnumerable<CBaseElement> GetElemets()
+        {
+            return _elements;
+        }
+
+        public CBaseKey(CBaseKey parent, SPosition pos, int Rank): base(parent, pos)
+        {
+            _rank = Rank;
+        }
 
         public override string ToString()
         {
@@ -83,13 +103,15 @@ namespace Parser
             _elements.Add(inElement);
         }
 
+        public void RemoveChild(CBaseElement inElement)
+        {
+            _elements.Remove(inElement);
+        }
+
         public void AddTokenTail(CTokenLine line, CLoger inLoger)
         {
             if(line.IsTailEmpty)
-            {
-                inLoger.LogInternalError(EInternalErrorCode.EmptyTailAdded, line.ToString());
                 return;
-            }
 
             for (int i = 0; i < line.TailLength; i++)
             {
@@ -116,20 +138,35 @@ namespace Parser
     {
         public override EElementType GetElementType() { return EElementType.Key; }
 
-        public CKey() : base(null, new SPosition())
+        public CKey() : base(null, new SPosition(), -1)
         {
             _name = "Root";
         }
 
-        public CKey(CBaseKey parent, CTokenLine line, CLoger inLoger) : base(parent, line.Head.Position)
+        public CKey(CBaseKey parent, CTokenLine line, CLoger inLoger) : base(parent, line.Head.Position, parent.Rank + 1)
         {
             _name = line.Head.Text;
             AddTokenTail(line, inLoger);
         }
 
-        public CKey(CBaseKey parent, CToken head, CLoger inLoger) : base(parent, head.Position)
+        public CKey(CBaseKey parent, CToken head, CLoger inLoger) : base(parent, head.Position, parent.Rank + 1)
         {
             _name = head.Text;
+        }
+
+        internal void CheckOnOneArray()
+        {
+            if(ElementCount == 1 && _elements[0].GetElementType() == EElementType.ArrayKey)
+            {
+                CArrayKey arr = _elements[0] as CArrayKey;
+                List<CBaseElement> lst = new List<CBaseElement>(arr.GetElemets());
+                _elements.Clear();
+
+                for (int i = 0; i < lst.Count; ++i)
+                {
+                    lst[i].SetParent(this);
+                }
+            }
         }
     }
 
@@ -150,7 +187,7 @@ namespace Parser
             }
         }
         
-        public CArrayKey(CBaseKey parent, SPosition pos, int index) : base(parent, pos)
+        public CArrayKey(CBaseKey parent, SPosition pos, int index) : base(parent, pos, parent.Rank)
         {
             _index = index;
         }
