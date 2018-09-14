@@ -34,6 +34,12 @@ namespace Parser
             _printer.AddLogToConsole(text, ELogLevel.Warning);
         }
 
+        public void LogError(EErrorCode inErrorCode, string inText, int inLineNumber)
+        {
+            string text = string.Format("{0}. [{1}]: {2}", inErrorCode, inLineNumber, inText);
+            _printer.AddLogToConsole(text, ELogLevel.Error);
+        }
+
         public void LogError(EErrorCode inErrorCode, CToken inToken)
         {
             string text = string.Format("{0}. Token {1}. Position {2}", inErrorCode, inToken, inToken.Position);

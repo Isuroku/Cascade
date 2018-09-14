@@ -117,7 +117,7 @@ namespace Parser
 
             tvTree.Nodes.Clear();
 
-            _sentenser.ParseText(tbSourceText.Text);
+            _sentenser.ParseText(tbSourceText.Text, _loger);
 
             List<CTokenLine> _lines = new List<CTokenLine>();
             int ecount = 0;

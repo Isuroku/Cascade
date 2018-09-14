@@ -19,6 +19,7 @@ namespace Parser
         CommandMustHaveOneParam,
         UnknownCommand,
         UnknownCommandName,
+        NotEvenQuoteCount,
     }
 
     public enum EInternalErrorCode

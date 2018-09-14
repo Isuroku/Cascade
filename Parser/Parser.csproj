@@ -79,6 +79,7 @@
     <Compile Include="TokenTemplate.cs" />
     <Compile Include="TreeBuilder.cs" />
     <Compile Include="TreeTypes.cs" />
+    <Compile Include="Utils.cs" />
     <EmbeddedResource Include="Form1.resx">
       <DependentUpon>Form1.cs</DependentUpon>
     </EmbeddedResource>

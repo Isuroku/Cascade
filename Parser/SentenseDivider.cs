@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Parser
 {
@@ -68,7 +66,7 @@ namespace Parser
             _sentenses.Clear();
         }
 
-        public void ParseText(string inRawText)
+        public void ParseText(string inRawText, CLoger inLoger)
         {
             Clear();
 
@@ -77,9 +75,37 @@ namespace Parser
             string[] lines = inRawText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; ++i)
             {
-                string[] lines2 = lines[i].Split(new string[] { ";" }, StringSplitOptions.RemoveEmptyEntries);
-                for (int j = 0; j < lines2.Length; ++j)
-                    _sentenses.Add(new CSentense(lines2[j], i));
+                string line = lines[i];
+                Tuple<int, int>[] quotes = Utils.GetStringPairs(line, i, inLoger);
+
+                int comments_pos = line.IndexOf("//");
+                if (comments_pos == -1)
+                    comments_pos = int.MaxValue;
+
+                string sub_line;
+                int start_pos = 0;
+                int pos = line.IndexOf(';', start_pos);
+                while(pos != -1 && pos < comments_pos)
+                {
+                    bool inside_quotes = false;
+                    for (int j = 0; j < quotes.Length && !inside_quotes; j++)
+                        inside_quotes = pos > quotes[j].Item1 && pos < quotes[j].Item2;
+
+                    if (!inside_quotes)
+                    {
+                        sub_line = line.Substring(start_pos, pos - start_pos);
+
+                        _sentenses.Add(new CSentense(sub_line, i));
+
+                        start_pos = pos + 1;
+                    }
+
+                    pos = line.IndexOf(';', pos + 1);
+                }
+
+                sub_line = line.Substring(start_pos);
+                if(!string.IsNullOrEmpty(sub_line))
+                    _sentenses.Add(new CSentense(sub_line, i));
             }
         }
     }

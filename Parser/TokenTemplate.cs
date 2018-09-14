@@ -89,42 +89,48 @@ namespace Parser
             int lnum = inSentense.LineNumber;
 
             int world_pos = 0;
-            bool start_word = false;
+            int world_len = 0;
             int i = 0;
-            while(i < line.Length)
+            bool open_qute = false;
+            while (i < line.Length)
             {
-                ITokenTemplate tmp = _templates.Find(tt => tt.CheckPassed(line, i));
-                if (tmp != null)
-                {
-                    if (start_word)
-                        AddWorld(i, world_pos, line, lst, lnum, tab_shift);
-                    start_word = false;
-                    world_pos = i;
+                bool quote = line[i] == '"';
+                if(quote)
+                    open_qute = !open_qute;
 
+                bool space = false;
+                ITokenTemplate tmp = null;
+                if (!open_qute)
+                {
+                    space = line[i] == ' ';
+                    tmp = _templates.Find(tt => tt.CheckPassed(line, i));
+                }
+
+                bool world_break = space || quote || tmp != null;
+                if (world_break)
+                {
+                    world_len = i - world_pos;
+                    if(world_len > 0)
+                        AddWorld(i, world_pos, line, lst, lnum, tab_shift);
+
+                    if(tmp == null)
+                        world_pos = i + 1;
+                    else
+                        world_pos = i + tmp.GetText().Length;
+                }
+
+                if (tmp == null)
+                    i++;
+                else
+                {
                     lst.Add(new CToken(tmp.GetTokenType(), tmp.GetText(), inSentense.LineNumber, i + inSentense.Rank * TAB_LENGTH));
                     i += tmp.GetText().Length;
                 }
-                else
-                {
-                    if(line[i] == ' ')
-                    {
-                        if (start_word)
-                            AddWorld(i, world_pos, line, lst, lnum, tab_shift);
-                        start_word = false;
-                        world_pos = i;
-                    }
-                    else if(!start_word)
-                    {
-                        start_word = true;
-                        world_pos = i;
-                    }
-                    i++;
-                }
             }
 
-            if (start_word)
+            world_len = i - world_pos;
+            if (world_len > 0)
                 AddWorld(i, world_pos, line, lst, lnum, tab_shift);
-
 
             if (comment != null)
                 lst.Add(comment);
