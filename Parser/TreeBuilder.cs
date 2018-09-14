@@ -17,6 +17,13 @@ namespace Parser
             var root = new CKey();
             Collect(root, inLines, 0, inLoger);
             root.CheckOnOneArray(inLoger);
+
+            if(root.ElementCount == 1 && root[0].GetElementType() == EElementType.Key)
+            {
+                root = root[0] as CKey;
+                root.SetParent(null);
+            }
+
             return root;
         }
 
