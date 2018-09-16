@@ -115,18 +115,20 @@ namespace Parser
 
             tvTree.Nodes.Clear();
 
-            _parser.Parse(tbSourceText.Text);
+            CKey root = _parser.Parse(_selected_file, tbSourceText.Text);
+
+            CTokenLine[] lines = _parser.GetLineByRoot(root);
 
             StringBuilder sb = new StringBuilder();
 
-            for (int i = 0; i < _parser.Lines.Count; i++)
+            for (int i = 0; i < lines.Length; i++)
             {
-                sb.Append(string.Format("{0}: {1}{2}", i.ToString("D4"), _parser.GetLine(i), Environment.NewLine));
+                sb.Append(string.Format("{0}: {1}{2}", i.ToString("D4"), lines[i], Environment.NewLine));
             }
             
             tbResult.Text = sb.ToString();
 
-            AddToTree(_parser.Root, tvTree.Nodes);
+            AddToTree(root, tvTree.Nodes);
             tvTree.ExpandAll();
         }
 

@@ -33,6 +33,13 @@ namespace Parser
             _pos = pos;
         }
 
+        public CBaseElement(CBaseElement other)
+        {
+            _pos = other._pos;
+        }
+
+        public abstract CBaseElement GetCopy();
+
         public void SetParent(CBaseKey parent)
         {
             if (_parent != null)
@@ -51,9 +58,6 @@ namespace Parser
 
     public abstract class CBaseKey : CBaseElement
     {
-        int _rank;
-        public int Rank { get { return _rank; } }
-
         protected string _name = string.Empty;
         public virtual string Name { get { return _name; } }
 
@@ -74,9 +78,19 @@ namespace Parser
             return _elements;
         }
 
-        public CBaseKey(CBaseKey parent, SPosition pos, int Rank): base(parent, pos)
+        public CBaseKey(CBaseKey parent, SPosition pos): base(parent, pos)
         {
-            _rank = Rank;
+        }
+
+        public CBaseKey(CBaseKey other): base(other)
+        {
+            _name = other._name;
+
+            foreach(var el in other._elements)
+            {
+                var copy = el.GetCopy();
+                copy.SetParent(this);
+            }
         }
 
         public override string ToString()
@@ -108,7 +122,7 @@ namespace Parser
             _elements.Remove(inElement);
         }
 
-        public void AddTokenTail(CTokenLine line, CLoger inLoger)
+        public void AddTokenTail(CTokenLine line, ITreeBuildSupport inLoger)
         {
             if(line.IsTailEmpty)
                 return;
@@ -132,29 +146,82 @@ namespace Parser
                     inLoger.LogError(EErrorCode.WrongTokenInTail, t);
             }
         }
+
+        public CBaseKey GetRoot()
+        {
+            if (_parent == null)
+                return this;
+            return _parent.GetRoot();
+        }
+
+        public CBaseKey FindKey(string[] path, int index = 0)
+        {
+            string need_name = path[index];
+
+            CBaseElement element = _elements.Find(el =>
+            {
+                EElementType t = el.GetElementType();
+                if (t == EElementType.ArrayKey || t == EElementType.Key)
+                {
+                    CBaseKey k = el as CBaseKey;
+                    return string.Equals(k.Name, need_name, StringComparison.InvariantCultureIgnoreCase);
+                }
+                return false;
+            });
+
+            if (element == null)
+                return null;
+
+            var key = element as CBaseKey;
+            if (index == path.Length - 1)
+                return key;
+            return key.FindKey(path, index + 1);
+        }
+
+        public void TakeAllElements(CBaseKey other_key, bool inClear)
+        {
+            List<CBaseElement> lst = new List<CBaseElement>(other_key._elements);
+
+            if(inClear)
+                _elements.Clear();
+
+            for (int i = 0; i < lst.Count; ++i)
+            {
+                lst[i].SetParent(this);
+            }
+        }
     }
 
     public class CKey: CBaseKey
     {
         public override EElementType GetElementType() { return EElementType.Key; }
 
-        public CKey() : base(null, new SPosition(), -1)
+        public CKey() : base(null, new SPosition())
         {
             _name = string.Empty;
         }
 
-        public CKey(CBaseKey parent, CTokenLine line, CLoger inLoger) : base(parent, line.Head.Position, parent.Rank + 1)
+        public CKey(CBaseKey parent, CTokenLine line, ITreeBuildSupport inLoger) : base(parent, line.Head.Position)
         {
             _name = line.Head.Text;
             AddTokenTail(line, inLoger);
         }
 
-        public CKey(CBaseKey parent, CToken head, CLoger inLoger) : base(parent, head.Position, parent.Rank + 1)
+        public CKey(CBaseKey parent, CToken head, ITreeBuildSupport inLoger) : base(parent, head.Position)
         {
             _name = head.Text;
         }
 
-        internal void CheckOnOneArray(CLoger inLoger)
+        public CKey(CBaseKey inTemplate) : base(inTemplate)
+        {
+        }
+
+        public override CBaseElement GetCopy()
+        {
+            return new CKey(this);
+        }
+
+        internal void CheckOnOneArray(ITreeBuildSupport inLoger)
         {
             if(ElementCount == 1 && _elements[0].GetElementType() == EElementType.ArrayKey)
             {
@@ -170,13 +237,7 @@ namespace Parser
                     }
                 }
 
-                List<CBaseElement> lst = new List<CBaseElement>(arr.GetElemets());
-                _elements.Clear();
-
-                for (int i = 0; i < lst.Count; ++i)
-                {
-                    lst[i].SetParent(this);
-                }
+                TakeAllElements(arr, true);
             }
         }
     }
@@ -200,9 +261,20 @@ namespace Parser
             }
         }
         
-        public CArrayKey(CBaseKey parent, SPosition pos, int index) : base(parent, pos, parent.Rank)
+        public CArrayKey(CBaseKey parent, SPosition pos, int index) : base(parent, pos)
         {
             _index = index;
+        }
+
+        public CArrayKey(CArrayKey inTemplate) : base(inTemplate)
+        {
+            _index = inTemplate._index;
+            _name = inTemplate._name;
+        }
+
+        public override CBaseElement GetCopy()
+        {
+            return new CArrayKey(this);
         }
     }
 
@@ -211,8 +283,10 @@ namespace Parser
         string _value;
         public override EElementType GetElementType() { return EElementType.String; }
         public CStringValue(CBaseKey parent, SPosition pos, string value) : base(parent, pos) { _value = value; }
+        public CStringValue(CStringValue other) : base(other) { _value = other._value; }
         public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
         public override string GetDebugText() { return ToString(); }
+        public override CBaseElement GetCopy() { return new CStringValue(this); }
     }
 
     public class CIntValue : CBaseElement
@@ -220,8 +294,10 @@ namespace Parser
         int _value;
         public override EElementType GetElementType() { return EElementType.Int; }
         public CIntValue(CBaseKey parent, SPosition pos, int value) : base(parent, pos) { _value = value; }
+        public CIntValue(CIntValue other) : base(other) { _value = other._value; }
         public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
         public override string GetDebugText() { return ToString(); }
+        public override CBaseElement GetCopy() { return new CIntValue(this); }
     }
 
     public class CFloatValue : CBaseElement
@@ -229,8 +305,10 @@ namespace Parser
         float _value;
         public override EElementType GetElementType() { return EElementType.Float; }
         public CFloatValue(CBaseKey parent, SPosition pos, float value) : base(parent, pos) { _value = value; }
+        public CFloatValue(CFloatValue other) : base(other) { _value = other._value; }
         public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
         public override string GetDebugText() { return ToString(); }
+        public override CBaseElement GetCopy() { return new CFloatValue(this); }
     }
 
     public class CBoolValue : CBaseElement
@@ -238,8 +316,10 @@ namespace Parser
         bool _value;
         public override EElementType GetElementType() { return EElementType.Bool; }
         public CBoolValue(CBaseKey parent, SPosition pos, bool value) : base(parent, pos) { _value = value; }
+        public CBoolValue(CBoolValue other) : base(other) { _value = other._value; }
         public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
         public override string GetDebugText() { return ToString(); }
+        public override CBaseElement GetCopy() { return new CBoolValue(this); }
     }
 
 

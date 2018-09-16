@@ -18,6 +18,9 @@ namespace Parser
         TooDeepRank,
         RecordBeforeRecordDividerDoesntPresent,
         CantTransferName,
+        LocalPathEmpty,
+        CantFindRootInFile,
+        CantFindKey,
     }
 
     public enum EInternalErrorCode
