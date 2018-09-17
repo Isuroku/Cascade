@@ -21,6 +21,7 @@ namespace Parser
         LocalPathEmpty,
         CantFindRootInFile,
         CantFindKey,
+        ElementWithNameAlreadyPresent,
     }
 
     public enum EInternalErrorCode

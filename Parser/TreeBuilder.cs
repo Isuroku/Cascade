@@ -125,7 +125,10 @@ namespace Parser
                     arr_key = new CArrayKey(inParent, line.Position, 0);
                 res_arr_key = arr_key;
 
-                key = new CKey(arr_key, line, inSupport);
+                if (arr_key.IsKeyWithNamePresent(line.Head.Text))
+                    inSupport.LogError(EErrorCode.ElementWithNameAlreadyPresent, line);
+                else
+                    key = new CKey(arr_key, line, inSupport);
             }
             else if(!line.IsTailEmpty)
             {

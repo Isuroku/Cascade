@@ -190,6 +190,22 @@ namespace Parser
                 lst[i].SetParent(this);
             }
         }
+
+        public bool IsKeyWithNamePresent(string inName)
+        {
+            for (int i = 0; i < _elements.Count; ++i)
+            {
+                CBaseElement el = _elements[i];
+                if (el.GetElementType() == EElementType.ArrayKey ||
+                    el.GetElementType() == EElementType.Key)
+                {
+                    CBaseKey key = el as CBaseKey;
+                    if (string.Equals(key.Name, inName, StringComparison.InvariantCultureIgnoreCase))
+                        return true;
+                }
+            }
+            return false;
+        }
     }
 
     public class CKey: CBaseKey
