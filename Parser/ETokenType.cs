@@ -17,5 +17,7 @@ namespace Parser
         Colon, //:
         RecordDivider, //--
         Sharp, //#
+        AddKey, //+
+        OverrideKey, //^
     }
 }

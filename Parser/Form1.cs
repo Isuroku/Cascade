@@ -134,7 +134,15 @@ namespace Parser
 
         void AddToTree(CBaseKey key, TreeNodeCollection nc)
         {
-            TreeNode tn = new TreeNode(key.GetDebugText());
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < key.ElementCount; i++)
+            {
+                CBaseElement el = key[i];
+                if (!el.IsKey())
+                    sb.AppendFormat("{0}, ", el.ToStringShort());
+            }
+
+            TreeNode tn = new TreeNode(string.Format("{0}: {1}", key.GetDebugText(), sb));
             nc.Add(tn);
             for(int i = 0; i < key.ElementCount; i++)
             {
@@ -142,12 +150,29 @@ namespace Parser
                 if (el.GetElementType() == EElementType.Key ||
                     el.GetElementType() == EElementType.ArrayKey)
                     AddToTree(el as CBaseKey, tn.Nodes);
-                else
-                {
-                    TreeNode etn = new TreeNode(el.GetDebugText());
-                    tn.Nodes.Add(etn);
-                }
+                //else
+                //{
+                //    TreeNode etn = new TreeNode(el.GetDebugText());
+                //    tn.Nodes.Add(etn);
+                //}
             }
+        }
+
+        private void btnNewFile_Click(object sender, EventArgs e)
+        {
+            string new_file_name = tbNewFileName.Text + ".txt";
+            string path = Path.Combine(Application.StartupPath, _path_to_data, new_file_name);
+            
+            if(File.Exists(path))
+            {
+                AddLogToConsole(string.Format("File {0} already exists", new_file_name), ELogLevel.Error);
+                return;
+            }
+
+            File.WriteAllText(path, "", Encoding.UTF8);
+
+            lbSourceFiles.Items.Add(new_file_name);
+            lbSourceFiles.SelectedIndex = lbSourceFiles.Items.Count - 1;
         }
     }
 }

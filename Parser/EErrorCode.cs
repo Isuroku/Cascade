@@ -22,6 +22,8 @@ namespace Parser
         CantFindRootInFile,
         CantFindKey,
         ElementWithNameAlreadyPresent,
+        CantResolveLine,
+        KeyMustHaveParent,
     }
 
     public enum EInternalErrorCode

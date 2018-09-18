@@ -62,6 +62,7 @@
   <ItemGroup>
     <Compile Include="ECommands.cs" />
     <Compile Include="EErrorCode.cs" />
+    <Compile Include="EKeyAdditionMode.cs" />
     <Compile Include="ETokenType.cs" />
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
@@ -79,6 +80,7 @@
     <Compile Include="TokenLine.cs" />
     <Compile Include="TokenTemplate.cs" />
     <Compile Include="TreeBuilder.cs" />
+    <Compile Include="TreeKeys.cs" />
     <Compile Include="TreeTypes.cs" />
     <Compile Include="Utils.cs" />
     <EmbeddedResource Include="Form1.resx">

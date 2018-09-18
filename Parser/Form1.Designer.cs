@@ -34,6 +34,8 @@
             this.btnParse = new System.Windows.Forms.Button();
             this.rtLog = new System.Windows.Forms.RichTextBox();
             this.tvTree = new System.Windows.Forms.TreeView();
+            this.tbNewFileName = new System.Windows.Forms.TextBox();
+            this.btnNewFile = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // tbSourceText
@@ -93,11 +95,30 @@
             this.tvTree.Size = new System.Drawing.Size(415, 481);
             this.tvTree.TabIndex = 31;
             // 
+            // tbNewFileName
+            // 
+            this.tbNewFileName.Location = new System.Drawing.Point(877, 113);
+            this.tbNewFileName.Name = "tbNewFileName";
+            this.tbNewFileName.Size = new System.Drawing.Size(216, 20);
+            this.tbNewFileName.TabIndex = 32;
+            // 
+            // btnNewFile
+            // 
+            this.btnNewFile.Location = new System.Drawing.Point(1099, 111);
+            this.btnNewFile.Name = "btnNewFile";
+            this.btnNewFile.Size = new System.Drawing.Size(106, 23);
+            this.btnNewFile.TabIndex = 33;
+            this.btnNewFile.Text = "CreateNewFile";
+            this.btnNewFile.UseVisualStyleBackColor = true;
+            this.btnNewFile.Click += new System.EventHandler(this.btnNewFile_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1304, 831);
+            this.Controls.Add(this.btnNewFile);
+            this.Controls.Add(this.tbNewFileName);
             this.Controls.Add(this.tvTree);
             this.Controls.Add(this.rtLog);
             this.Controls.Add(this.btnParse);
@@ -121,6 +142,8 @@
         private System.Windows.Forms.Button btnParse;
         private System.Windows.Forms.RichTextBox rtLog;
         private System.Windows.Forms.TreeView tvTree;
+        private System.Windows.Forms.TextBox tbNewFileName;
+        private System.Windows.Forms.Button btnNewFile;
     }
 }
 

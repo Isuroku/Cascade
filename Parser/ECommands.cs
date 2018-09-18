@@ -5,7 +5,7 @@ namespace Parser
     {
         None,
         Name,
-        Inherit,
+        Delete,
         Insert
     }
 }

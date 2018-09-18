@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Parser
 {
@@ -38,7 +36,9 @@ namespace Parser
 
         public SPosition Position { get { return new SPosition(LineNumber, 0); } }
 
-
+        EKeyAddingMode _addition_mode = EKeyAddingMode.AddUnique;
+        public EKeyAddingMode AdditionMode { get { return _addition_mode; } }
+        
         public CTokenLine()
         {
         }
@@ -75,28 +75,48 @@ namespace Parser
             if (_tokens[0].TokenType == ETokenType.Sharp)
                 return;
 
-            if (_tokens.Length == 1)
+            if (_tokens[0].TokenType == ETokenType.RecordDivider)
+                return;
+
+            int cur_index = 0;
+            CToken toc = _tokens[cur_index];
+            if (toc.TokenType == ETokenType.OverrideKey)
             {
-                if (IsDataType(_tokens[0].TokenType))
-                    _tail = new CToken[1] { _tokens[0] };
-                else if(_tokens[0].TokenType != ETokenType.RecordDivider)
-                    inLoger.LogError(EErrorCode.AloneDividerInLine, _tokens[0]);
+                _addition_mode = EKeyAddingMode.Override;
+                cur_index++;
+            }
+            else if (toc.TokenType == ETokenType.AddKey)
+            {
+                _addition_mode = EKeyAddingMode.Add;
+                cur_index++;
+            }
+
+            int token_count = _tokens.Length - cur_index;
+            if (cur_index == 0 && token_count == 1 && Utils.IsDataType(toc.TokenType))
+            {//written only one value
+                _tail = new CToken[1] { _tokens[0] };
                 return;
             }
 
-            int start_for_tail = 0;
-            if(_tokens[1].TokenType == ETokenType.Colon)
+            if(token_count < 2)
             {
-                _head = _tokens[0];
-                start_for_tail = 2;
-                if (_tokens[0].TokenType != ETokenType.Word)
-                    inLoger.LogError(EErrorCode.StrangeHeadType, _tokens[0]);
+                inLoger.LogError(EErrorCode.CantResolveLine, this);
+                return;
             }
 
-            List<CToken> lst = new List<CToken>();
-            for(int i = start_for_tail; i < _tokens.Length; ++i)
+            toc = _tokens[cur_index + 1];
+            if(toc.TokenType == ETokenType.Colon)
             {
-                if(IsDataType(_tokens[i].TokenType))
+                _head = _tokens[cur_index];
+                cur_index += 2;
+                if (_head.TokenType != ETokenType.Word)
+                    inLoger.LogError(EErrorCode.StrangeHeadType, _head);
+            }
+            
+            List<CToken> lst = new List<CToken>();
+            for(int i = cur_index; i < _tokens.Length; ++i)
+            {
+                if(Utils.IsDataType(_tokens[i].TokenType))
                     lst.Add(_tokens[i]);
             }
             _tail = lst.ToArray();
@@ -132,7 +152,7 @@ namespace Parser
             List<string> lst = new List<string>();
             for (int i = 2; i < _tokens.Length; ++i)
             {
-                if (IsDataType(_tokens[i].TokenType))
+                if (Utils.IsDataType(_tokens[i].TokenType))
                     lst.Add(_tokens[i].Text);
             }
             _command_params = lst.ToArray();
@@ -182,12 +202,6 @@ namespace Parser
             }
 
             return ecount;
-        }
-
-        public static bool IsDataType(ETokenType inType)
-        {
-            return inType == ETokenType.Word || inType == ETokenType.Float || inType == ETokenType.Int || 
-                inType == ETokenType.True || inType == ETokenType.False;
         }
     }
 }

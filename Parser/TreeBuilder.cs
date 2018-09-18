@@ -44,6 +44,7 @@ namespace Parser
         {
             CArrayKey ar_key = null;
             CKey last_key = null;
+            EKeyAddingMode last_key_add_mode = EKeyAddingMode.AddUnique;
 
             int curr_rank = inParentRank + 1;
 
@@ -54,7 +55,7 @@ namespace Parser
                 CTokenLine line = inLines[i];
                 if (line.Rank < curr_rank)
                 {
-                    CheckEmptyKey(last_key, inSupport);
+                    OnClosingKey(last_key, last_key_add_mode, inSupport);
                     return i;
                 }
                 else if (line.Rank > curr_rank)
@@ -62,10 +63,6 @@ namespace Parser
                     if (last_key == null)
                     {
                         inSupport.LogError(EErrorCode.TooDeepRank, line);
-
-                        Tuple<CArrayKey, CKey> res = AddLine(inParent, ar_key, line, inSupport);
-                        ar_key = res.Item1;
-                        last_key = res.Item2;
                     }
                     else
                     {
@@ -75,29 +72,66 @@ namespace Parser
                 }
                 else
                 {
-                    CheckEmptyKey(last_key, inSupport);
+                    OnClosingKey(last_key, last_key_add_mode, inSupport);
 
-                    Tuple<CArrayKey, CKey> res = AddLine(inParent, ar_key, line, inSupport);
+                    Tuple<CArrayKey, CKey, EKeyAddingMode> res = AddLine(inParent, ar_key, line, inSupport);
                     ar_key = res.Item1;
                     last_key = res.Item2;
+                    last_key_add_mode = res.Item3;
                 }
 
                 if (t == i)
                     i++;
             }
+
+            //if(last_key != null)
+            //    last_key.CheckOnOneArray(inSupport);
+            OnClosingKey(last_key, last_key_add_mode, inSupport);
             return i;
         }
 
-        static void CheckEmptyKey(CBaseKey key, ITreeBuildSupport inSupport)
+        static void OnClosingKey(CBaseKey key, EKeyAddingMode inKeyAddMode, ITreeBuildSupport inSupport)
         {
-            if (key != null && key.ElementCount == 0)
+            if (key == null)
+                return;
+
+            if (key.ElementCount == 0)
+            {
                 inSupport.LogError(EErrorCode.HeadWithoutValues, key);
+                return;
+            }
+
+            if (inKeyAddMode == EKeyAddingMode.AddUnique)
+                return;
+
+            CBaseKey parent = key.Parent;
+            if (parent == null)
+            {
+                inSupport.LogError(EErrorCode.KeyMustHaveParent, key);
+                return;
+            }
+
+            key.SetParent(null);
+
+            if (inKeyAddMode == EKeyAddingMode.Add)
+            {
+                CBaseKey child_key = parent.FindChildKey(key.Name);
+                if (child_key != null)
+                    child_key.MergeKey(key);
+                else
+                    key.SetParent(parent);
+            }
+            if (inKeyAddMode == EKeyAddingMode.Override)
+                parent.OverrideKey(key);
+            //if (inKeyAddMode == EKeyAddingMode.Delete)
+            //    parent.DeleteKey(key, inSupport);
         }
 
-        static Tuple<CArrayKey, CKey> AddLine(CBaseKey inParent, CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
+        static Tuple<CArrayKey, CKey, EKeyAddingMode> AddLine(CBaseKey inParent, CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
         {
             CKey key = null;
             CArrayKey res_arr_key = null;
+            EKeyAddingMode addition_mode = EKeyAddingMode.AddUnique;
             if (line.IsEmpty())
             {
                 res_arr_key = arr_key;
@@ -125,10 +159,11 @@ namespace Parser
                     arr_key = new CArrayKey(inParent, line.Position, 0);
                 res_arr_key = arr_key;
 
-                if (arr_key.IsKeyWithNamePresent(line.Head.Text))
+                if (line.AdditionMode == EKeyAddingMode.AddUnique && arr_key.IsKeyWithNamePresent(line.Head.Text))
                     inSupport.LogError(EErrorCode.ElementWithNameAlreadyPresent, line);
-                else
-                    key = new CKey(arr_key, line, inSupport);
+
+                addition_mode = line.AdditionMode;
+                key = new CKey(arr_key, line, inSupport);
             }
             else if(!line.IsTailEmpty)
             {
@@ -149,7 +184,7 @@ namespace Parser
                 res_arr_key.AddTokenTail(line, inSupport);
             }
 
-            return new Tuple<CArrayKey, CKey>(res_arr_key, key);
+            return new Tuple<CArrayKey, CKey, EKeyAddingMode>(res_arr_key, key, addition_mode);
         }
 
         static void ExecuteCommand(CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
@@ -161,45 +196,76 @@ namespace Parser
                 else
                     arr_key.SetName(line.CommandParams[0]);
             }
-            else if(line.Command == ECommands.Insert || line.Command == ECommands.Inherit)
+            else if(line.Command == ECommands.Insert)
+                ExecuteCommand_Insert(arr_key, line, inSupport);
+            else if (line.Command == ECommands.Delete)
+                ExecuteCommand_Delete(arr_key, line, inSupport);
+        }
+
+        static void ExecuteCommand_Delete(CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
+        {
+            if (line.CommandParams.Length == 0 || string.IsNullOrEmpty(line.CommandParams[0]))
             {
-                SCommandParams prms = GetFileAndKeys(line, inSupport);
-
-                if(!string.IsNullOrEmpty(prms.key_path))
-                {
-                    string[] path = prms.key_path.Split(new char[] { '\\', '/' });
-
-                    CBaseKey root = null;
-                    if (!string.IsNullOrEmpty(prms.file_name))
-                        root = inSupport.GetTree(prms.file_name);
-                    else
-                        root = arr_key.GetRoot();
-
-                    if(root == null)
-                    {
-                        inSupport.LogError(EErrorCode.CantFindRootInFile, line);
-                        return;
-                    }
-
-                    CBaseKey key = root.FindKey(path);
-                    if (key == null)
-                    {
-                        inSupport.LogError(EErrorCode.CantFindKey, line);
-                        return;
-                    }
-
-                    if (line.Command == ECommands.Insert)
-                    {
-                        CBaseKey copy_key = key.GetCopy() as CBaseKey;
-                        if (!prms.insert_only_elements)
-                            copy_key.SetParent(arr_key);
-                        else
-                            arr_key.TakeAllElements(copy_key, false);
-                    }
-                }
-                else
-                    inSupport.LogError(EErrorCode.LocalPathEmpty, line);
+                inSupport.LogError(EErrorCode.LocalPathEmpty, line);
+                return;
             }
+
+            string key_path = line.CommandParams[0];
+
+            string[] path = key_path.Split(new char[] { '\\', '/' });
+            
+            CBaseKey key = arr_key.FindKey(path);
+            if (key == null)
+            {
+                inSupport.LogError(EErrorCode.CantFindKey, line);
+                return;
+            }
+
+            CBaseKey parent = key.Parent;
+            key.SetParent(null);
+            while (parent != arr_key && parent.ElementCount == 0)
+            {
+                CBaseKey prev = parent;
+                parent = parent.Parent;
+                prev.SetParent(null);
+            }
+        }
+
+        static void ExecuteCommand_Insert(CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
+        {
+            SCommandParams prms = GetFileAndKeys(line, inSupport);
+
+            if (!string.IsNullOrEmpty(prms.key_path))
+            {
+                string[] path = prms.key_path.Split(new char[] { '\\', '/' });
+
+                CBaseKey root = null;
+                if (!string.IsNullOrEmpty(prms.file_name))
+                    root = inSupport.GetTree(prms.file_name);
+                else
+                    root = arr_key.GetRoot();
+
+                if (root == null)
+                {
+                    inSupport.LogError(EErrorCode.CantFindRootInFile, line);
+                    return;
+                }
+
+                CBaseKey key = root.FindKey(path);
+                if (key == null)
+                {
+                    inSupport.LogError(EErrorCode.CantFindKey, line);
+                    return;
+                }
+
+                CBaseKey copy_key = key.GetCopy() as CBaseKey;
+                if (!prms.insert_only_elements)
+                    copy_key.SetParent(arr_key);
+                else
+                    arr_key.TakeAllElements(copy_key, false);
+            }
+            else
+                inSupport.LogError(EErrorCode.LocalPathEmpty, line);
         }
 
         struct SCommandParams
