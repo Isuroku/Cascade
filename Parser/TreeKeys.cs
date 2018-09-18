@@ -141,17 +141,17 @@ namespace Parser
         //    }
         //}
 
-        internal void OverrideKey(CBaseKey key)
-        {
+        //internal void OverrideKey(CBaseKey key)
+        //{
             
-        }
+        //}
 
         internal void MergeKey(CBaseKey inKey)
         {
-            List<CBaseElement> in_elements = new List<CBaseElement>(inKey.GetElements());
-            for (int i = 0; i < in_elements.Count; i++)
+            List<CBaseElement> elements_in_key = new List<CBaseElement>(inKey.GetElements());
+            for (int i = 0; i < elements_in_key.Count; i++)
             {
-                CBaseElement el = in_elements[i];
+                CBaseElement el = elements_in_key[i];
                 if (el.IsKey())
                 {
                     var in_sub_key = el as CBaseKey;

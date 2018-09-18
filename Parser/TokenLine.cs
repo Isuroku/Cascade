@@ -80,16 +80,16 @@ namespace Parser
 
             int cur_index = 0;
             CToken toc = _tokens[cur_index];
-            if (toc.TokenType == ETokenType.OverrideKey)
-            {
-                _addition_mode = EKeyAddingMode.Override;
-                cur_index++;
-            }
-            else if (toc.TokenType == ETokenType.AddKey)
+            if (toc.TokenType == ETokenType.AddKey)
             {
                 _addition_mode = EKeyAddingMode.Add;
                 cur_index++;
             }
+            //if (toc.TokenType == ETokenType.OverrideKey)
+            //{
+            //    _addition_mode = EKeyAddingMode.Override;
+            //    cur_index++;
+            //}
 
             int token_count = _tokens.Length - cur_index;
             if (cur_index == 0 && token_count == 1 && Utils.IsDataType(toc.TokenType))

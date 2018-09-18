@@ -68,7 +68,7 @@ namespace Parser
             _templates.Add(new CTokenTemplate(ETokenType.False, "false"));
             _templates.Add(new CTokenTemplate(ETokenType.False, "False"));
             _templates.Add(new CTokenTemplate(ETokenType.AddKey, "+"));
-            _templates.Add(new CTokenTemplate(ETokenType.OverrideKey, "^"));
+            //_templates.Add(new CTokenTemplate(ETokenType.OverrideKey, "^"));
             //_templates.Add(new CTokenTemplate(ETokenType.OpenBrace, "{"));
             //_templates.Add(new CTokenTemplate(ETokenType.CloseBrace, "}"));
             //_templates.Add(new CTokenTemplate(ETokenType.OpenSqBracket, "["));

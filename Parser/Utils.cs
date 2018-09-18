@@ -38,7 +38,7 @@ namespace Parser
 
         public static bool IsChangeKeyPrefix(ETokenType inType)
         {
-            return inType == ETokenType.AddKey || inType == ETokenType.OverrideKey;
+            return inType == ETokenType.AddKey;// || inType == ETokenType.OverrideKey;
         }
     }
 }

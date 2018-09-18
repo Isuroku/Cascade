@@ -18,6 +18,6 @@ namespace Parser
         RecordDivider, //--
         Sharp, //#
         AddKey, //+
-        OverrideKey, //^
+        //OverrideKey, //^
     }
 }

@@ -121,10 +121,10 @@ namespace Parser
                 else
                     key.SetParent(parent);
             }
-            if (inKeyAddMode == EKeyAddingMode.Override)
-                parent.OverrideKey(key);
-            //if (inKeyAddMode == EKeyAddingMode.Delete)
-            //    parent.DeleteKey(key, inSupport);
+            //if (inKeyAddMode == EKeyAddingMode.Override)
+            //{
+            //    parent.OverrideKey(key);
+            //}
         }
 
         static Tuple<CArrayKey, CKey, EKeyAddingMode> AddLine(CBaseKey inParent, CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
@@ -213,22 +213,26 @@ namespace Parser
             string key_path = line.CommandParams[0];
 
             string[] path = key_path.Split(new char[] { '\\', '/' });
-            
-            CBaseKey key = arr_key.FindKey(path);
-            if (key == null)
-            {
+
+            if(!RemoveKeysByPath(arr_key, path))
                 inSupport.LogError(EErrorCode.CantFindKey, line);
-                return;
-            }
+        }
+
+        static bool RemoveKeysByPath(CBaseKey inParent, string[] inPath)
+        {
+            CBaseKey key = inParent.FindKey(inPath);
+            if (key == null)
+                return false;
 
             CBaseKey parent = key.Parent;
             key.SetParent(null);
-            while (parent != arr_key && parent.ElementCount == 0)
+            while (parent != inParent && parent.ElementCount == 0)
             {
                 CBaseKey prev = parent;
                 parent = parent.Parent;
                 prev.SetParent(null);
             }
+            return true;
         }
 
         static void ExecuteCommand_Insert(CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
