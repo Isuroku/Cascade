@@ -237,39 +237,40 @@ namespace Parser
 
         static void ExecuteCommand_Insert(CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
         {
-            SCommandParams prms = GetFileAndKeys(line, inSupport);
+            string key_path = line.CommandParams["key"];
 
-            if (!string.IsNullOrEmpty(prms.key_path))
-            {
-                string[] path = prms.key_path.Split(new char[] { '\\', '/' });
-
-                CBaseKey root = null;
-                if (!string.IsNullOrEmpty(prms.file_name))
-                    root = inSupport.GetTree(prms.file_name);
-                else
-                    root = arr_key.GetRoot();
-
-                if (root == null)
-                {
-                    inSupport.LogError(EErrorCode.CantFindRootInFile, line);
-                    return;
-                }
-
-                CBaseKey key = root.FindKey(path);
-                if (key == null)
-                {
-                    inSupport.LogError(EErrorCode.CantFindKey, line);
-                    return;
-                }
-
-                CBaseKey copy_key = key.GetCopy() as CBaseKey;
-                if (!prms.insert_only_elements)
-                    copy_key.SetParent(arr_key);
-                else
-                    arr_key.TakeAllElements(copy_key, false);
-            }
-            else
+            if (string.IsNullOrEmpty(key_path))
                 inSupport.LogError(EErrorCode.LocalPathEmpty, line);
+
+            string file_name = line.CommandParams["file"];
+            CBaseKey root = null;
+            if (!string.IsNullOrEmpty(file_name))
+                root = inSupport.GetTree(file_name);
+            else
+                root = arr_key.GetRoot();
+
+            if (root == null)
+            {
+                inSupport.LogError(EErrorCode.CantFindRootInFile, line);
+                return;
+            }
+
+            string[] path = key_path.Split(new char[] { '\\', '/' });
+
+            CBaseKey key = root.FindKey(path);
+            if (key == null)
+            {
+                inSupport.LogError(EErrorCode.CantFindKey, line);
+                return;
+            }
+
+
+            bool insert_only_elements = line.CommandParams.ContainsKey("elems");
+            CBaseKey copy_key = key.GetCopy() as CBaseKey;
+            if (!insert_only_elements)
+                copy_key.SetParent(arr_key);
+            else
+                arr_key.TakeAllElements(copy_key, false);
         }
 
         struct SCommandParams
@@ -294,22 +295,29 @@ namespace Parser
 
             string fn = string.Empty;
             string kp = string.Empty;
-            string[] pathes = line.CommandParams[0].Split(new char[] { ':' });
-            if (pathes.Length > 1)
-            {
-                fn = pathes[0];
-                kp = pathes[1];
-            }
-            else
-                kp = pathes[0];
+            bool only_elements = false;
 
-            bool oe = line.CommandParams.Length > 1;
+            if (line.CommandParams.Length > 2)
+            {
+                fn = line.CommandParams[0];
+                kp = line.CommandParams[1];
+                only_elements = true;
+            }
+            else if (line.CommandParams.Length == 2)
+            {
+                fn = line.CommandParams[0];
+                kp = line.CommandParams[1];
+            }
+            else if (line.CommandParams.Length == 1)
+            {
+                kp = line.CommandParams[0];
+            }
 
             return new SCommandParams
             {
                 file_name = fn,
                 key_path = kp,
-                insert_only_elements = oe,
+                insert_only_elements = only_elements,
             };
         }
     }

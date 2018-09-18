@@ -77,19 +77,6 @@ namespace Parser
                     }
                 }
                 break;
-                case ETokenType.Colon:
-                {
-                    int need_index = 1;
-                    if (Utils.IsChangeKeyPrefix(inTokensInLine[0].TokenType))
-                        need_index = 2;
-
-                    if (inMyIndex != need_index)
-                    {
-                        _error_count++;
-                        inLoger.LogError(EErrorCode.ColonErrorPos, this);
-                    }
-                }
-                break;
                 case ETokenType.Sharp:
                 {
                     if (inMyIndex != 0)

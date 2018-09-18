@@ -60,6 +60,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CommandParams.cs" />
     <Compile Include="ECommands.cs" />
     <Compile Include="EErrorCode.cs" />
     <Compile Include="EKeyAdditionMode.cs" />

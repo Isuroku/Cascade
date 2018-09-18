@@ -24,8 +24,8 @@ namespace Parser
 
         ECommands _command;
         public ECommands Command { get { return _command; } }
-        string[] _command_params;
-        public string[] CommandParams { get { return _command_params; } }
+        CCommandParams _command_params = new CCommandParams();
+        public CCommandParams CommandParams { get { return _command_params; } }
 
         int _error_count;
         public int ErrorCount { get { return _error_count; } }
@@ -149,13 +149,28 @@ namespace Parser
                 return;
             }
 
-            List<string> lst = new List<string>();
-            for (int i = 2; i < _tokens.Length; ++i)
+
+            int curr_index = 2;
+            while(curr_index < _tokens.Length)
             {
-                if (Utils.IsDataType(_tokens[i].TokenType))
-                    lst.Add(_tokens[i].Text);
+                bool triplet = false;
+                if(_tokens.Length - curr_index >= 3)
+                {
+                    int colon_index = curr_index + 1;
+                    triplet = _tokens[colon_index].TokenType == ETokenType.Colon;
+                    if(triplet)
+                    {
+                        _command_params.Add(_tokens[curr_index].Text, _tokens[curr_index + 2].Text);
+                        curr_index += 3;
+                    }
+                }
+
+                if(!triplet)
+                {
+                    _command_params.Add(_tokens[curr_index].Text, string.Empty);
+                    curr_index += 1;
+                }
             }
-            _command_params = lst.ToArray();
         }
 
         public override string ToString()

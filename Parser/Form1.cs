@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace Parser
 {
-    public partial class Form1 : Form, ILogPrinter
+    public partial class Form1 : Form, ILogPrinter, IParserOwner
     {
         const string _path_to_data = "Data";
 
@@ -77,7 +77,7 @@ namespace Parser
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            _parser = new CParserManager(this);
+            _parser = new CParserManager(this, this);
 
             string path = Path.Combine(Application.StartupPath, _path_to_data);
             string[] files = Directory.GetFiles(path, "*.txt", SearchOption.TopDirectoryOnly);
@@ -90,6 +90,14 @@ namespace Parser
 
             if (lbSourceFiles.Items.Count > 0)
                 lbSourceFiles.SelectedIndex = 0;
+        }
+
+        public string GetTextFromFile(string inFileName)
+        {
+            string path = Path.Combine(Application.StartupPath, _path_to_data, inFileName);
+            if (!File.Exists(path))
+                return string.Empty;
+            return File.ReadAllText(path);
         }
 
         private void lbSourceFiles_SelectedIndexChanged(object sender, EventArgs e)
@@ -115,7 +123,7 @@ namespace Parser
 
             tvTree.Nodes.Clear();
 
-            CKey root = _parser.Parse(_selected_file, tbSourceText.Text);
+            CKey root = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text);
 
             CTokenLine[] lines = _parser.GetLineByRoot(root);
 

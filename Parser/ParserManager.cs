@@ -3,6 +3,11 @@ using System.Collections.Generic;
 
 namespace Parser
 {
+    public interface IParserOwner
+    {
+        string GetTextFromFile(string inFileName);
+    }
+
     public class CParserManager : ITreeBuildSupport
     {
         class CParsed
@@ -30,8 +35,11 @@ namespace Parser
 
         CLoger _loger;
 
-        public CParserManager(ILogPrinter inLogPrinter)
+        IParserOwner _owner;
+
+        public CParserManager(IParserOwner owner, ILogPrinter inLogPrinter)
         {
+            _owner = owner;
             _loger = new CLoger(inLogPrinter);
         }
 
@@ -105,7 +113,15 @@ namespace Parser
 
         public CKey GetTree(string inFileName)
         {
-            return null;
+            CParsed parsed = _parsed.Find(p => string.Equals(p.FileName, inFileName, StringComparison.InvariantCultureIgnoreCase));
+            if (parsed != null)
+                return parsed.Root;
+
+            string text = _owner.GetTextFromFile(inFileName);
+            if (string.IsNullOrEmpty(text))
+                return null;
+
+            return Parse(inFileName, text);
         }
     }
 }
