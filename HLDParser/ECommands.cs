@@ -1,5 +1,5 @@
 ﻿
-namespace Parser
+namespace HLDParser
 {
     public enum ECommands
     {

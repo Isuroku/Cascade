@@ -1,14 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Parser
+namespace HLDParser
 {
     public interface IParserOwner
     {
         string GetTextFromFile(string inFileName);
     }
 
-    public class CParserManager : ITreeBuildSupport
+    public class CParserManager
     {
         class CParsed
         {
@@ -29,6 +29,26 @@ namespace Parser
             }
         }
 
+        class CSupportOwner: ITreeBuildSupport
+        {
+            CParserManager _owner;
+
+            public CSupportOwner(CParserManager owner)
+            {
+                _owner = owner;
+            }
+
+            public ILogger GetLogger()
+            {
+                return _owner._loger;
+            }
+
+            public CKey GetTree(string inFileName)
+            {
+                return _owner.GetTree(inFileName);
+            }
+        }
+
         List<CParsed> _parsed = new List<CParsed>();
 
         CSentenseDivider _sentenser = new CSentenseDivider();
@@ -37,10 +57,13 @@ namespace Parser
 
         IParserOwner _owner;
 
+        CSupportOwner _supporter;
+
         public CParserManager(IParserOwner owner, ILogPrinter inLogPrinter)
         {
             _owner = owner;
             _loger = new CLoger(inLogPrinter);
+            _supporter = new CSupportOwner(this);
         }
 
         public CKey Parse(string inFileName, string inText)
@@ -58,7 +81,7 @@ namespace Parser
                 lines.Add(tl);
             }
 
-            CKey root = CTreeBuilder.Build(lines, this);
+            CKey root = CTreeBuilder.Build(lines, _supporter);
 
             _parsed.Add(new CParsed(root, lines, inFileName));
 
@@ -73,43 +96,6 @@ namespace Parser
             return parsed.Lines.ToArray();
         }
 
-
-        //ITreeBuildSupport
-
-        public void LogWarning(EErrorCode inErrorCode, CToken inToken)
-        {
-            _loger.LogWarning(inErrorCode, inToken);
-        }
-
-        public void LogError(EErrorCode inErrorCode, string inText, int inLineNumber)
-        {
-            _loger.LogError(inErrorCode, inText, inLineNumber);
-        }
-
-        public void LogError(EErrorCode inErrorCode, CBaseKey inKey)
-        {
-            _loger.LogError(inErrorCode, inKey);
-        }
-
-        public void LogError(EErrorCode inErrorCode, CToken inToken)
-        {
-            _loger.LogError(inErrorCode, inToken);
-        }
-
-        public void LogError(EErrorCode inErrorCode, CTokenLine inLine)
-        {
-            _loger.LogError(inErrorCode, inLine);
-        }
-
-        public void LogInternalError(EInternalErrorCode inErrorCode, string inDebugText)
-        {
-            _loger.LogInternalError(inErrorCode, inDebugText);
-        }
-
-        public void Trace(string inText)
-        {
-            _loger.Trace(inText);
-        }
 
         public CKey GetTree(string inFileName)
         {

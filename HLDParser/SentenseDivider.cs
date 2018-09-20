@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Parser
+namespace HLDParser
 {
     public class CSentense
     {
@@ -40,7 +40,7 @@ namespace Parser
         }
     }
 
-    public class CSentenseDivider
+    internal class CSentenseDivider
     {
         List<CSentense> _sentenses = new List<CSentense>();
 
@@ -66,7 +66,7 @@ namespace Parser
             _sentenses.Clear();
         }
 
-        public void ParseText(string inRawText, CLoger inLoger)
+        public void ParseText(string inRawText, ILogger inLoger)
         {
             Clear();
 

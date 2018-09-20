@@ -1,22 +1,15 @@
-﻿using System;
+﻿
 using System.Collections.Generic;
 
-namespace Parser
+namespace HLDParser
 {
-    public interface ITreeBuildSupport
+    internal interface ITreeBuildSupport
     {
-        void LogWarning(EErrorCode inErrorCode, CToken inToken);
-        void LogError(EErrorCode inErrorCode, string inText, int inLineNumber);
-        void LogError(EErrorCode inErrorCode, CBaseKey inKey);
-        void LogError(EErrorCode inErrorCode, CToken inToken);
-        void LogError(EErrorCode inErrorCode, CTokenLine inLine);
-        void LogInternalError(EInternalErrorCode inErrorCode, string inDebugText);
-        void Trace(string inText);
-
         CKey GetTree(string inFileName);
+        ILogger GetLogger();
     }
 
-    public static class CTreeBuilder
+    internal static class CTreeBuilder
     {
         enum EMultiArrayType { NotMultiArray, List, MultiArray }
 
@@ -29,7 +22,7 @@ namespace Parser
         {
             var root = new CKey();
             Collect(root, -1, inLines, 0, inSupport);
-            root.CheckOnOneArray(inSupport);
+            root.CheckOnOneArray(inSupport.GetLogger());
 
             if(root.ElementCount == 1 && root[0].GetElementType() == EElementType.Key)
             {
@@ -62,12 +55,12 @@ namespace Parser
                 {
                     if (last_key == null)
                     {
-                        inSupport.LogError(EErrorCode.TooDeepRank, line);
+                        inSupport.GetLogger().LogError(EErrorCode.TooDeepRank, line);
                     }
                     else
                     {
                         i = Collect(last_key, curr_rank, inLines, i, inSupport);
-                        last_key.CheckOnOneArray(inSupport);
+                        last_key.CheckOnOneArray(inSupport.GetLogger());
                     }
                 }
                 else
@@ -97,7 +90,7 @@ namespace Parser
 
             if (key.ElementCount == 0)
             {
-                inSupport.LogError(EErrorCode.HeadWithoutValues, key);
+                inSupport.GetLogger().LogError(EErrorCode.HeadWithoutValues, key);
                 return;
             }
 
@@ -107,7 +100,7 @@ namespace Parser
             CBaseKey parent = key.Parent;
             if (parent == null)
             {
-                inSupport.LogError(EErrorCode.KeyMustHaveParent, key);
+                inSupport.GetLogger().LogError(EErrorCode.KeyMustHaveParent, key);
                 return;
             }
 
@@ -142,7 +135,7 @@ namespace Parser
                 if (arr_key != null)
                     index = arr_key.Index + 1;
                 else
-                    inSupport.LogError(EErrorCode.RecordBeforeRecordDividerDoesntPresent, line);
+                    inSupport.GetLogger().LogError(EErrorCode.RecordBeforeRecordDividerDoesntPresent, line);
                 res_arr_key = new CArrayKey(inParent, line.Position, index);
             }
             else if (line.IsCommandLine())
@@ -160,10 +153,10 @@ namespace Parser
                 res_arr_key = arr_key;
 
                 if (line.AdditionMode == EKeyAddingMode.AddUnique && arr_key.IsKeyWithNamePresent(line.Head.Text))
-                    inSupport.LogError(EErrorCode.ElementWithNameAlreadyPresent, line);
+                    inSupport.GetLogger().LogError(EErrorCode.ElementWithNameAlreadyPresent, line);
 
                 addition_mode = line.AdditionMode;
-                key = new CKey(arr_key, line, inSupport);
+                key = new CKey(arr_key, line, inSupport.GetLogger());
             }
             else if(!line.IsTailEmpty)
             {
@@ -181,7 +174,7 @@ namespace Parser
                     res_arr_key = arr_key;
                 }
 
-                res_arr_key.AddTokenTail(line, inSupport);
+                res_arr_key.AddTokenTail(line, inSupport.GetLogger());
             }
 
             return new Tuple<CArrayKey, CKey, EKeyAddingMode>(res_arr_key, key, addition_mode);
@@ -192,7 +185,7 @@ namespace Parser
             if (line.Command == ECommands.Name)
             {
                 if (line.CommandParams.Length < 1)
-                    inSupport.LogError(EErrorCode.EmptyCommand, line);
+                    inSupport.GetLogger().LogError(EErrorCode.EmptyCommand, line);
                 else
                     arr_key.SetName(line.CommandParams[0]);
             }
@@ -206,7 +199,7 @@ namespace Parser
         {
             if (line.CommandParams.Length == 0 || string.IsNullOrEmpty(line.CommandParams[0]))
             {
-                inSupport.LogError(EErrorCode.LocalPathEmpty, line);
+                inSupport.GetLogger().LogError(EErrorCode.LocalPathEmpty, line);
                 return;
             }
 
@@ -215,7 +208,7 @@ namespace Parser
             string[] path = key_path.Split(new char[] { '\\', '/' });
 
             if(!RemoveKeysByPath(arr_key, path))
-                inSupport.LogError(EErrorCode.CantFindKey, line);
+                inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
         }
 
         static bool RemoveKeysByPath(CBaseKey inParent, string[] inPath)
@@ -240,7 +233,7 @@ namespace Parser
             string key_path = line.CommandParams["key"];
 
             if (string.IsNullOrEmpty(key_path))
-                inSupport.LogError(EErrorCode.LocalPathEmpty, line);
+                inSupport.GetLogger().LogError(EErrorCode.LocalPathEmpty, line);
 
             string file_name = line.CommandParams["file"];
             CBaseKey root = null;
@@ -251,7 +244,7 @@ namespace Parser
 
             if (root == null)
             {
-                inSupport.LogError(EErrorCode.CantFindRootInFile, line);
+                inSupport.GetLogger().LogError(EErrorCode.CantFindRootInFile, line);
                 return;
             }
 
@@ -260,7 +253,7 @@ namespace Parser
             CBaseKey key = root.FindKey(path);
             if (key == null)
             {
-                inSupport.LogError(EErrorCode.CantFindKey, line);
+                inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
                 return;
             }
 
@@ -284,7 +277,7 @@ namespace Parser
         {
             if (line.CommandParams.Length < 1)
             {
-                inSupport.LogError(EErrorCode.EmptyCommand, line);
+                inSupport.GetLogger().LogError(EErrorCode.EmptyCommand, line);
                 return new SCommandParams
                 {
                     file_name = string.Empty,

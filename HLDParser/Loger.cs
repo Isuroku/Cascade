@@ -1,5 +1,5 @@
 ﻿
-namespace Parser
+namespace HLDParser
 {
     public enum ELogLevel
     {
@@ -14,7 +14,7 @@ namespace Parser
         void AddLogToConsole(string inText, ELogLevel inLogLevel);
     }
 
-    public class CLoger
+    internal class CLoger: ILogger
     {
         ILogPrinter _printer;
 
@@ -58,13 +58,6 @@ namespace Parser
             _error_count++;
             string text = string.Format("{0}. Line {1}.", inErrorCode, inLine);
             _printer.AddLogToConsole(text, ELogLevel.Error);
-        }
-
-        public void LogInternalError(EInternalErrorCode inErrorCode, string inDebugText)
-        {
-            _error_count++;
-            string text = string.Format("{0}. {1}", inErrorCode, inDebugText);
-            _printer.AddLogToConsole(text, ELogLevel.InternalError);
         }
 
         public void Trace(string inText)

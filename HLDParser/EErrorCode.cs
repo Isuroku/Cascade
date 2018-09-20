@@ -1,5 +1,5 @@
 ﻿
-namespace Parser
+namespace HLDParser
 {
     public enum EErrorCode
     {
@@ -24,9 +24,5 @@ namespace Parser
         ElementWithNameAlreadyPresent,
         CantResolveLine,
         KeyMustHaveParent,
-    }
-
-    public enum EInternalErrorCode
-    {
     }
 }

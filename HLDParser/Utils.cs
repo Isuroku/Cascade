@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Parser
+namespace HLDParser
 {
     public static class Utils
     {
-        public static Tuple<int, int>[] GetStringPairs(string line, int line_number, CLoger inLoger)
+        internal static Tuple<int, int>[] GetStringPairs(string line, int line_number, ILogger inLoger)
         {
             List<int> indices = new List<int>();
             int i = line.IndexOf('"');

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Parser
+namespace HLDParser
 {
     public abstract class CBaseKey : CBaseElement
     {
@@ -79,7 +79,7 @@ namespace Parser
             _elements.Remove(inElement);
         }
 
-        public void AddTokenTail(CTokenLine line, ITreeBuildSupport inLoger)
+        internal void AddTokenTail(CTokenLine line, ILogger inLoger)
         {
             if (line.IsTailEmpty)
                 return;
@@ -241,13 +241,13 @@ namespace Parser
             _name = string.Empty;
         }
 
-        public CKey(CBaseKey parent, CTokenLine line, ITreeBuildSupport inLoger) : base(parent, line.Head.Position)
+        internal CKey(CBaseKey parent, CTokenLine line, ILogger inLoger) : base(parent, line.Head.Position)
         {
             _name = line.Head.Text;
             AddTokenTail(line, inLoger);
         }
 
-        public CKey(CBaseKey parent, CToken head, ITreeBuildSupport inLoger) : base(parent, head.Position)
+        internal CKey(CBaseKey parent, CToken head, ILogger inLoger) : base(parent, head.Position)
         {
             _name = head.Text;
         }
@@ -261,7 +261,7 @@ namespace Parser
             return new CKey(this);
         }
 
-        internal void CheckOnOneArray(ITreeBuildSupport inLoger)
+        internal void CheckOnOneArray(ILogger inLoger)
         {
             int arr_key_count = 0;
             CArrayKey arr = null;

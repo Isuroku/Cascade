@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Parser
+namespace HLDParser
 {
     public class CTokenLine
     {
@@ -25,7 +25,7 @@ namespace Parser
         ECommands _command;
         public ECommands Command { get { return _command; } }
         CCommandParams _command_params = new CCommandParams();
-        public CCommandParams CommandParams { get { return _command_params; } }
+        internal CCommandParams CommandParams { get { return _command_params; } }
 
         int _error_count;
         public int ErrorCount { get { return _error_count; } }
@@ -38,12 +38,12 @@ namespace Parser
 
         EKeyAddingMode _addition_mode = EKeyAddingMode.AddUnique;
         public EKeyAddingMode AdditionMode { get { return _addition_mode; } }
-        
-        public CTokenLine()
+
+        internal CTokenLine()
         {
         }
 
-        public void Init(CSentense sentense, CLoger inLoger)
+        internal void Init(CSentense sentense, CLoger inLoger)
         {
             _sentense = sentense;
             BuildTokens(sentense, inLoger);

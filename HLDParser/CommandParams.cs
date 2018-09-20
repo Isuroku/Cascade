@@ -1,9 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
-namespace Parser
+namespace HLDParser
 {
-    public class CCommandParams
+    internal class CCommandParams
     {
         Dictionary<string, string> _dic = new Dictionary<string, string>();
         List<Tuple<string, string>> _list = new List<Tuple<string, string>>();
