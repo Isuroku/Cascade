@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using System.Collections;
-using System.Linq;
 
 namespace ReflectionSerializer
 {
@@ -62,7 +61,7 @@ namespace ReflectionSerializer
                 child = new SerializedAggregate { Name = name, Type = type };
                 var childAggregation = child as SerializedAggregate;
 
-                MemberInfo[] member_infos = reflectionProvider.GetSerializableMembers(type).ToArray();
+                MemberInfo[] member_infos = reflectionProvider.GetSerializableMembers(type);
                 foreach (MemberInfo memberInfo in member_infos)
                 {
                     var memberAttr = reflectionProvider.GetSingleAttributeOrDefault<SerializationAttribute>(memberInfo);

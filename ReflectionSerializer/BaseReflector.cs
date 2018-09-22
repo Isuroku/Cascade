@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -16,17 +15,34 @@ namespace ReflectionSerializer
 
         static readonly BindingFlags CollectMembers = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
 
-        //public virtual IEnumerable<MemberInfo> GetSerializableMembers(Type type)
-        //{
-        //    return type.GetProperties(CollectMembers)
-        //        .Where(p => p.GetGetMethod() != null && p.GetSetMethod() != null && p.GetGetMethod().GetParameters().Length == 0)
-        //        .Cast<MemberInfo>()
-        //        .Union(type.GetFields(CollectMembers)
-        //        //.Where(f => f.GetCustomAttributes(typeof(CompilerGeneratedAttribute), false) == null)
-        //        .Cast<MemberInfo>());
-        //}
 
-        public virtual IEnumerable<MemberInfo> GetSerializableMembers(Type type)
+//        Derived d = New Derived();
+//        Type ty = d.GetType;
+//        List<FieldInfo> l = New List<FieldInfo>;
+//l.AddRange(ty.GetFields(BindingFlags.Instance | BindingFlags.Public));
+//While ty != Nothing
+//{
+//    l.AddRange(ty.GetFields(BindingFlags.Instance | BindingFlags.NonPublic));
+//    ty = ty.BaseType;
+//}
+
+//    If you want i.e.value in name fields of Base class:
+
+//   Derived d = New Derived();
+//Type ty = d.GetType;
+//String s;
+//While ty != Nothing
+//    {
+//    If(ty = typeof(Base))
+//    {
+//        s = (String)ty.GetField("name", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(d);
+//        break;
+//    }
+//    ty = ty.BaseType;
+//}
+//Debug.WriteLine(s);
+
+        public virtual MemberInfo[] GetSerializableMembers(Type type)
         {
             List<MemberInfo> lst = new List<MemberInfo>();
 
@@ -46,7 +62,7 @@ namespace ReflectionSerializer
                     lst.Add(f);
             }
 
-            return lst;
+            return lst.ToArray();
         }
 
         public abstract object Instantiate(Type type);

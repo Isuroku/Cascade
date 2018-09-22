@@ -41,7 +41,7 @@ namespace ReflectionSerializer
                 GetSingleAttributeOrDefault<T>(memberInfo as FieldInfo);
         }
 
-        public override IEnumerable<MemberInfo> GetSerializableMembers(Type type)
+        public override MemberInfo[] GetSerializableMembers(Type type)
         {
             MemberInfo[] properties;
             if (!memberCache.TryGetValue(type.TypeHandle.Value, out properties))

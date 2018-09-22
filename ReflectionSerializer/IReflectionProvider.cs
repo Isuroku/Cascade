@@ -9,7 +9,7 @@ namespace ReflectionSerializer
     public interface IReflectionProvider
     {
         T GetSingleAttributeOrDefault<T>(MemberInfo memberInfo) where T : Attribute, new();
-        IEnumerable<MemberInfo> GetSerializableMembers(Type type);
+        MemberInfo[] GetSerializableMembers(Type type);
         object Instantiate(Type type);
         object GetValue(MemberInfo member, object instance);
         void SetValue(MemberInfo member, object instance, object value);
