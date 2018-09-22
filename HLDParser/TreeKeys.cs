@@ -94,6 +94,7 @@ namespace HLDParser
                 {
                     case ETokenType.Word: be = new CStringValue(this, t.Position, t.Text); break;
                     case ETokenType.Int: be = new CIntValue(this, t.Position, t.GetIntValue()); break;
+                    case ETokenType.UInt: be = new CUIntValue(this, t.Position, t.GetUIntValue()); break;
                     case ETokenType.Float: be = new CFloatValue(this, t.Position, t.GetFloatValue()); break;
                     case ETokenType.True: be = new CBoolValue(this, t.Position, true); break;
                     case ETokenType.False: be = new CBoolValue(this, t.Position, false); break;
@@ -252,6 +253,11 @@ namespace HLDParser
             _name = head.Text;
         }
 
+        public CKey(CBaseKey parent, string inName) : base(parent, SPosition.zero)
+        {
+            _name = inName;
+        }
+
         public CKey(CBaseKey inTemplate) : base(inTemplate)
         {
         }
@@ -310,6 +316,11 @@ namespace HLDParser
         }
 
         public CArrayKey(CBaseKey parent, SPosition pos, int index) : base(parent, pos)
+        {
+            _index = index;
+        }
+
+        public CArrayKey(CBaseKey parent, int index) : base(parent, SPosition.zero)
         {
             _index = index;
         }

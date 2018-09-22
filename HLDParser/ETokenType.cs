@@ -5,6 +5,7 @@ namespace HLDParser
     {
         Word,
         Int,
+        UInt,
         Float,
         True,
         False,

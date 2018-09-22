@@ -110,6 +110,10 @@
       <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
       <Name>HLDParser</Name>
     </ProjectReference>
+    <ProjectReference Include="..\ReflectionSerializer\ReflectionSerializer.csproj">
+      <Project>{6aa90dc2-4fb2-406f-a205-682478520f8e}</Project>
+      <Name>ReflectionSerializer</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

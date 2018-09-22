@@ -143,13 +143,19 @@ namespace HLDParser
 
             bool only_digit = true;
             int point_count = 0;
-            for(int i = 0; i < word.Length && only_digit; ++i)
+            bool minus_was = false;
+            for (int i = 0; i < word.Length && only_digit; ++i)
             {
                 char c = word[i];
+
                 bool point = c == '.';
                 point_count += point ? 1 : 0;
 
-                only_digit = (point || char.IsDigit(c)) && point_count < 2;
+                bool minus = c == '-' && i == 0;
+                if (minus)
+                    minus_was = true;
+
+                only_digit = (minus || point || char.IsDigit(c)) && point_count < 2;
             }
 
             ETokenType tt = ETokenType.Word;
@@ -157,8 +163,15 @@ namespace HLDParser
             {
                 if (point_count > 0)
                     tt = ETokenType.Float;
-                else
-                    tt = ETokenType.Int;
+                else if(word.Length <= 20)
+                {
+                    //long:  -9223372036854775808   to 9223372036854775807
+                    //ulong: 0                      to 18446744073709551615
+                    if (!minus_was && word.Length == 20)
+                        tt = ETokenType.UInt;
+                    else
+                        tt = ETokenType.Int;
+                }
             }
             out_lst.Add(new CToken(tt, word, lnum, world_start_pos + tab_shift));
         }

@@ -32,22 +32,30 @@ namespace HLDParser
             return $"{_token_type} [{_text}]";
         }
 
-        public int GetIntValue()
+        public long GetIntValue()
         {
             if (_token_type != ETokenType.Int)
                 return 0;
             
-            return int.Parse(_text);
+            return long.Parse(_text);
         }
 
-        public float GetFloatValue()
+        public ulong GetUIntValue()
+        {
+            if (_token_type != ETokenType.UInt)
+                return 0;
+
+            return ulong.Parse(_text);
+        }
+
+        public decimal GetFloatValue()
         {
             if (_token_type != ETokenType.Float)
                 return 0;
 
             CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
             ci.NumberFormat.CurrencyDecimalSeparator = ".";
-            return float.Parse(_text, NumberStyles.Any, ci);
+            return decimal.Parse(_text, NumberStyles.Any, ci);
         }
 
         internal void CheckInLine(CToken[] inTokensInLine, int inMyIndex, CLoger inLoger)

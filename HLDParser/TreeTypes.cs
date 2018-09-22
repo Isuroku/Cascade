@@ -66,6 +66,7 @@ namespace HLDParser
         string _value;
         public override EElementType GetElementType() { return EElementType.String; }
         public CStringValue(CBaseKey parent, SPosition pos, string value) : base(parent, pos) { _value = value; }
+        public CStringValue(CBaseKey parent, string value) : base(parent, SPosition.zero) { _value = value; }
         public CStringValue(CStringValue other) : base(other) { _value = other._value; }
         public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
         public override string ToStringShort() { return _value; }
@@ -75,9 +76,10 @@ namespace HLDParser
 
     public class CIntValue : CBaseElement
     {
-        int _value;
+        long _value;
         public override EElementType GetElementType() { return EElementType.Int; }
-        public CIntValue(CBaseKey parent, SPosition pos, int value) : base(parent, pos) { _value = value; }
+        public CIntValue(CBaseKey parent, SPosition pos, long value) : base(parent, pos) { _value = value; }
+        public CIntValue(CBaseKey parent, long value) : base(parent, SPosition.zero) { _value = value; }
         public CIntValue(CIntValue other) : base(other) { _value = other._value; }
         public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
         public override string ToStringShort() { return _value.ToString(); }
@@ -85,11 +87,25 @@ namespace HLDParser
         public override CBaseElement GetCopy() { return new CIntValue(this); }
     }
 
+    public class CUIntValue : CBaseElement
+    {
+        ulong _value;
+        public override EElementType GetElementType() { return EElementType.Int; }
+        public CUIntValue(CBaseKey parent, SPosition pos, ulong value) : base(parent, pos) { _value = value; }
+        public CUIntValue(CBaseKey parent, ulong value) : base(parent, SPosition.zero) { _value = value; }
+        public CUIntValue(CUIntValue other) : base(other) { _value = other._value; }
+        public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
+        public override string ToStringShort() { return _value.ToString(); }
+        public override string GetDebugText() { return ToString(); }
+        public override CBaseElement GetCopy() { return new CUIntValue(this); }
+    }
+
     public class CFloatValue : CBaseElement
     {
-        float _value;
+        decimal _value;
         public override EElementType GetElementType() { return EElementType.Float; }
-        public CFloatValue(CBaseKey parent, SPosition pos, float value) : base(parent, pos) { _value = value; }
+        public CFloatValue(CBaseKey parent, SPosition pos, decimal value) : base(parent, pos) { _value = value; }
+        public CFloatValue(CBaseKey parent, decimal value) : base(parent, SPosition.zero) { _value = value; }
         public CFloatValue(CFloatValue other) : base(other) { _value = other._value; }
         public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
         public override string ToStringShort() { return _value.ToString(); }
@@ -102,6 +118,7 @@ namespace HLDParser
         bool _value;
         public override EElementType GetElementType() { return EElementType.Bool; }
         public CBoolValue(CBaseKey parent, SPosition pos, bool value) : base(parent, pos) { _value = value; }
+        public CBoolValue(CBaseKey parent, bool value) : base(parent, SPosition.zero) { _value = value; }
         public CBoolValue(CBoolValue other) : base(other) { _value = other._value; }
         public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
         public override string ToStringShort() { return _value.ToString(); }

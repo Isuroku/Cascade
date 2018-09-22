@@ -36,6 +36,7 @@
             this.tvTree = new System.Windows.Forms.TreeView();
             this.tbNewFileName = new System.Windows.Forms.TextBox();
             this.btnNewFile = new System.Windows.Forms.Button();
+            this.btnSerializeTests = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // tbSourceText
@@ -112,11 +113,22 @@
             this.btnNewFile.UseVisualStyleBackColor = true;
             this.btnNewFile.Click += new System.EventHandler(this.btnNewFile_Click);
             // 
+            // btnSerializeTests
+            // 
+            this.btnSerializeTests.Location = new System.Drawing.Point(1185, 270);
+            this.btnSerializeTests.Name = "btnSerializeTests";
+            this.btnSerializeTests.Size = new System.Drawing.Size(107, 23);
+            this.btnSerializeTests.TabIndex = 34;
+            this.btnSerializeTests.Text = "SerializeTests";
+            this.btnSerializeTests.UseVisualStyleBackColor = true;
+            this.btnSerializeTests.Click += new System.EventHandler(this.btnSerializeTests_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1304, 831);
+            this.Controls.Add(this.btnSerializeTests);
             this.Controls.Add(this.btnNewFile);
             this.Controls.Add(this.tbNewFileName);
             this.Controls.Add(this.tvTree);
@@ -144,6 +156,7 @@
         private System.Windows.Forms.TreeView tvTree;
         private System.Windows.Forms.TextBox tbNewFileName;
         private System.Windows.Forms.Button btnNewFile;
+        private System.Windows.Forms.Button btnSerializeTests;
     }
 }
 
