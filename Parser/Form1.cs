@@ -201,14 +201,20 @@ namespace Parser
 
         private void btnSerializeTests_Click(object sender, EventArgs e)
         {
-            var serializer = new Serializer(new CachedReflector());
-            SerializedObject serialized = serializer.Serialize(TestObject.CreateTestObject());
-            //SerializedObject serialized = serializer.Serialize(new CTest2());
-            string text = serialized.Stringify();
-            AddLogToRichText(text, Color.Green);
+            var serializer = new CKeySerializer(new CachedReflector());
+            TestObject saved_obj = TestObject.CreateTestObject();
+            CKey root = new CKey(null, "Root");
 
-            CKey root = new CKey(null, serialized.Name);
-            SaveToRoot(root, serialized);
+            serializer.Serialize(saved_obj, root);
+
+            //var serializer = new Serializer(new CachedReflector());
+            //SerializedObject serialized = serializer.Serialize(TestObject.CreateTestObject());
+            ////SerializedObject serialized = serializer.Serialize(new CTest2());
+            //string text = serialized.Stringify();
+            //AddLogToRichText(text, Color.Green);
+
+            //CKey root = new CKey(null, serialized.Name);
+            //SaveToRoot(root, serialized);
 
             tvTree.Nodes.Clear();
             AddToTree(root, tvTree.Nodes);

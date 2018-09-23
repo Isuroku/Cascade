@@ -1,10 +1,10 @@
-﻿using System;
+﻿using ReflectionSerializer;
+using System;
 using System.Collections.Generic;
-using System.Text;
 
 namespace HLDParser
 {
-    public abstract class CBaseKey : CBaseElement
+    public abstract class CBaseKey : CBaseElement, IKey
     {
         protected string _name = string.Empty;
         public virtual string Name { get { return _name; } }
@@ -105,6 +105,27 @@ namespace HLDParser
             }
         }
 
+        #region IKey
+
+        public IKey CreateChildKey(string name)
+        {
+            CKey child = new CKey(this, name);
+            return child;
+        }
+
+        public IKey CreateArrayKey(int index)
+        {
+            CArrayKey child = new CArrayKey(this, index);
+            return child;
+        }
+
+        public void AddValue(long v) { new CIntValue(this, SPosition.zero, v); }
+        public void AddValue(ulong v) { new CUIntValue(this, SPosition.zero, v); }
+        public void AddValue(decimal v) { new CFloatValue(this, SPosition.zero, v); }
+        public void AddValue(bool v) { new CBoolValue(this, SPosition.zero, v); }
+        public void AddValue(string v) { new CStringValue(this, SPosition.zero, v); }
+        #endregion IKey
+
         //internal bool DeleteKey(CBaseKey inKey, ITreeBuildSupport inLoger)
         //{
         //    CBaseKey child_key = FindChildKey(inKey.Name);
@@ -144,7 +165,7 @@ namespace HLDParser
 
         //internal void OverrideKey(CBaseKey key)
         //{
-            
+
         //}
 
         internal void MergeKey(CBaseKey inKey)

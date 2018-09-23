@@ -65,7 +65,7 @@ namespace ReflectionSerializer
             return value is float || value is double || value is decimal;
         }
 
-        public static bool IsDefault(object value)
+        public static bool IsDefault(object value, IReflectionProvider provider)
         {
             if (value is string)
                 return (string)value == string.Empty;
@@ -88,15 +88,13 @@ namespace ReflectionSerializer
             if (type.IsEnum)
                 return (int)value == 0;
 
-            throw new Exception(string.Format("Unknown type {0}", type.Name));
+            if (type.IsHashSet())
+                return (int)provider.GetValue(type
+                    .GetProperty("Count", BindingFlags.ExactBinding | ReflectionHelper.PublicInstanceMembers, null, typeof(int), Type.EmptyTypes, null),
+                    value) == 0;
 
-            //if (type.IsHashSet())
-            //    return (int)reflectionProvider.GetValue(type
-            //        .GetProperty("Count", BindingFlags.ExactBinding | ReflectionHelper.PublicInstanceMembers, null, typeof(int), Type.EmptyTypes, null),
-            //        value) == 0;
-            
 
-            //return value.Equals(reflectionProvider.Instantiate(type));
+            return value.Equals(provider.Instantiate(type));
         }
     }
 }

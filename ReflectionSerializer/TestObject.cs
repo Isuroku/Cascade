@@ -42,6 +42,8 @@ namespace ReflectionSerializer
         public HashSet<TestObject> AggregateSet { get; set; }
         public Dictionary<string, int> AtomicDictionary { get; set; }
         public Dictionary<string, TestObject> HybridDictionary { get; set; }
+
+        [Serialization(Ignore = true)]
         public Dictionary<TestObject, TestObject> AggregateDictionary { get; set; }
 
         #endregion
