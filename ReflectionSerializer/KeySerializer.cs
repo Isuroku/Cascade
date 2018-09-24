@@ -4,6 +4,13 @@ using System.Reflection;
 
 namespace ReflectionSerializer
 {
+    public interface ILogger
+    {
+        void LogWarning(string inText);
+        void LogError(string inText);
+        void Trace(string inText);
+    }
+
     public interface IKey
     {
         IKey CreateChildKey(string name);
@@ -13,6 +20,15 @@ namespace ReflectionSerializer
         void AddValue(decimal v);
         void AddValue(bool v);
         void AddValue(string v);
+
+        string GetName();
+
+        int GetChildCount();
+        IKey GetChild(int index);
+        IKey GetChild(string name);
+
+        int GetValuesCount();
+        string GetValueAsString(int index);
     }
 
     public class CKeySerializer
@@ -24,12 +40,12 @@ namespace ReflectionSerializer
             _reflectionProvider = reflectionProvider;
         }
 
-        public void Serialize(object instance, IKey inKey)
+        public void Serialize(object instance, IKey inKey, ILogger inLogger)
         {
-            Serialize(instance.GetType().Name, 0, instance, typeof(object), inKey);
+            Serialize(instance.GetType().Name, 0, instance, typeof(object), inKey, inLogger);
         }
 
-        void Serialize(string name, int index, object instance, Type declaredType, IKey inKey)
+        void Serialize(string name, int index, object instance, Type declaredType, IKey inKey, ILogger inLogger)
         {
             IKey child;
             if(!string.IsNullOrEmpty(name))
@@ -50,13 +66,13 @@ namespace ReflectionSerializer
                 Type keyDeclaredType = genericArguments[0];
                 Type valueDeclaredType = genericArguments[1];
 
-                if(!keyDeclaredType.IsAtomic())
+                if (!keyDeclaredType.IsAtomic())
+                    inLogger.LogError("Dictionary must simple key.");
+                else
                 {
-                    throw new Exception("Dictionary must simple key.");
+                    foreach (var key in dictionary.Keys)
+                        Serialize(key.ToString(), 0, dictionary[key], valueDeclaredType, child, inLogger);
                 }
-
-                foreach (var key in dictionary.Keys)
-                    Serialize(key.ToString(), 0, dictionary[key], valueDeclaredType, child);
             }
             else if (type.IsGenericCollection())
             {
@@ -73,7 +89,7 @@ namespace ReflectionSerializer
                     int i = 0;
                     foreach (var item in collection)
                     {
-                        Serialize(null, i, item, declaredItemType, child);
+                        Serialize(null, i, item, declaredItemType, child, inLogger);
                         i++;
                     }
                 }
@@ -97,7 +113,7 @@ namespace ReflectionSerializer
 
                     // If no property name is defined, use the short type name
                     string memberName = memberAttr.Name ?? memberInfo.Name;
-                    Serialize(memberName, 0, value, memberType, child);
+                    Serialize(memberName, 0, value, memberType, child, inLogger);
                 }
             }
         }
@@ -114,6 +130,154 @@ namespace ReflectionSerializer
                 key.AddValue(Convert.ToUInt64(instance));
             else
                 key.AddValue(instance.ToString());
+        }
+
+        public T Deserialize<T>(IKey key, ILogger inLogger)
+        {
+            return (T)DeserializeInternal(key, typeof(T), inLogger);
+        }
+
+        public object DeserializeInternal(IKey key, Type declaredType, ILogger inLogger)
+        {
+            Type type = declaredType;
+            object instance;
+
+            // Atomic or null values
+            if (type.IsAtomic())
+            {
+                if (key.GetValuesCount() == 0)
+                {
+                    instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider);
+                }
+                else if (key.GetValuesCount() > 1)
+                {
+                    inLogger.LogError(string.Format("Need one value for type {1}. Key: {0} ", key, type.Name));
+                    instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider);
+                }
+                else
+                {
+                    string key_value = key.GetValueAsString(0);
+                    if (!ReflectionHelper.StringToAtomicValue(key_value, type, out instance))
+                    {
+                        inLogger.LogError(string.Format("Key {0} with value {1} can't convert value to type {2}", key, key_value, type.Name));
+                        instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider);
+                    }
+                }
+            }
+            // Dictionaries
+            else if (type.IsGenericDictionary())
+            {
+                // Instantiate if necessary
+                instance = _reflectionProvider.Instantiate(type);
+
+                var dictionary = instance as IDictionary;
+                Type[] genericArguments = dictionary.GetType().GetGenericArguments();
+                Type keyDeclaredType = genericArguments[0];
+                Type valueDeclaredType = genericArguments[1];
+
+                for(int i = 0; i < key.GetChildCount(); ++i)
+                {
+                    IKey sub_key = key.GetChild(i);
+
+                    object dic_key;
+                    if (!ReflectionHelper.StringToAtomicValue(sub_key.GetName(), keyDeclaredType, out dic_key))
+                    {
+                        inLogger.LogError(string.Format("SubKey {0} for dictionary with key type {1} can't convert value {2}", 
+                            key, keyDeclaredType.Name, sub_key.GetName()));
+                    }
+                    else
+                    {
+                        object dic_value = DeserializeInternal(sub_key, valueDeclaredType, inLogger);
+
+                        if (dictionary.Contains(dic_key))
+                            dictionary.Remove(dic_key);
+                        dictionary.Add(dic_key, dic_value);
+                    }
+                }
+            }
+            // Arrays, lists and sets (any collection excluding dictionaries)
+            else if (type.IsGenericCollection())
+            {
+                bool isArray = type.IsArray;
+                bool isHashSet = type.IsHashSet();
+
+                Type declaredItemType = type.IsArray ? type.GetElementType() : type.GetGenericArguments()[0];
+                bool is_atomic_elems = declaredItemType.IsAtomic();
+                int element_count = is_atomic_elems ? key.GetValuesCount() : key.GetChildCount();
+
+                if (isArray)
+                    instance = Array.CreateInstance(declaredItemType, element_count);
+                else
+                    instance = _reflectionProvider.Instantiate(declaredType) as IEnumerable;
+
+                MethodHandler addToHashSet = null;
+                if (isHashSet)
+                    addToHashSet = _reflectionProvider.GetDelegate(type.GetMethod("Add"));
+
+                for(int i = 0; i < element_count; i++)
+                {
+                    object obj_value;
+                    if (is_atomic_elems)
+                    {
+                        string str_value = key.GetValueAsString(i);
+                        if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
+                        {
+                            inLogger.LogError(string.Format("Key {0} for collection with element type {1} can't convert value {2}",
+                                key, declaredItemType.Name, str_value));
+                        }
+                    }
+                    else
+                    {
+                        IKey sub_key = key.GetChild(i);
+                        obj_value = DeserializeInternal(sub_key, declaredItemType, inLogger);
+                    }
+
+                    if (isArray)
+                        (instance as IList)[i] = obj_value;
+                    else if (isHashSet)
+                        // Potential problem if set already contains key...
+                        addToHashSet(instance, obj_value);
+                    else if (instance is IList)
+                        (instance as IList).Add(obj_value);
+                    else
+                        throw new NotImplementedException();
+                }
+            }
+            // Everything else (serialized with recursive property reflection)
+            else
+            {
+                instance = _reflectionProvider.Instantiate(type);
+
+                foreach (MemberInfo memberInfo in _reflectionProvider.GetSerializableMembers(type))
+                {
+                    var memberAttr = _reflectionProvider.GetSingleAttributeOrDefault<SerializationAttribute>(memberInfo);
+                    if (memberAttr.Ignore)
+                        continue;
+
+                    Type memberType = memberInfo.GetMemberType();
+                    string name = memberAttr.Name ?? memberInfo.Name;
+
+                    IKey sub_key = key.GetChild(name);
+                    if (sub_key == null)
+                    {
+                        if (memberAttr.Required)
+                        {
+                            inLogger.LogError(string.Format("Key {0} doesn't have sub_key with name {1}",
+                                key, name));
+                        }
+                    }
+                    else
+                    {
+                        var readValue = DeserializeInternal(sub_key, memberType, inLogger);
+                        // This dirty check is naive and doesn't provide performance benefits
+                        //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
+                        _reflectionProvider.SetValue(memberInfo, instance, readValue);
+                    }
+                }
+            }
+
+
+            return instance;
         }
     }
 }

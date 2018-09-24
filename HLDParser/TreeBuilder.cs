@@ -22,11 +22,11 @@ namespace HLDParser
         {
             var root = new CKey();
             Collect(root, -1, inLines, 0, inSupport);
-            root.CheckOnOneArray(inSupport.GetLogger());
+            root.CheckOnOneArray();
 
-            if(root.ElementCount == 1 && root[0].GetElementType() == EElementType.Key)
+            if(root.KeyCount == 1 && root.GetKey(0).GetElementType() == EElementType.Key)
             {
-                root = root[0] as CKey;
+                root = root.GetKey(0) as CKey;
                 root.SetParent(null);
             }
 
@@ -60,7 +60,7 @@ namespace HLDParser
                     else
                     {
                         i = Collect(last_key, curr_rank, inLines, i, inSupport);
-                        last_key.CheckOnOneArray(inSupport.GetLogger());
+                        last_key.CheckOnOneArray();
                     }
                 }
                 else
@@ -88,7 +88,7 @@ namespace HLDParser
             if (key == null)
                 return;
 
-            if (key.ElementCount == 0)
+            if (key.IsEmpty)
             {
                 inSupport.GetLogger().LogError(EErrorCode.HeadWithoutValues, key);
                 return;
@@ -219,7 +219,7 @@ namespace HLDParser
 
             CBaseKey parent = key.Parent;
             key.SetParent(null);
-            while (parent != inParent && parent.ElementCount == 0)
+            while (parent != inParent && parent.IsEmpty)
             {
                 CBaseKey prev = parent;
                 parent = parent.Parent;
@@ -264,6 +264,7 @@ namespace HLDParser
                 copy_key.SetParent(arr_key);
             else
                 arr_key.TakeAllElements(copy_key, false);
+            arr_key.CheckOnOneArray();
         }
 
         struct SCommandParams

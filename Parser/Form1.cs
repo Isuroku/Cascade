@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace Parser
 {
-    public partial class Form1 : Form, ILogPrinter, IParserOwner
+    public partial class Form1 : Form, ILogPrinter, IParserOwner, ILogger
     {
         const string _path_to_data = "Data";
 
@@ -73,6 +73,22 @@ namespace Parser
             //tbLog.BeginInvoke(new Action<string>(s => tbLog.AppendText(s)), sres);
             rtLog.BeginInvoke(new Action<string>(s => AddLogToRichText(s, clr)), sres);
             m_uiLogLinesCount++;
+        }
+
+        //ILogger
+        public void LogWarning(string inText)
+        {
+            AddLogToConsole(inText, ELogLevel.Warning);
+        }
+
+        public void LogError(string inText)
+        {
+            AddLogToConsole(inText, ELogLevel.Error);
+        }
+
+        public void Trace(string inText)
+        {
+            AddLogToConsole(inText, ELogLevel.Info);
         }
 
         #endregion //LogWindow Output
@@ -145,26 +161,18 @@ namespace Parser
         void AddToTree(CBaseKey key, TreeNodeCollection nc)
         {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < key.ElementCount; i++)
+            for (int i = 0; i < key.ValuesCount; i++)
             {
-                CBaseElement el = key[i];
-                if (!el.IsKey())
-                    sb.AppendFormat("{0}, ", el.ToStringShort());
+                CBaseElement el = key.GetValue(i);
+                sb.AppendFormat("{0}, ", el);
             }
 
-            TreeNode tn = new TreeNode(string.Format("{0}: {1}", key.ToStringShort(), sb));
+            TreeNode tn = new TreeNode(string.Format("{0}: {1}", key.Name, sb));
             nc.Add(tn);
-            for(int i = 0; i < key.ElementCount; i++)
+            for(int i = 0; i < key.KeyCount; i++)
             {
-                CBaseElement el = key[i];
-                if (el.GetElementType() == EElementType.Key ||
-                    el.GetElementType() == EElementType.ArrayKey)
-                    AddToTree(el as CBaseKey, tn.Nodes);
-                //else
-                //{
-                //    TreeNode etn = new TreeNode(el.GetDebugText());
-                //    tn.Nodes.Add(etn);
-                //}
+                CBaseKey el = key.GetKey(i);
+                AddToTree(el as CBaseKey, tn.Nodes);
             }
         }
 
@@ -205,7 +213,7 @@ namespace Parser
             TestObject saved_obj = TestObject.CreateTestObject();
             CKey root = new CKey(null, "Root");
 
-            serializer.Serialize(saved_obj, root);
+            serializer.Serialize(saved_obj, root, this);
 
             //var serializer = new Serializer(new CachedReflector());
             //SerializedObject serialized = serializer.Serialize(TestObject.CreateTestObject());

@@ -20,7 +20,6 @@ namespace HLDParser
         protected SPosition _pos;
 
         public abstract EElementType GetElementType();
-        public abstract string GetDebugText();
 
         public virtual bool IsKey() { return false; }
 
@@ -57,8 +56,6 @@ namespace HLDParser
         {
             return string.Format("{0} [pos {1}]", GetElementType(), _pos);
         }
-
-        public abstract string ToStringShort();
     }
 
     public class CStringValue : CBaseElement
@@ -68,9 +65,7 @@ namespace HLDParser
         public CStringValue(CBaseKey parent, SPosition pos, string value) : base(parent, pos) { _value = value; }
         public CStringValue(CBaseKey parent, string value) : base(parent, SPosition.zero) { _value = value; }
         public CStringValue(CStringValue other) : base(other) { _value = other._value; }
-        public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
-        public override string ToStringShort() { return _value; }
-        public override string GetDebugText() { return ToString(); }
+        public override string ToString() { return _value; }
         public override CBaseElement GetCopy() { return new CStringValue(this); }
     }
 
@@ -81,9 +76,7 @@ namespace HLDParser
         public CIntValue(CBaseKey parent, SPosition pos, long value) : base(parent, pos) { _value = value; }
         public CIntValue(CBaseKey parent, long value) : base(parent, SPosition.zero) { _value = value; }
         public CIntValue(CIntValue other) : base(other) { _value = other._value; }
-        public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
-        public override string ToStringShort() { return _value.ToString(); }
-        public override string GetDebugText() { return ToString(); }
+        public override string ToString() { return _value.ToString(); }
         public override CBaseElement GetCopy() { return new CIntValue(this); }
     }
 
@@ -94,9 +87,7 @@ namespace HLDParser
         public CUIntValue(CBaseKey parent, SPosition pos, ulong value) : base(parent, pos) { _value = value; }
         public CUIntValue(CBaseKey parent, ulong value) : base(parent, SPosition.zero) { _value = value; }
         public CUIntValue(CUIntValue other) : base(other) { _value = other._value; }
-        public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
-        public override string ToStringShort() { return _value.ToString(); }
-        public override string GetDebugText() { return ToString(); }
+        public override string ToString() { return _value.ToString(); }
         public override CBaseElement GetCopy() { return new CUIntValue(this); }
     }
 
@@ -107,9 +98,7 @@ namespace HLDParser
         public CFloatValue(CBaseKey parent, SPosition pos, decimal value) : base(parent, pos) { _value = value; }
         public CFloatValue(CBaseKey parent, decimal value) : base(parent, SPosition.zero) { _value = value; }
         public CFloatValue(CFloatValue other) : base(other) { _value = other._value; }
-        public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
-        public override string ToStringShort() { return _value.ToString(); }
-        public override string GetDebugText() { return ToString(); }
+        public override string ToString() { return _value.ToString(); }
         public override CBaseElement GetCopy() { return new CFloatValue(this); }
     }
 
@@ -120,9 +109,7 @@ namespace HLDParser
         public CBoolValue(CBaseKey parent, SPosition pos, bool value) : base(parent, pos) { _value = value; }
         public CBoolValue(CBaseKey parent, bool value) : base(parent, SPosition.zero) { _value = value; }
         public CBoolValue(CBoolValue other) : base(other) { _value = other._value; }
-        public override string ToString() { return string.Format("{0} {1}", base.ToString(), _value); }
-        public override string ToStringShort() { return _value.ToString(); }
-        public override string GetDebugText() { return ToString(); }
+        public override string ToString() { return _value.ToString(); }
         public override CBaseElement GetCopy() { return new CBoolValue(this); }
     }
 

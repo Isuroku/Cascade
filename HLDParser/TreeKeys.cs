@@ -9,24 +9,18 @@ namespace HLDParser
         protected string _name = string.Empty;
         public virtual string Name { get { return _name; } }
 
-        protected List<CBaseElement> _elements = new List<CBaseElement>();
-
-        public int ElementCount { get { return _elements.Count; } }
+        protected List<CBaseElement> _values = new List<CBaseElement>();
+        protected List<CBaseKey> _keys = new List<CBaseKey>();
 
         public override bool IsKey() { return true; }
 
-        public CBaseElement this[int index]
-        {
-            get
-            {
-                return _elements[index];
-            }
-        }
+        public CBaseKey GetKey(int index) { return _keys[index]; }
+        public int KeyCount { get { return _keys.Count; } }
 
-        public IEnumerable<CBaseElement> GetElements()
-        {
-            return _elements;
-        }
+        public CBaseElement GetValue(int index) { return _values[index]; }
+        public int ValuesCount { get { return _values.Count; } }
+
+        public bool IsEmpty { get { return _keys.Count == 0 && _values.Count == 0; } }
 
         public CBaseKey(CBaseKey parent, SPosition pos) : base(parent, pos)
         {
@@ -36,7 +30,13 @@ namespace HLDParser
         {
             _name = other._name;
 
-            foreach (var el in other._elements)
+            foreach (var el in other._values)
+            {
+                var copy = el.GetCopy();
+                copy.SetParent(this);
+            }
+
+            foreach (var el in other._keys)
             {
                 var copy = el.GetCopy();
                 copy.SetParent(this);
@@ -45,13 +45,14 @@ namespace HLDParser
 
         public override string ToString()
         {
-            if (_elements.Count == 0)
-                return Name;//string.Format("{0} {1}", base.ToString(), Name);
+            return Name;
+            //if (_elements.Count == 0)
+            //    return Name;//string.Format("{0} {1}", base.ToString(), Name);
 
-            if (_elements.Count == 1)
-                return string.Format("{0}: {1}", Name, _elements[0].ToStringShort());
+            //if (_elements.Count == 1)
+            //    return string.Format("{0}: {1}", Name, _elements[0].ToStringShort());
 
-            return string.Format("{0}: elcount {1}", Name, _elements.Count);
+            //return string.Format("{0}: elcount {1}", Name, _elements.Count);
 
             //StringBuilder sb = new StringBuilder(": ");
 
@@ -60,23 +61,27 @@ namespace HLDParser
             //return string.Format("{0} {1}{2}", base.ToString(), Name, sb);
         }
 
-        public override string ToStringShort() { return Name; }
-
-        public override string GetDebugText()
-        {
-            return string.Format("{0} {1}", base.ToString(), Name);
-        }
+        //public override string GetDebugText()
+        //{
+        //    return string.Format("{0} {1}", base.ToString(), Name);
+        //}
 
         public void SetName(string name) { _name = name; }
 
         public void AddChild(CBaseElement inElement)
         {
-            _elements.Add(inElement);
+            if (inElement.IsKey())
+                _keys.Add(inElement as CBaseKey);
+            else
+                _values.Add(inElement);
         }
 
         public void RemoveChild(CBaseElement inElement)
         {
-            _elements.Remove(inElement);
+            if (inElement.IsKey())
+                _keys.Remove(inElement as CBaseKey);
+            else
+                _values.Remove(inElement);
         }
 
         internal void AddTokenTail(CTokenLine line, ILogger inLoger)
@@ -124,6 +129,15 @@ namespace HLDParser
         public void AddValue(decimal v) { new CFloatValue(this, SPosition.zero, v); }
         public void AddValue(bool v) { new CBoolValue(this, SPosition.zero, v); }
         public void AddValue(string v) { new CStringValue(this, SPosition.zero, v); }
+
+        public string GetName() { return Name; }
+
+        public int GetChildCount() { return _keys.Count; }
+        public IKey GetChild(int index) { return _keys[index]; }
+        public IKey GetChild(string name) { return FindChildKey(name); }
+
+        public int GetValuesCount() { return _values.Count; }
+        public string GetValueAsString(int index) { return _values[index].ToString(); }
         #endregion IKey
 
         //internal bool DeleteKey(CBaseKey inKey, ITreeBuildSupport inLoger)
@@ -170,22 +184,18 @@ namespace HLDParser
 
         internal void MergeKey(CBaseKey inKey)
         {
-            List<CBaseElement> elements_in_key = new List<CBaseElement>(inKey.GetElements());
-            for (int i = 0; i < elements_in_key.Count; i++)
-            {
-                CBaseElement el = elements_in_key[i];
-                if (el.IsKey())
-                {
-                    var in_sub_key = el as CBaseKey;
+            TakeAllValues(inKey, false);
 
-                    CBaseKey child_key = FindChildKey(in_sub_key.Name);
-                    if (child_key != null)
-                        child_key.MergeKey(in_sub_key);
-                    else
-                        in_sub_key.SetParent(this);
-                }
+            List<CBaseKey> keys = new List<CBaseKey>(inKey._keys);
+            for (int i = 0; i < keys.Count; i++)
+            {
+                var in_sub_key = keys[i];
+
+                CBaseKey child_key = FindChildKey(in_sub_key.Name);
+                if (child_key != null)
+                    child_key.MergeKey(in_sub_key);
                 else
-                    el.SetParent(this);
+                    in_sub_key.SetParent(this);
             }
         }
 
@@ -198,15 +208,11 @@ namespace HLDParser
 
         public CBaseKey FindChildKey(string key_name)
         {
-            for(int i = 0; i < _elements.Count; ++i)
+            for(int i = 0; i < _keys.Count; ++i)
             {
-                CBaseElement el = _elements[i];
-                if (el.IsKey())
-                {
-                    CBaseKey k = el as CBaseKey;
-                    if (string.Equals(k.Name, key_name, StringComparison.InvariantCultureIgnoreCase))
-                        return k;
-                }
+                CBaseKey k = _keys[i];
+                if (string.Equals(k.Name, key_name, StringComparison.InvariantCultureIgnoreCase))
+                    return k;
             }
             return null;
         }
@@ -224,33 +230,58 @@ namespace HLDParser
             return key.FindKey(path, index + 1);
         }
 
-        public void TakeAllElements(CBaseKey other_key, bool inClear)
+        void TakeAllValues(CBaseKey other_key, bool inClear)
         {
-            List<CBaseElement> lst = new List<CBaseElement>(other_key._elements);
+            List<CBaseElement> lst = new List<CBaseElement>(other_key._values);
 
             if (inClear)
-                _elements.Clear();
+                _values.Clear();
 
             for (int i = 0; i < lst.Count; ++i)
-            {
                 lst[i].SetParent(this);
-            }
+        }
+
+        void TakeAllKeys(CBaseKey other_key, bool inClear)
+        {
+            List<CBaseKey> lst = new List<CBaseKey>(other_key._keys);
+
+            if (inClear)
+                _keys.Clear();
+
+            for (int i = 0; i < lst.Count; ++i)
+                lst[i].SetParent(this);
+        }
+
+        public void TakeAllElements(CBaseKey other_key, bool inClear)
+        {
+            TakeAllValues(other_key, inClear);
+            TakeAllKeys(other_key, inClear);
         }
 
         public bool IsKeyWithNamePresent(string inName)
         {
-            for (int i = 0; i < _elements.Count; ++i)
-            {
-                CBaseElement el = _elements[i];
-                if (el.GetElementType() == EElementType.ArrayKey ||
-                    el.GetElementType() == EElementType.Key)
-                {
-                    CBaseKey key = el as CBaseKey;
-                    if (string.Equals(key.Name, inName, StringComparison.InvariantCultureIgnoreCase))
-                        return true;
-                }
-            }
-            return false;
+            return FindChildKey(inName) != null;
+        }
+
+        internal void CheckOnOneArray()
+        {
+            if (_keys.Count != 1)
+                return;
+
+            if (_keys[0].GetElementType() != EElementType.ArrayKey)
+                return;
+
+            CArrayKey arr = _keys[0] as CArrayKey;
+
+            if (!string.IsNullOrEmpty(arr.RealName) &&
+                !string.IsNullOrEmpty(_name))
+                return;
+
+            if (!string.IsNullOrEmpty(arr.RealName))
+                _name = arr.RealName;
+
+            TakeAllElements(arr, false);
+            arr.SetParent(null);
         }
     }
 
@@ -286,34 +317,6 @@ namespace HLDParser
         public override CBaseElement GetCopy()
         {
             return new CKey(this);
-        }
-
-        internal void CheckOnOneArray(ILogger inLoger)
-        {
-            int arr_key_count = 0;
-            CArrayKey arr = null;
-            for (int i = 0; i < _elements.Count; i++)
-                if (_elements[i].GetElementType() == EElementType.ArrayKey)
-                {
-                    arr_key_count++;
-                    arr = _elements[i] as CArrayKey;
-                }
-
-            if (arr_key_count == 1)
-            {
-                if (!string.IsNullOrEmpty(arr.RealName))
-                {
-                    if (string.IsNullOrEmpty(_name))
-                        _name = arr.RealName;
-                    else
-                    {
-                        inLoger.LogError(EErrorCode.CantTransferName, this);
-                    }
-                }
-
-                TakeAllElements(arr, false);
-                arr.SetParent(null);
-            }
         }
     }
 

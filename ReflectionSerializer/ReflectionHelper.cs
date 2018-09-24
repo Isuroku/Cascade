@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.ComponentModel;
 
 namespace ReflectionSerializer
 {
@@ -95,6 +96,39 @@ namespace ReflectionSerializer
 
 
             return value.Equals(provider.Instantiate(type));
+        }
+
+        public static object GetDefaultValue(Type inType, IReflectionProvider provider)
+        {
+            if (inType.IsValueType)
+                return provider.Instantiate(inType);
+            return null;
+        }
+
+        public static bool StringToAtomicValue(string inText, Type inType, out object outValue)
+        {
+            if (inType == typeof(string))
+            {
+                outValue = inText;
+                return true;
+            }
+            if (inType.IsEnum)
+            {
+                outValue = Enum.Parse(inType, inText);
+                return true;
+            }
+
+            outValue = 0;
+            TypeConverter converter = TypeDescriptor.GetConverter(inType);
+            try
+            {
+                outValue = converter.ConvertFromString(inText);
+            }
+            catch(NotSupportedException)
+            {
+                return false;
+            }
+            return true;
         }
     }
 }
