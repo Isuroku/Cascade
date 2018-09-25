@@ -18,6 +18,6 @@ namespace ReflectionSerializer
         /// </summary>
         public bool Ignore { get; set; }
 
-        public bool Required { get; set; }
+        //public bool Required { get; set; }
     }
 }

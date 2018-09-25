@@ -37,6 +37,7 @@
             this.tbNewFileName = new System.Windows.Forms.TextBox();
             this.btnNewFile = new System.Windows.Forms.Button();
             this.btnSerializeTests = new System.Windows.Forms.Button();
+            this.btnDeserializeTest = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // tbSourceText
@@ -123,11 +124,22 @@
             this.btnSerializeTests.UseVisualStyleBackColor = true;
             this.btnSerializeTests.Click += new System.EventHandler(this.btnSerializeTests_Click);
             // 
+            // btnDeserializeTest
+            // 
+            this.btnDeserializeTest.Location = new System.Drawing.Point(1185, 299);
+            this.btnDeserializeTest.Name = "btnDeserializeTest";
+            this.btnDeserializeTest.Size = new System.Drawing.Size(107, 23);
+            this.btnDeserializeTest.TabIndex = 35;
+            this.btnDeserializeTest.Text = "Deserialize Test";
+            this.btnDeserializeTest.UseVisualStyleBackColor = true;
+            this.btnDeserializeTest.Click += new System.EventHandler(this.btnDeserializeTest_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1304, 831);
+            this.Controls.Add(this.btnDeserializeTest);
             this.Controls.Add(this.btnSerializeTests);
             this.Controls.Add(this.btnNewFile);
             this.Controls.Add(this.tbNewFileName);
@@ -157,6 +169,7 @@
         private System.Windows.Forms.TextBox tbNewFileName;
         private System.Windows.Forms.Button btnNewFile;
         private System.Windows.Forms.Button btnSerializeTests;
+        private System.Windows.Forms.Button btnDeserializeTest;
     }
 }
 

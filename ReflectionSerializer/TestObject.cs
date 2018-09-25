@@ -24,8 +24,8 @@ namespace ReflectionSerializer
         public SomeStruct AggregateStruct { get; set; }
         public object Polymorphic { get; set; }
 
-        [Serialization(Required = true)]
-        public TestObject Required { get; set; }
+        //[Serialization(Required = true)]
+        //public TestObject Required { get; set; }
 
         [Serialization(Name = "AnotherName")]
         public TestObject Renamed { get; set; }
@@ -112,7 +112,7 @@ namespace ReflectionSerializer
                 NonReadable = 4,
                 Nullable = 6,
                 InternalField = 8,
-                Required = new TestObject(),
+                //Required = new TestObject(),
                 Renamed = new TestObject(),
                 Polymorphic = new TestObject()
             };

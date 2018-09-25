@@ -193,7 +193,17 @@ namespace Parser
             lbSourceFiles.SelectedIndex = lbSourceFiles.Items.Count - 1;
         }
 
-        class CTest2
+        class CTest2Base
+        {
+            private float _float;
+
+            public CTest2Base()
+            {
+                _float = 3.1415f;
+            }
+        }
+
+        class CTest2: CTest2Base
         {
             private int _int;
 
@@ -207,13 +217,16 @@ namespace Parser
             }
         }
 
+        CKey _test_serialize;
+
         private void btnSerializeTests_Click(object sender, EventArgs e)
         {
             var serializer = new CKeySerializer(new CachedReflector());
-            TestObject saved_obj = TestObject.CreateTestObject();
-            CKey root = new CKey(null, "Root");
+            //TestObject saved_obj = TestObject.CreateTestObject();
+            CTest2 saved_obj = new CTest2();
+            _test_serialize = new CKey(null, "TestObject");
 
-            serializer.Serialize(saved_obj, root, this);
+            serializer.Serialize(saved_obj, _test_serialize, this);
 
             //var serializer = new Serializer(new CachedReflector());
             //SerializedObject serialized = serializer.Serialize(TestObject.CreateTestObject());
@@ -225,7 +238,7 @@ namespace Parser
             //SaveToRoot(root, serialized);
 
             tvTree.Nodes.Clear();
-            AddToTree(root, tvTree.Nodes);
+            AddToTree(_test_serialize, tvTree.Nodes);
             tvTree.ExpandAll();
         }
 
@@ -310,6 +323,12 @@ namespace Parser
                 return;
             }
             var string_value = new CStringValue(key, instance.Value.ToString());
+        }
+
+        private void btnDeserializeTest_Click(object sender, EventArgs e)
+        {
+            var serializer = new CKeySerializer(new CachedReflector());
+            TestObject saved_obj = serializer.Deserialize<TestObject>(_test_serialize, this);
         }
     }
 }

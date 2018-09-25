@@ -73,7 +73,8 @@ namespace ReflectionSerializer
                     object value = reflectionProvider.GetValue(memberInfo, instance);
 
                     // Optional properties are skipped when serializing a default or null value
-                    if (!memberAttr.Required && (value == null || IsDefault(value)))
+                    //if (!memberAttr.Required && (value == null || IsDefault(value)))
+                    if (value == null || IsDefault(value))
                         continue;
 
                     // If no property name is defined, use the short type name
@@ -190,12 +191,13 @@ namespace ReflectionSerializer
                     object currentValue = reflectionProvider.GetValue(memberInfo, instance);
                     bool valueFound = serializedAggregation.Children.ContainsKey(name);
 
-                    if (!valueFound)
-                    {
-                        if (memberAttr.Required)
-                            throw new InvalidOperationException(string.Format("MissingRequiredValue: {0} {1} ", name, type.Name));
-                    }
-                    else
+                    //if (!valueFound)
+                    //{
+                    //    if (memberAttr.Required)
+                    //        throw new InvalidOperationException(string.Format("MissingRequiredValue: {0} {1} ", name, type.Name));
+                    //}
+                    //else
+                    if (valueFound)
                     {
                         var readValue = DeserializeInternal(serializedAggregation[name], memberType, currentValue);
                         // This dirty check is naive and doesn't provide performance benefits

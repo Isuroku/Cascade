@@ -42,22 +42,16 @@ namespace ReflectionSerializer
 
         public void Serialize(object instance, IKey inKey, ILogger inLogger)
         {
-            Serialize(instance.GetType().Name, 0, instance, typeof(object), inKey, inLogger);
+            Serialize(instance, typeof(object), inKey, inLogger);
         }
 
-        void Serialize(string name, int index, object instance, Type declaredType, IKey inKey, ILogger inLogger)
+        void Serialize(object instance, Type declaredType, IKey inKey, ILogger inLogger)
         {
-            IKey child;
-            if(!string.IsNullOrEmpty(name))
-                child = inKey.CreateChildKey(name);
-            else
-                child = inKey.CreateArrayKey(index);
-
             Type type = instance == null ? declaredType : instance.GetType();
 
             if (instance == null || type.IsAtomic())
             {
-                AddValueToKey(child, instance);
+                AddValueToKey(inKey, instance);
             }
             else if (type.IsGenericDictionary())
             {
@@ -71,7 +65,10 @@ namespace ReflectionSerializer
                 else
                 {
                     foreach (var key in dictionary.Keys)
-                        Serialize(key.ToString(), 0, dictionary[key], valueDeclaredType, child, inLogger);
+                    {
+                        IKey child = inKey.CreateChildKey(key.ToString());
+                        Serialize(dictionary[key], valueDeclaredType, child, inLogger);
+                    }
                 }
             }
             else if (type.IsGenericCollection())
@@ -82,14 +79,15 @@ namespace ReflectionSerializer
                 if (declaredItemType.IsAtomic())
                 {
                     foreach (var item in collection)
-                        AddValueToKey(child, item);
+                        AddValueToKey(inKey, item);
                 }
                 else
                 {
                     int i = 0;
                     foreach (var item in collection)
                     {
-                        Serialize(null, i, item, declaredItemType, child, inLogger);
+                        IKey child = inKey.CreateArrayKey(i);
+                        Serialize(item, declaredItemType, child, inLogger);
                         i++;
                     }
                 }
@@ -108,13 +106,24 @@ namespace ReflectionSerializer
                     object value = _reflectionProvider.GetValue(memberInfo, instance);
 
                     // Optional properties are skipped when serializing a default or null value
-                    if (!memberAttr.Required && (value == null || ReflectionHelper.IsDefault(value, _reflectionProvider)))
+                    //if (!memberAttr.Required && (value == null || ReflectionHelper.IsDefault(value, _reflectionProvider)))
+                    if (value == null || ReflectionHelper.IsDefault(value, _reflectionProvider))
                         continue;
 
                     // If no property name is defined, use the short type name
                     string memberName = memberAttr.Name ?? memberInfo.Name;
-                    Serialize(memberName, 0, value, memberType, child, inLogger);
+                    IKey child = inKey.CreateChildKey(memberName);
+                    Serialize(value, memberType, child, inLogger);
                 }
+
+                if(inKey.GetChildCount() == 0)
+                    inKey.AddValue("default");
+            }
+
+            // Write the runtime type if different (except nullables since they get unboxed)
+            if (!declaredType.IsNullable() && type != declaredType)
+            {
+                inKey.CreateChildKey("RealObjectType").AddValue(type.FullName);
             }
         }
 
@@ -246,32 +255,45 @@ namespace ReflectionSerializer
             // Everything else (serialized with recursive property reflection)
             else
             {
+                IKey type_key = key.GetChild("RealObjectType");
+                if (type_key != null)
+                {
+                    string type_name = type_key.GetValueAsString(0);
+                    Type obj_type = Type.GetType(type_name, false);
+                    if (obj_type != null)
+                        type = obj_type;
+                }
+
                 instance = _reflectionProvider.Instantiate(type);
 
-                foreach (MemberInfo memberInfo in _reflectionProvider.GetSerializableMembers(type))
+                if (key.GetChildCount() != 0)
                 {
-                    var memberAttr = _reflectionProvider.GetSingleAttributeOrDefault<SerializationAttribute>(memberInfo);
-                    if (memberAttr.Ignore)
-                        continue;
-
-                    Type memberType = memberInfo.GetMemberType();
-                    string name = memberAttr.Name ?? memberInfo.Name;
-
-                    IKey sub_key = key.GetChild(name);
-                    if (sub_key == null)
+                    foreach (MemberInfo memberInfo in _reflectionProvider.GetSerializableMembers(type))
                     {
-                        if (memberAttr.Required)
+                        var memberAttr = _reflectionProvider.GetSingleAttributeOrDefault<SerializationAttribute>(memberInfo);
+                        if (memberAttr.Ignore)
+                            continue;
+
+                        Type memberType = memberInfo.GetMemberType();
+                        string name = memberAttr.Name ?? memberInfo.Name;
+
+                        IKey sub_key = key.GetChild(name);
+                        //if (sub_key == null)
+                        //{
+                        //    if (memberAttr.Required)
+                        //    {
+                        //        inLogger.LogError(string.Format("Key {0} doesn't have sub_key with name {1}",
+                        //            key, name));
+                        //    }
+                        //}
+                        //else
+                        if (sub_key != null)
                         {
-                            inLogger.LogError(string.Format("Key {0} doesn't have sub_key with name {1}",
-                                key, name));
+                            var readValue = DeserializeInternal(sub_key, memberType, inLogger);
+                            // This dirty check is naive and doesn't provide performance benefits
+                            //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
+                            _reflectionProvider.SetValue(memberInfo, instance, readValue);
                         }
-                    }
-                    else
-                    {
-                        var readValue = DeserializeInternal(sub_key, memberType, inLogger);
-                        // This dirty check is naive and doesn't provide performance benefits
-                        //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
-                        _reflectionProvider.SetValue(memberInfo, instance, readValue);
                     }
                 }
             }

@@ -42,16 +42,23 @@ namespace ReflectionSerializer
 //}
 //Debug.WriteLine(s);
 
-        public virtual MemberInfo[] GetSerializableMembers(Type type)
+        private void CollectSerializableMembers(Type type, List<MemberInfo> outMembers)
         {
-            List<MemberInfo> lst = new List<MemberInfo>();
+            if (type.BaseType != null)
+                CollectSerializableMembers(type.BaseType, outMembers);
 
             PropertyInfo[] properties = type.GetProperties(CollectMembers);
-            for(int i = 0; i < properties.Length; i++)
+            for (int i = 0; i < properties.Length; i++)
             {
                 PropertyInfo p = properties[i];
-                if (p.GetGetMethod() != null && p.GetSetMethod() != null && p.GetGetMethod().GetParameters().Length == 0)
-                    lst.Add(p);
+
+                MethodInfo get_info = p.GetGetMethod();
+                int get_params_count = get_info != null ? get_info.GetParameters().Length : 0;
+
+                MethodInfo set_info = p.GetSetMethod();
+
+                if (get_info != null && set_info != null && get_params_count == 0)
+                    outMembers.Add(p);
             }
 
             FieldInfo[] fields = type.GetFields(CollectMembers);
@@ -59,9 +66,14 @@ namespace ReflectionSerializer
             {
                 FieldInfo f = fields[i];
                 if (!f.IsDefined(typeof(CompilerGeneratedAttribute), false))
-                    lst.Add(f);
+                    outMembers.Add(f);
             }
+        }
 
+        public virtual MemberInfo[] GetSerializableMembers(Type type)
+        {
+            List<MemberInfo> lst = new List<MemberInfo>();
+            CollectSerializableMembers(type, lst);
             return lst.ToArray();
         }
 
