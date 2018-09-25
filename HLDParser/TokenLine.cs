@@ -127,7 +127,7 @@ namespace HLDParser
             if (_tokens.Length == 0)
                 return;
 
-            if (_tokens[0].TokenType != ETokenType.Sharp)
+            if (_tokens[0].TokenType != CTokenFinder.COMMAND_PREFIX)
                 return;
 
             if (_tokens.Length < 2)

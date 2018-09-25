@@ -1,6 +1,7 @@
 ﻿using ReflectionSerializer;
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace HLDParser
 {
@@ -283,6 +284,97 @@ namespace HLDParser
             TakeAllElements(arr, false);
             arr.SetParent(null);
         }
+
+        public override string GetStringForSave()
+        {
+            return Name;
+        }
+
+        void AppendIntent(StringBuilder sb, int intent)
+        {
+            for (int i = 0; i < intent; ++i)
+                sb.Append('\t');
+        }
+
+        bool IsKeyWithNamePresent()
+        {
+            for (int i = 0; i < _keys.Count; ++i)
+                if (!string.IsNullOrEmpty(_keys[i]._name))
+                    return true;
+            return false;
+        }
+
+        protected void SaveToString(StringBuilder sb, int intent, int parent_index)
+        {
+            if (sb.Length > 0)
+                sb.Append(Environment.NewLine);
+
+            if (parent_index > 0 && GetElementType() == EElementType.ArrayKey && KeyCount > 0)
+            {
+                AppendIntent(sb, intent);
+                string rd_str = CTokenFinder.Instance.GetTokenString(ETokenType.RecordDivider);
+                sb.Append(rd_str);
+                sb.Append(Environment.NewLine);
+            }
+
+            bool write_head = false;
+            if (!string.IsNullOrEmpty(_name))
+                write_head = true;
+            else if(_parent != null && _parent.IsKeyWithNamePresent())
+                write_head = true;
+
+            int new_int = intent;
+            if (write_head)
+            {
+                AppendIntent(sb, intent);
+
+                if (GetElementType() == EElementType.ArrayKey && _parent != null && _parent.KeyCount > 1)
+                {
+                    if(!string.IsNullOrEmpty(_name))
+                        sb.AppendFormat("{0}{1} {2}", CTokenFinder.Instance.GetTokenString(CTokenFinder.COMMAND_PREFIX), ECommands.Name, _name);
+                }
+                else
+                {
+                    sb.AppendFormat("{0}: ", Name);
+                    new_int = intent + 1;
+                }
+            }
+            //else if (GetElementType() == EElementType.ArrayKey && !string.IsNullOrEmpty(_name))
+            //{
+            //    if (sb.Length > 0)
+            //        sb.Append(Environment.NewLine);
+
+            //    AppendIntent(sb, intent);
+
+            //    sb.AppendFormat("{0}{1} {2}", CTokenFinder.Instance.GetTokenString(CTokenFinder.COMMAND_PREFIX), ECommands.Name, _name);
+            //}
+
+            string values = string.Empty;
+            if(_values.Count > 0)
+            {
+                bool vert = _values.Count > 3 && _keys.Count == 0;
+
+                if (!vert && !write_head)
+                    AppendIntent(sb, intent);
+
+                for (int i = 0; i < _values.Count; ++i)
+                {
+                    if (vert)
+                    {
+                        sb.Append(Environment.NewLine);
+                        AppendIntent(sb, new_int);
+                    }
+                    
+                    sb.Append(_values[i].GetStringForSave());
+
+                    if (!vert && i < _values.Count - 1)
+                        sb.Append(", ");
+                }
+            }
+
+            for (int i = 0; i < _keys.Count; ++i)
+                _keys[i].SaveToString(sb, new_int, i);
+        }
     }
 
     public class CKey : CBaseKey
@@ -317,6 +409,13 @@ namespace HLDParser
         public override CBaseElement GetCopy()
         {
             return new CKey(this);
+        }
+
+        public string SaveToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            SaveToString(sb, 0, 0);
+            return sb.ToString();
         }
     }
 

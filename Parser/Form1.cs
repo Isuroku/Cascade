@@ -17,6 +17,8 @@ namespace Parser
 
         CParserManager _parser;
 
+        CKey _test_serialize;
+
         public Form1()
         {
             InitializeComponent();
@@ -141,9 +143,9 @@ namespace Parser
 
             tvTree.Nodes.Clear();
 
-            CKey root = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text);
+            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text);
 
-            CTokenLine[] lines = _parser.GetLineByRoot(root);
+            CTokenLine[] lines = _parser.GetLineByRoot(_test_serialize);
 
             StringBuilder sb = new StringBuilder();
 
@@ -154,7 +156,7 @@ namespace Parser
             
             tbResult.Text = sb.ToString();
 
-            AddToTree(root, tvTree.Nodes);
+            AddToTree(_test_serialize, tvTree.Nodes);
             tvTree.ExpandAll();
         }
 
@@ -167,8 +169,13 @@ namespace Parser
                 sb.AppendFormat("{0}, ", el);
             }
 
-            TreeNode tn = new TreeNode(string.Format("{0}: {1}", key.Name, sb));
+            string arr_flag = string.Empty;
+            if(key.GetElementType() == EElementType.ArrayKey)
+                arr_flag = "[a]";
+
+            TreeNode tn = new TreeNode(string.Format("{0}{1}: {2}", key.Name, arr_flag, sb));
             nc.Add(tn);
+
             for(int i = 0; i < key.KeyCount; i++)
             {
                 CBaseKey el = key.GetKey(i);
@@ -178,19 +185,30 @@ namespace Parser
 
         private void btnNewFile_Click(object sender, EventArgs e)
         {
-            string new_file_name = tbNewFileName.Text + ".txt";
+            SaveTextToFile("", tbNewFileName.Text, true);
+        }
+
+        void SaveTextToFile(string inText, string inFileName, bool inCheckExists)
+        {
+            string new_file_name = inFileName + ".txt";
             string path = Path.Combine(Application.StartupPath, _path_to_data, new_file_name);
-            
-            if(File.Exists(path))
+
+            if (inCheckExists && File.Exists(path))
             {
                 AddLogToConsole(string.Format("File {0} already exists", new_file_name), ELogLevel.Error);
                 return;
             }
 
-            File.WriteAllText(path, "", Encoding.UTF8);
+            File.WriteAllText(path, inText, Encoding.UTF8);
 
-            lbSourceFiles.Items.Add(new_file_name);
-            lbSourceFiles.SelectedIndex = lbSourceFiles.Items.Count - 1;
+            int index = lbSourceFiles.Items.IndexOf(new_file_name);
+            if (index == -1)
+            {
+                lbSourceFiles.Items.Add(new_file_name);
+                lbSourceFiles.SelectedIndex = lbSourceFiles.Items.Count - 1;
+            }
+            else
+                lbSourceFiles.SelectedIndex = index;
         }
 
         class CTest2Base
@@ -216,8 +234,6 @@ namespace Parser
                 PubProp = 11;
             }
         }
-
-        CKey _test_serialize;
 
         private void btnSerializeTests_Click(object sender, EventArgs e)
         {
@@ -329,6 +345,17 @@ namespace Parser
         {
             var serializer = new CKeySerializer(new CachedReflector());
             TestObject saved_obj = serializer.Deserialize<TestObject>(_test_serialize, this);
+        }
+
+        private void btnSaveToFile_Click(object sender, EventArgs e)
+        {
+            if(_test_serialize == null)
+            {
+                AddLogToConsole("Test Serialize doesnt present.", ELogLevel.Error);
+                return;
+            }
+            string text = _test_serialize.SaveToString();
+            SaveTextToFile(text, "SerializeTest", false);
         }
     }
 }

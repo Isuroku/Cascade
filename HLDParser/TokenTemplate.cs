@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 namespace HLDParser
 {
@@ -50,6 +51,8 @@ namespace HLDParser
         }
 
         const int TAB_LENGTH = 4;
+
+        public const ETokenType COMMAND_PREFIX = ETokenType.Sharp;
 
         List<ITokenTemplate> _templates = new List<ITokenTemplate>();
 
@@ -190,6 +193,14 @@ namespace HLDParser
             comment = new CToken(ETokenType.Comment, scomm, inSentense.LineNumber, pos + inSentense.Rank * TAB_LENGTH);
 
             return comment;
+        }
+
+        public string GetTokenString(ETokenType tt)
+        {
+            ITokenTemplate token = _templates.Find(t => t.GetTokenType() == tt);
+            if (token == null)
+                return string.Empty;
+            return token.GetText();
         }
     }
 }

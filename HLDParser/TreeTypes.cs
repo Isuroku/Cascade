@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
+using System.Threading;
 
 namespace HLDParser
 {
@@ -18,6 +20,17 @@ namespace HLDParser
     {
         protected CBaseKey _parent;
         protected SPosition _pos;
+
+        static CultureInfo _custom_culture;
+        protected static CultureInfo GetCultureInfo()
+        {
+            if (_custom_culture == null)
+            {
+                _custom_culture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+                _custom_culture.NumberFormat.NumberDecimalSeparator = ".";
+            }
+            return _custom_culture;
+        }
 
         public abstract EElementType GetElementType();
 
@@ -56,6 +69,8 @@ namespace HLDParser
         {
             return string.Format("{0} [pos {1}]", GetElementType(), _pos);
         }
+
+        public abstract string GetStringForSave();
     }
 
     public class CStringValue : CBaseElement
@@ -67,6 +82,11 @@ namespace HLDParser
         public CStringValue(CStringValue other) : base(other) { _value = other._value; }
         public override string ToString() { return _value; }
         public override CBaseElement GetCopy() { return new CStringValue(this); }
+
+        public override string GetStringForSave()
+        {
+            return string.Format("{0}{1}{2}", "\"", _value, "\"");
+        }
     }
 
     public class CIntValue : CBaseElement
@@ -78,6 +98,11 @@ namespace HLDParser
         public CIntValue(CIntValue other) : base(other) { _value = other._value; }
         public override string ToString() { return _value.ToString(); }
         public override CBaseElement GetCopy() { return new CIntValue(this); }
+
+        public override string GetStringForSave()
+        {
+            return _value.ToString();
+        }
     }
 
     public class CUIntValue : CBaseElement
@@ -89,6 +114,11 @@ namespace HLDParser
         public CUIntValue(CUIntValue other) : base(other) { _value = other._value; }
         public override string ToString() { return _value.ToString(); }
         public override CBaseElement GetCopy() { return new CUIntValue(this); }
+
+        public override string GetStringForSave()
+        {
+            return _value.ToString();
+        }
     }
 
     public class CFloatValue : CBaseElement
@@ -100,6 +130,11 @@ namespace HLDParser
         public CFloatValue(CFloatValue other) : base(other) { _value = other._value; }
         public override string ToString() { return _value.ToString(); }
         public override CBaseElement GetCopy() { return new CFloatValue(this); }
+
+        public override string GetStringForSave()
+        {
+            return _value.ToString(GetCultureInfo());
+        }
     }
 
     public class CBoolValue : CBaseElement
@@ -111,6 +146,11 @@ namespace HLDParser
         public CBoolValue(CBoolValue other) : base(other) { _value = other._value; }
         public override string ToString() { return _value.ToString(); }
         public override CBaseElement GetCopy() { return new CBoolValue(this); }
+
+        public override string GetStringForSave()
+        {
+            return _value.ToString();
+        }
     }
 
 
