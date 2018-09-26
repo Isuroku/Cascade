@@ -5,17 +5,30 @@ using System.Text;
 
 namespace HLDParser
 {
-    public abstract class CBaseKey : CBaseElement, IKey
+    public class CKey : CBaseElement, IKey
     {
+        public bool IsArray { get; private set; }
+
         protected string _name = string.Empty;
-        public virtual string Name { get { return _name; } }
+
+        public virtual string Name
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(_name))
+                    return _name;
+                if (IsArray)
+                    return GetIndex().ToString();
+                return string.Empty;
+            }
+        }
 
         protected List<CBaseElement> _values = new List<CBaseElement>();
-        protected List<CBaseKey> _keys = new List<CBaseKey>();
+        protected List<CKey> _keys = new List<CKey>();
 
         public override bool IsKey() { return true; }
 
-        public CBaseKey GetKey(int index) { return _keys[index]; }
+        public CKey GetKey(int index) { return _keys[index]; }
         public int KeyCount { get { return _keys.Count; } }
 
         public CBaseElement GetValue(int index) { return _values[index]; }
@@ -23,11 +36,61 @@ namespace HLDParser
 
         public bool IsEmpty { get { return _keys.Count == 0 && _values.Count == 0; } }
 
-        public CBaseKey(CBaseKey parent, SPosition pos) : base(parent, pos)
+        public override EElementType GetElementType() { return EElementType.Key; }
+
+        public static CKey Create(CKey parent, SPosition pos)
         {
+            return new CKey(parent, string.Empty, false, pos);
         }
 
-        public CBaseKey(CBaseKey other) : base(other)
+        internal static CKey Create(CKey parent, CTokenLine line, ILogger inLoger)
+        {
+            return new CKey(parent, line, inLoger);
+        }
+
+        internal static CKey CreateCopy(CKey other)
+        {
+            return new CKey(other);
+        }
+
+        public static CKey CreateArrayKey(CKey parent)
+        {
+            return new CKey(parent, string.Empty, true, SPosition.zero);
+        }
+
+        public static CKey CreateArrayKey(CKey parent, SPosition pos)
+        {
+            return new CKey(parent, string.Empty, true, pos);
+        }
+
+        public static CKey CreateRoot()
+        {
+            return new CKey(null, string.Empty, false, SPosition.zero);
+        }
+
+        public static CKey CreateRoot(string inName)
+        {
+            return new CKey(null, inName, false, SPosition.zero);
+        }
+
+        public static CKey CreateChild(CKey parent, string inName)
+        {
+            return new CKey(parent, inName, false, SPosition.zero);
+        }
+
+        private CKey(CKey parent, string inName, bool inArray, SPosition pos) : base(parent, pos)
+        {
+            _name = inName;
+            IsArray = inArray;
+        }
+
+        private CKey(CKey parent, CTokenLine line, ILogger inLoger) : base(parent, line.Head.Position)
+        {
+            _name = line.Head.Text;
+            AddTokenTail(line, false, inLoger);
+        }
+
+        private CKey(CKey other) : base(other)
         {
             _name = other._name;
 
@@ -44,35 +107,22 @@ namespace HLDParser
             }
         }
 
+        public override CBaseElement GetCopy()
+        {
+            return CreateCopy(this);
+        }
+
         public override string ToString()
         {
             return Name;
-            //if (_elements.Count == 0)
-            //    return Name;//string.Format("{0} {1}", base.ToString(), Name);
-
-            //if (_elements.Count == 1)
-            //    return string.Format("{0}: {1}", Name, _elements[0].ToStringShort());
-
-            //return string.Format("{0}: elcount {1}", Name, _elements.Count);
-
-            //StringBuilder sb = new StringBuilder(": ");
-
-            //_elements.ForEach(e => sb.AppendFormat("{0} ", e.GetDebugText()));
-
-            //return string.Format("{0} {1}{2}", base.ToString(), Name, sb);
         }
-
-        //public override string GetDebugText()
-        //{
-        //    return string.Format("{0} {1}", base.ToString(), Name);
-        //}
 
         public void SetName(string name) { _name = name; }
 
         public void AddChild(CBaseElement inElement)
         {
             if (inElement.IsKey())
-                _keys.Add(inElement as CBaseKey);
+                _keys.Add(inElement as CKey);
             else
                 _values.Add(inElement);
         }
@@ -80,7 +130,7 @@ namespace HLDParser
         public void RemoveChild(CBaseElement inElement)
         {
             if (inElement.IsKey())
-                _keys.Remove(inElement as CBaseKey);
+                _keys.Remove(inElement as CKey);
             else
                 _values.Remove(inElement);
         }
@@ -117,17 +167,27 @@ namespace HLDParser
             }
         }
 
+        public int GetIndex()
+        {
+            for (int i = 0; i < _parent.KeyCount; i++)
+            {
+                if (_parent.GetKey(i) == this)
+                    return i;
+            }
+            return -1;
+        }
+
         #region IKey
 
         public IKey CreateChildKey(string name)
         {
-            CKey child = new CKey(this, name);
+            CKey child = CreateChild(this, name);
             return child;
         }
 
         public IKey CreateArrayKey()
         {
-            CArrayKey child = new CArrayKey(this);
+            CKey child = CreateArrayKey(this);
             return child;
         }
 
@@ -147,58 +207,16 @@ namespace HLDParser
         public string GetValueAsString(int index) { return _values[index].ToString(); }
         #endregion IKey
 
-        //internal bool DeleteKey(CBaseKey inKey, ITreeBuildSupport inLoger)
-        //{
-        //    CBaseKey child_key = FindChildKey(inKey.Name);
-
-        //    if(child_key == null)
-        //    {
-        //        inLoger.LogError(EErrorCode.CantFindKey, inKey.Name, Position.Line);
-        //        return false;
-        //    }
-
-        //    List<CBaseKey> in_sub_keys = new List<CBaseKey>();
-        //    for(int i = 0; i < inKey.ElementCount; i++)
-        //    {
-        //        CBaseElement el = inKey[i];
-        //        if (el.IsKey())
-        //            in_sub_keys.Add(el as CBaseKey);
-        //    }
-
-        //    if(in_sub_keys.Count > 0)
-        //    {
-        //        for (int i = 0; i < in_sub_keys.Count; i++)
-        //        {
-        //            CBaseKey in_sub_key = in_sub_keys[i];
-        //            bool res = child_key.DeleteKey(in_sub_key, inLoger);
-        //        }
-
-        //        if(child_key.ElementCount == 0)
-        //            child_key.SetParent(null);
-        //        return true;
-        //    }
-        //    else
-        //    {
-        //        child_key.SetParent(null);
-        //        return true;
-        //    }
-        //}
-
-        //internal void OverrideKey(CBaseKey key)
-        //{
-
-        //}
-
-        internal void MergeKey(CBaseKey inKey)
+        internal void MergeKey(CKey inKey)
         {
             TakeAllValues(inKey, false);
 
-            List<CBaseKey> keys = new List<CBaseKey>(inKey._keys);
+            List<CKey> keys = new List<CKey>(inKey._keys);
             for (int i = 0; i < keys.Count; i++)
             {
                 var in_sub_key = keys[i];
 
-                CBaseKey child_key = FindChildKey(in_sub_key.Name);
+                CKey child_key = FindChildKey(in_sub_key.Name);
                 if (child_key != null)
                     child_key.MergeKey(in_sub_key);
                 else
@@ -206,29 +224,29 @@ namespace HLDParser
             }
         }
 
-        public CBaseKey GetRoot()
+        public CKey GetRoot()
         {
             if (_parent == null)
                 return this;
             return _parent.GetRoot();
         }
 
-        public CBaseKey FindChildKey(string key_name)
+        public CKey FindChildKey(string key_name)
         {
-            for(int i = 0; i < _keys.Count; ++i)
+            for (int i = 0; i < _keys.Count; ++i)
             {
-                CBaseKey k = _keys[i];
+                CKey k = _keys[i];
                 if (string.Equals(k.Name, key_name, StringComparison.InvariantCultureIgnoreCase))
                     return k;
             }
             return null;
         }
 
-        public CBaseKey FindKey(string[] path, int index = 0)
+        public CKey FindKey(string[] path, int index = 0)
         {
             string need_name = path[index];
 
-            CBaseKey key = FindChildKey(need_name);
+            CKey key = FindChildKey(need_name);
             if (key == null)
                 return null;
 
@@ -237,7 +255,7 @@ namespace HLDParser
             return key.FindKey(path, index + 1);
         }
 
-        void TakeAllValues(CBaseKey other_key, bool inClear)
+        void TakeAllValues(CKey other_key, bool inClear)
         {
             List<CBaseElement> lst = new List<CBaseElement>(other_key._values);
 
@@ -248,9 +266,9 @@ namespace HLDParser
                 lst[i].SetParent(this);
         }
 
-        void TakeAllKeys(CBaseKey other_key, bool inClear)
+        void TakeAllKeys(CKey other_key, bool inClear)
         {
-            List<CBaseKey> lst = new List<CBaseKey>(other_key._keys);
+            List<CKey> lst = new List<CKey>(other_key._keys);
 
             if (inClear)
                 _keys.Clear();
@@ -259,7 +277,7 @@ namespace HLDParser
                 lst[i].SetParent(this);
         }
 
-        public void TakeAllElements(CBaseKey other_key, bool inClear)
+        public void TakeAllElements(CKey other_key, bool inClear)
         {
             TakeAllValues(other_key, inClear);
             TakeAllKeys(other_key, inClear);
@@ -275,31 +293,31 @@ namespace HLDParser
             if (_keys.Count != 1)
                 return;
 
-            if (_keys[0].GetElementType() != EElementType.ArrayKey)
+            if (!_keys[0].IsArray)
                 return;
 
-            CArrayKey arr = _keys[0] as CArrayKey;
+            CKey arr = _keys[0];
 
-            if (!string.IsNullOrEmpty(arr.RealName) &&
+            if (!string.IsNullOrEmpty(arr._name) &&
                 !string.IsNullOrEmpty(_name))
                 return;
 
-            if (!string.IsNullOrEmpty(arr.RealName))
-                _name = arr.RealName;
+            if (!string.IsNullOrEmpty(arr._name))
+                _name = arr._name;
 
             TakeAllElements(arr, false);
             arr.SetParent(null);
         }
 
-        internal Tuple<CBaseKey, int> FindLowerNearestKey(int inLineNumber)
+        internal Tuple<CKey, int> FindLowerNearestKey(int inLineNumber)
         {
             int dist = Position.Line - inLineNumber;
             if (dist >= 0 && _parent != null)
-                return new Tuple<CBaseKey, int>(this, dist);
-            
-            CBaseKey sub_key = null;
+                return new Tuple<CKey, int>(this, dist);
+
+            CKey sub_key = null;
             int key_dist = int.MaxValue;
-            for(int i = 0; i < _keys.Count; ++i)
+            for (int i = 0; i < _keys.Count; ++i)
             {
                 var t = _keys[i].FindLowerNearestKey(inLineNumber);
                 if (t.Item1 != null && t.Item2 < key_dist)
@@ -309,7 +327,14 @@ namespace HLDParser
                 }
             }
 
-            return new Tuple<CBaseKey, int>(sub_key, key_dist);
+            return new Tuple<CKey, int>(sub_key, key_dist);
+        }
+
+        public string SaveToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            SaveToString(sb, 0, 0);
+            return sb.ToString();
         }
 
         public override string GetStringForSave()
@@ -327,11 +352,11 @@ namespace HLDParser
         {
             StringBuilder sb = new StringBuilder();
 
-            if(!string.IsNullOrEmpty(Comments))
+            if (!string.IsNullOrEmpty(Comments))
                 sb.AppendFormat("{0}; ", Comments);
 
             for (int i = 0; i < _values.Count; ++i)
-                if(!string.IsNullOrEmpty(_values[i].Comments))
+                if (!string.IsNullOrEmpty(_values[i].Comments))
                     sb.AppendFormat("{0}; ", _values[i].Comments);
 
             return sb.ToString();
@@ -361,7 +386,7 @@ namespace HLDParser
         {
             bool was_writing = false;
             int new_int = intent;
-            if (GetElementType() == EElementType.Key)
+            if (!IsArray)
             {
                 if (!string.IsNullOrEmpty(Comments))
                 {
@@ -371,7 +396,7 @@ namespace HLDParser
                 }
 
                 bool vert_values_writing = _values.Count > 3 && _keys.Count == 0 || IsValuesHasComments();
-                if(vert_values_writing)
+                if (vert_values_writing)
                 {
                     AppendIntent(sb, intent);
                     sb.AppendFormat("{0}: ", Name);
@@ -389,9 +414,9 @@ namespace HLDParser
 
                     was_writing = true;
                 }
-                else if(!string.IsNullOrEmpty(Name) || _values.Count > 0)
+                else if (!string.IsNullOrEmpty(Name) || _values.Count > 0)
                 {
-                    
+
                     AppendIntent(sb, intent);
                     sb.AppendFormat("{0}: ", Name);
                     AddStringValuesForSave(sb);
@@ -399,7 +424,7 @@ namespace HLDParser
                     new_int = intent + 1;
                 }
             }
-            else if (GetElementType() == EElementType.ArrayKey)
+            else
             {
                 if (!string.IsNullOrEmpty(Comments))
                 {
@@ -428,13 +453,13 @@ namespace HLDParser
                     was_writing = true;
                 }
             }
-            
+
             if (was_writing)
                 sb.Append(Environment.NewLine);
 
             for (int i = 0; i < _keys.Count; ++i)
             {
-                if (_keys[i].GetElementType() == EElementType.ArrayKey && i > 0 && _keys[i].KeyCount > 0)
+                if (_keys[i].IsArray && i > 0 && _keys[i].KeyCount > 0)
                 {
                     AppendIntent(sb, new_int);
                     string rd_str = CTokenFinder.Instance.GetTokenString(ETokenType.RecordDivider);
@@ -444,88 +469,7 @@ namespace HLDParser
                 _keys[i].SaveToString(sb, new_int, i);
             }
 
-            
-        }
-    }
 
-    public class CKey : CBaseKey
-    {
-        public override EElementType GetElementType() { return EElementType.Key; }
-
-        public CKey() : base(null, new SPosition())
-        {
-            _name = string.Empty;
-        }
-
-        internal CKey(CBaseKey parent, CTokenLine line, ILogger inLoger) : base(parent, line.Head.Position)
-        {
-            _name = line.Head.Text;
-            AddTokenTail(line, false, inLoger);
-        }
-
-        public CKey(CBaseKey parent, string inName) : base(parent, SPosition.zero)
-        {
-            _name = inName;
-        }
-
-        public CKey(CBaseKey inTemplate) : base(inTemplate)
-        {
-        }
-
-        public override CBaseElement GetCopy()
-        {
-            return new CKey(this);
-        }
-
-        public string SaveToString()
-        {
-            StringBuilder sb = new StringBuilder();
-            SaveToString(sb, 0, 0);
-            return sb.ToString();
-        }
-    }
-
-    public class CArrayKey : CBaseKey
-    {
-        public override EElementType GetElementType() { return EElementType.ArrayKey; }
-
-        public int GetIndex()
-        {
-            for(int i = 0; i < _parent.KeyCount; i++)
-            {
-                if (_parent.GetKey(i) == this)
-                    return i;
-            }
-            return -1;
-        }
-
-        public string RealName { get { return _name; } }
-
-        public override string Name
-        {
-            get
-            {
-                if (string.IsNullOrEmpty(_name))
-                    return GetIndex().ToString();
-                return _name;
-            }
-        }
-
-        public CArrayKey(CBaseKey parent, SPosition pos) : base(parent, pos)
-        {
-        }
-
-        public CArrayKey(CBaseKey parent) : base(parent, SPosition.zero)
-        {
-        }
-
-        public CArrayKey(CArrayKey inTemplate) : base(inTemplate)
-        {
-        }
-
-        public override CBaseElement GetCopy()
-        {
-            return new CArrayKey(this);
         }
     }
 }

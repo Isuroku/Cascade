@@ -49,7 +49,7 @@
             this.tbSourceText.Multiline = true;
             this.tbSourceText.Name = "tbSourceText";
             this.tbSourceText.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbSourceText.Size = new System.Drawing.Size(859, 281);
+            this.tbSourceText.Size = new System.Drawing.Size(438, 614);
             this.tbSourceText.TabIndex = 0;
             this.tbSourceText.Leave += new System.EventHandler(this.tbSourceText_Leave);
             // 
@@ -58,22 +58,22 @@
             this.lbSourceFiles.FormattingEnabled = true;
             this.lbSourceFiles.Location = new System.Drawing.Point(877, 12);
             this.lbSourceFiles.Name = "lbSourceFiles";
-            this.lbSourceFiles.Size = new System.Drawing.Size(415, 95);
+            this.lbSourceFiles.Size = new System.Drawing.Size(415, 186);
             this.lbSourceFiles.TabIndex = 1;
             this.lbSourceFiles.SelectedIndexChanged += new System.EventHandler(this.lbSourceFiles_SelectedIndexChanged);
             // 
             // tbResult
             // 
-            this.tbResult.Location = new System.Drawing.Point(12, 338);
+            this.tbResult.Location = new System.Drawing.Point(877, 632);
             this.tbResult.Multiline = true;
             this.tbResult.Name = "tbResult";
             this.tbResult.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.tbResult.Size = new System.Drawing.Size(859, 288);
+            this.tbResult.Size = new System.Drawing.Size(415, 187);
             this.tbResult.TabIndex = 0;
             // 
             // btnParse
             // 
-            this.btnParse.Location = new System.Drawing.Point(12, 299);
+            this.btnParse.Location = new System.Drawing.Point(877, 574);
             this.btnParse.Name = "btnParse";
             this.btnParse.Size = new System.Drawing.Size(88, 23);
             this.btnParse.TabIndex = 2;
@@ -93,21 +93,21 @@
             // 
             // tvTree
             // 
-            this.tvTree.Location = new System.Drawing.Point(877, 338);
+            this.tvTree.Location = new System.Drawing.Point(456, 12);
             this.tvTree.Name = "tvTree";
-            this.tvTree.Size = new System.Drawing.Size(415, 481);
+            this.tvTree.Size = new System.Drawing.Size(415, 614);
             this.tvTree.TabIndex = 31;
             // 
             // tbNewFileName
             // 
-            this.tbNewFileName.Location = new System.Drawing.Point(877, 113);
+            this.tbNewFileName.Location = new System.Drawing.Point(877, 204);
             this.tbNewFileName.Name = "tbNewFileName";
-            this.tbNewFileName.Size = new System.Drawing.Size(216, 20);
+            this.tbNewFileName.Size = new System.Drawing.Size(303, 20);
             this.tbNewFileName.TabIndex = 32;
             // 
             // btnNewFile
             // 
-            this.btnNewFile.Location = new System.Drawing.Point(1099, 111);
+            this.btnNewFile.Location = new System.Drawing.Point(1186, 204);
             this.btnNewFile.Name = "btnNewFile";
             this.btnNewFile.Size = new System.Drawing.Size(106, 23);
             this.btnNewFile.TabIndex = 33;
@@ -117,7 +117,7 @@
             // 
             // btnSerializeTests
             // 
-            this.btnSerializeTests.Location = new System.Drawing.Point(1185, 270);
+            this.btnSerializeTests.Location = new System.Drawing.Point(1185, 574);
             this.btnSerializeTests.Name = "btnSerializeTests";
             this.btnSerializeTests.Size = new System.Drawing.Size(107, 23);
             this.btnSerializeTests.TabIndex = 34;
@@ -127,7 +127,7 @@
             // 
             // btnDeserializeTest
             // 
-            this.btnDeserializeTest.Location = new System.Drawing.Point(1185, 299);
+            this.btnDeserializeTest.Location = new System.Drawing.Point(1185, 603);
             this.btnDeserializeTest.Name = "btnDeserializeTest";
             this.btnDeserializeTest.Size = new System.Drawing.Size(107, 23);
             this.btnDeserializeTest.TabIndex = 35;
@@ -137,9 +137,9 @@
             // 
             // btnSaveToFile
             // 
-            this.btnSaveToFile.Location = new System.Drawing.Point(877, 309);
+            this.btnSaveToFile.Location = new System.Drawing.Point(877, 603);
             this.btnSaveToFile.Name = "btnSaveToFile";
-            this.btnSaveToFile.Size = new System.Drawing.Size(75, 23);
+            this.btnSaveToFile.Size = new System.Drawing.Size(88, 23);
             this.btnSaveToFile.TabIndex = 36;
             this.btnSaveToFile.Text = "SaveToFile";
             this.btnSaveToFile.UseVisualStyleBackColor = true;

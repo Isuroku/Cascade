@@ -39,7 +39,7 @@ namespace HLDParser
             _printer.AddLogToConsole(text, ELogLevel.Error);
         }
 
-        public void LogError(EErrorCode inErrorCode, CBaseKey inKey)
+        public void LogError(EErrorCode inErrorCode, CKey inKey)
         {
             _error_count++;
             string text = string.Format("{0}. {1}", inErrorCode, inKey);

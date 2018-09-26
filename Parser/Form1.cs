@@ -160,7 +160,7 @@ namespace Parser
             tvTree.ExpandAll();
         }
 
-        void AddToTree(CBaseKey key, TreeNodeCollection nc)
+        void AddToTree(CKey key, TreeNodeCollection nc)
         {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < key.ValuesCount; i++)
@@ -175,7 +175,7 @@ namespace Parser
             }
 
             string arr_flag = string.Empty;
-            if(key.GetElementType() == EElementType.ArrayKey)
+            if(key.IsArray)
                 arr_flag = "[a]";
 
             string key_comments = string.Empty;
@@ -187,8 +187,8 @@ namespace Parser
 
             for(int i = 0; i < key.KeyCount; i++)
             {
-                CBaseKey el = key.GetKey(i);
-                AddToTree(el as CBaseKey, tn.Nodes);
+                CKey el = key.GetKey(i);
+                AddToTree(el as CKey, tn.Nodes);
             }
         }
 
@@ -225,7 +225,7 @@ namespace Parser
             var serializer = new CKeySerializer(new CachedReflector());
             //TestObject saved_obj = TestObject.CreateTestObject();
             CTest2 saved_obj = CTest2.CreateTestObject();
-            _test_serialize = new CKey(null, "TestObject");
+            _test_serialize = CKey.CreateRoot("TestObject");
 
             serializer.Serialize(saved_obj, _test_serialize, this);
 

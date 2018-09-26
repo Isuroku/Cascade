@@ -27,11 +27,11 @@ namespace HLDParser
             List<Tuple<int, string>> _add_comment = new List<Tuple<int, string>>();
             public void AddComment(int line, string name) { _add_comment.Add(new Tuple<int, string>(line, name)); }
 
-            internal void WriteComments(CBaseKey root)
+            internal void WriteComments(CKey root)
             {
                 foreach (var t in _add_comment)
                 {
-                    CBaseKey fk = root.FindLowerNearestKey(t.Item1).Item1;
+                    CKey fk = root.FindLowerNearestKey(t.Item1).Item1;
                     if (fk == null)
                         _logger.LogError(EErrorCode.CantAddComment, t.Item2, t.Item1);
                     else
@@ -43,11 +43,11 @@ namespace HLDParser
             #endregion Comments
 
             string _next_array_key_name;
-            CBaseKey _next_array_key_parent;
+            CKey _next_array_key_parent;
             int _next_array_key_line_number;
             public bool IsNextArrayKeyNamePresent { get { return !string.IsNullOrEmpty(_next_array_key_name); } }
 
-            public void SetNextArrayKeyName(string inName, int inLineNumber, CBaseKey inParent)
+            public void SetNextArrayKeyName(string inName, int inLineNumber, CKey inParent)
             {
                 if (IsNextArrayKeyNamePresent)
                     _logger.LogError(EErrorCode.NextArrayKeyNameAlreadySetted, _next_array_key_name, inLineNumber);
@@ -59,7 +59,7 @@ namespace HLDParser
                 }
             }
 
-            public string PopNextArrayKeyName(CBaseKey inParent)
+            public string PopNextArrayKeyName(CKey inParent)
             {
                 if(_next_array_key_parent != inParent)
                 {
@@ -81,7 +81,7 @@ namespace HLDParser
 
         public static CKey Build(List<CTokenLine> inLines, ITreeBuildSupport inSupport)
         {
-            var root = new CKey();
+            var root = CKey.CreateRoot();
 
             CBuildCommands commands = new CBuildCommands(inSupport.GetLogger());
 
@@ -90,7 +90,7 @@ namespace HLDParser
 
             if(root.KeyCount == 1 && root.GetKey(0).GetElementType() == EElementType.Key)
             {
-                root = root.GetKey(0) as CKey;
+                root = root.GetKey(0);
                 root.SetParent(null);
             }
 
@@ -99,11 +99,16 @@ namespace HLDParser
             return root;
         }
 
+        struct SAddLineResult
+        {
+            public CKey current_array_key;
+            public CKey last_record_key;
+            public EKeyAddingMode last_key_add_mode;
+        }
+
         static int Collect(CKey inParent, int inParentRank, List<CTokenLine> inLines, int inStartIndex, ITreeBuildSupport inSupport, CBuildCommands inCommands)
         {
-            CArrayKey ar_key = null;
-            CKey last_key = null;
-            EKeyAddingMode last_key_add_mode = EKeyAddingMode.AddUnique;
+            SAddLineResult current_state = new SAddLineResult();
 
             int curr_rank = inParentRank + 1;
 
@@ -116,29 +121,25 @@ namespace HLDParser
                 {
                     if (line.Rank < curr_rank)
                     {
-                        OnClosingKey(last_key, last_key_add_mode, inSupport);
+                        OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
                         return i;
                     }
                     else if (line.Rank > curr_rank)
                     {
-                        if (last_key == null)
+                        if (current_state.last_record_key == null)
                         {
                             inSupport.GetLogger().LogError(EErrorCode.TooDeepRank, line);
                         }
                         else
                         {
-                            i = Collect(last_key, curr_rank, inLines, i, inSupport, inCommands);
-                            last_key.CheckOnOneArray();
+                            i = Collect(current_state.last_record_key, curr_rank, inLines, i, inSupport, inCommands);
+                            current_state.last_record_key.CheckOnOneArray();
                         }
                     }
                     else
                     {
-                        OnClosingKey(last_key, last_key_add_mode, inSupport);
-
-                        Tuple<CArrayKey, CKey, EKeyAddingMode> res = AddLine(inParent, ar_key, line, inSupport, inCommands);
-                        ar_key = res.Item1;
-                        last_key = res.Item2;
-                        last_key_add_mode = res.Item3;
+                        OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
+                        current_state = AddLine(inParent, current_state.current_array_key, line, inSupport, inCommands);
                     }
                 }
                 else if (line.Comments != null)
@@ -150,11 +151,11 @@ namespace HLDParser
 
             //if(last_key != null)
             //    last_key.CheckOnOneArray(inSupport);
-            OnClosingKey(last_key, last_key_add_mode, inSupport);
+            OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
             return i;
         }
 
-        static void OnClosingKey(CBaseKey key, EKeyAddingMode inKeyAddMode, ITreeBuildSupport inSupport)
+        static void OnClosingKey(CKey key, EKeyAddingMode inKeyAddMode, ITreeBuildSupport inSupport)
         {
             if (key == null)
                 return;
@@ -168,7 +169,7 @@ namespace HLDParser
             if (inKeyAddMode == EKeyAddingMode.AddUnique)
                 return;
 
-            CBaseKey parent = key.Parent;
+            CKey parent = key.Parent;
             if (parent == null)
             {
                 inSupport.GetLogger().LogError(EErrorCode.KeyMustHaveParent, key);
@@ -179,7 +180,7 @@ namespace HLDParser
 
             if (inKeyAddMode == EKeyAddingMode.Add)
             {
-                CBaseKey child_key = parent.FindChildKey(key.Name);
+                CKey child_key = parent.FindChildKey(key.Name);
                 if (child_key != null)
                     child_key.MergeKey(key);
                 else
@@ -191,42 +192,41 @@ namespace HLDParser
             //}
         }
 
-        static CArrayKey CreateNewArrayKey(CBaseKey inParent, CTokenLine line, CBuildCommands inCommands)
+        static CKey CreateNewArrayKey(CKey inParent, CTokenLine line, CBuildCommands inCommands)
         {
-            var res_arr_key = new CArrayKey(inParent, line.Position);
+            var res_arr_key = CKey.CreateArrayKey(inParent, line.Position);
             if (inCommands.IsNextArrayKeyNamePresent)
                 res_arr_key.SetName(inCommands.PopNextArrayKeyName(inParent));
             return res_arr_key;
         }
 
-        static Tuple<CArrayKey, CKey, EKeyAddingMode> AddLine(CBaseKey inParent, CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
+        static SAddLineResult AddLine(CKey inParent, CKey inCurrentArrayKey, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
         {
-            CKey key = null;
-            CArrayKey res_arr_key = null;
-            EKeyAddingMode addition_mode = EKeyAddingMode.AddUnique;
+            SAddLineResult result = new SAddLineResult();
+
             if (line.IsEmpty())
             {
-                res_arr_key = arr_key;
+                result.current_array_key = inCurrentArrayKey;
             }
             else if (line.IsRecordDivider())
             {
-                res_arr_key = null;
+                result.current_array_key = null;
             }
             else if (line.IsCommandLine())
             {
-                res_arr_key = ExecuteCommand(inParent, arr_key, line, inSupport, inCommands);
+                result.current_array_key = ExecuteCommand(inParent, inCurrentArrayKey, line, inSupport, inCommands);
             }
             else if (line.Head != null)
             {
-                res_arr_key = arr_key;
-                if (res_arr_key == null)
-                    res_arr_key = CreateNewArrayKey(inParent, line, inCommands);
+                result.current_array_key = inCurrentArrayKey;
+                if (result.current_array_key == null)
+                    result.current_array_key = CreateNewArrayKey(inParent, line, inCommands);
 
-                if (line.AdditionMode == EKeyAddingMode.AddUnique && res_arr_key.IsKeyWithNamePresent(line.Head.Text))
+                if (line.AdditionMode == EKeyAddingMode.AddUnique && result.current_array_key.IsKeyWithNamePresent(line.Head.Text))
                     inSupport.GetLogger().LogError(EErrorCode.ElementWithNameAlreadyPresent, line);
 
-                addition_mode = line.AdditionMode;
-                key = new CKey(res_arr_key, line, inSupport.GetLogger());
+                result.last_key_add_mode = line.AdditionMode;
+                result.last_record_key = CKey.Create(result.current_array_key, line, inSupport.GetLogger());
             }
             else if(!line.IsTailEmpty)
             {
@@ -234,17 +234,17 @@ namespace HLDParser
                     inParent.AddTokenTail(line, true, inSupport.GetLogger());
                 else
                 {
-                    res_arr_key = CreateNewArrayKey(inParent, line, inCommands);
-                    res_arr_key.AddTokenTail(line, false, inSupport.GetLogger());
+                    result.current_array_key = CreateNewArrayKey(inParent, line, inCommands);
+                    result.current_array_key.AddTokenTail(line, false, inSupport.GetLogger());
                 }
             }
 
-            return new Tuple<CArrayKey, CKey, EKeyAddingMode>(res_arr_key, key, addition_mode);
+            return result;
         }
 
-        static CArrayKey ExecuteCommand(CBaseKey inParent, CArrayKey inArrKey, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
+        static CKey ExecuteCommand(CKey inParent, CKey inArrKey, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
         {
-            CArrayKey arr_key = inArrKey;
+            CKey arr_key = inArrKey;
 
             if (line.Command == ECommands.Name)
             {
@@ -270,7 +270,7 @@ namespace HLDParser
             return arr_key;
         }
 
-        static void ExecuteCommand_Delete(CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
+        static void ExecuteCommand_Delete(CKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
         {
             if (line.CommandParams.Length == 0 || string.IsNullOrEmpty(line.CommandParams[0]))
             {
@@ -286,24 +286,24 @@ namespace HLDParser
                 inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
         }
 
-        static bool RemoveKeysByPath(CBaseKey inParent, string[] inPath)
+        static bool RemoveKeysByPath(CKey inParent, string[] inPath)
         {
-            CBaseKey key = inParent.FindKey(inPath);
+            CKey key = inParent.FindKey(inPath);
             if (key == null)
                 return false;
 
-            CBaseKey parent = key.Parent;
+            CKey parent = key.Parent;
             key.SetParent(null);
             while (parent != inParent && parent.IsEmpty)
             {
-                CBaseKey prev = parent;
+                CKey prev = parent;
                 parent = parent.Parent;
                 prev.SetParent(null);
             }
             return true;
         }
 
-        static void ExecuteCommand_Insert(CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
+        static void ExecuteCommand_Insert(CKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
         {
             string key_path = line.CommandParams["key"];
 
@@ -311,7 +311,7 @@ namespace HLDParser
                 inSupport.GetLogger().LogError(EErrorCode.LocalPathEmpty, line);
 
             string file_name = line.CommandParams["file"];
-            CBaseKey root = null;
+            CKey root = null;
             if (!string.IsNullOrEmpty(file_name))
                 root = inSupport.GetTree(file_name);
             else
@@ -325,7 +325,7 @@ namespace HLDParser
 
             string[] path = key_path.Split(new char[] { '\\', '/' });
 
-            CBaseKey key = root.FindKey(path);
+            CKey key = root.FindKey(path);
             if (key == null)
             {
                 inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
@@ -334,7 +334,7 @@ namespace HLDParser
 
 
             bool insert_only_elements = line.CommandParams.ContainsKey("elems");
-            CBaseKey copy_key = key.GetCopy() as CBaseKey;
+            CKey copy_key = key.GetCopy() as CKey;
             if (!insert_only_elements)
                 copy_key.SetParent(arr_key);
             else
