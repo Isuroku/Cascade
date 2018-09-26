@@ -72,13 +72,15 @@ namespace HLDParser
 
             _text = inRawText;
 
+            string comm_str = CTokenFinder.Instance.GetTokenString(ETokenType.Comment);
+
             string[] lines = inRawText.Split(new string[] { Environment.NewLine }, StringSplitOptions.None);
             for (int i = 0; i < lines.Length; ++i)
             {
                 string line = lines[i];
                 Tuple<int, int>[] quotes = Utils.GetStringPairs(line, i, inLoger);
 
-                int comments_pos = line.IndexOf("//");
+                int comments_pos = line.IndexOf(comm_str);
                 if (comments_pos == -1)
                     comments_pos = int.MaxValue;
 

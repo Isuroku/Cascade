@@ -77,7 +77,7 @@ namespace HLDParser
 
         public void AddComments(string text)
         {
-            _comments = text;
+            _comments += string.Format(" {0}", text);
         }
     }
 

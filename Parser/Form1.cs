@@ -173,7 +173,11 @@ namespace Parser
             if(key.GetElementType() == EElementType.ArrayKey)
                 arr_flag = "[a]";
 
-            TreeNode tn = new TreeNode(string.Format("{0}{1}: {2}", key.Name, arr_flag, sb));
+            string key_comments = string.Empty;
+            if (!string.IsNullOrEmpty(key.Comments))
+                key_comments = string.Format(" //{0}", key.Comments);
+
+            TreeNode tn = new TreeNode(string.Format("{0}{1}: {2}{3}", key.Name, arr_flag, sb, key_comments));
             nc.Add(tn);
 
             for(int i = 0; i < key.KeyCount; i++)

@@ -58,6 +58,7 @@ namespace HLDParser
 
         public CTokenFinder()
         {
+            _templates.Add(new CTokenTemplate(ETokenType.Comment, "//"));
             _templates.Add(new CTokenTemplate(ETokenType.Comma, ","));
             _templates.Add(new CTokenTemplate(ETokenType.Colon, ":"));
             _templates.Add(new CTokenTemplate(ETokenType.RecordDivider, "--"));
@@ -80,9 +81,10 @@ namespace HLDParser
                 return new CToken[0];
 
             string line = inSentense.Text;
-            CToken comment = FindComments(inSentense);
-            if(comment != null)
-                line = line.Substring(0, comment.LinePosition);
+            Tuple<CToken, int> comment_pos = FindComments(inSentense);
+            CToken comment = comment_pos.Item1;
+            if (comment != null)
+                line = line.Substring(0, comment_pos.Item2);
 
             List<CToken> lst = new List<CToken>();
 
@@ -179,20 +181,21 @@ namespace HLDParser
             out_lst.Add(new CToken(tt, word, lnum, world_start_pos + tab_shift));
         }
 
-        CToken FindComments(CSentense inSentense)
+        Tuple<CToken, int> FindComments(CSentense inSentense)
         {
             if (string.IsNullOrEmpty(inSentense.Text))
-                return null;
+                return new Tuple<CToken, int>(null, 0);
 
             CToken comment = null;
-            int pos = inSentense.Text.IndexOf("//");
+            string comm_str = GetTokenString(ETokenType.Comment);
+            int pos = inSentense.Text.IndexOf(comm_str);
             if (pos == -1)
-                return null;
-            
-            string scomm = inSentense.Text.Substring(pos);
+                return new Tuple<CToken, int>(null, 0);
+
+            string scomm = inSentense.Text.Substring(pos + comm_str.Length);
             comment = new CToken(ETokenType.Comment, scomm, inSentense.LineNumber, pos + inSentense.Rank * TAB_LENGTH);
 
-            return comment;
+            return new Tuple<CToken, int>(comment, pos);
         }
 
         public string GetTokenString(ETokenType tt)

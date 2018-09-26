@@ -32,6 +32,15 @@ namespace HLDParser
                     else
                         fk.SetName(t.Item2);
                 }
+
+                foreach (var t in _add_comment)
+                {
+                    CBaseKey fk = inKey.FindLowerNearestKey(t.Item1).Item1;
+                    if (fk == null)
+                        inSupport.GetLogger().LogError(EErrorCode.CantAddComment, t.Item2, t.Item1);
+                    else
+                        fk.AddComments(t.Item2);
+                }
             }
         }
 
@@ -95,6 +104,8 @@ namespace HLDParser
                         last_key_add_mode = res.Item3;
                     }
                 }
+                else if (line.Comments != null)
+                    inCommands.AddComment(line.Position.Line, line.Comments.Text);
 
                 if (t == i)
                     i++;
@@ -175,11 +186,11 @@ namespace HLDParser
             else if(!line.IsTailEmpty)
             {
                 if (line.TailLength == 1 && inParent.GetElementType() == EElementType.Key)
-                    inParent.AddTokenTail(line, inSupport.GetLogger());
+                    inParent.AddTokenTail(line, true, inSupport.GetLogger());
                 else
                 {
                     res_arr_key = new CArrayKey(inParent, line.Position);
-                    res_arr_key.AddTokenTail(line, inSupport.GetLogger());
+                    res_arr_key.AddTokenTail(line, false, inSupport.GetLogger());
                 }
             }
 

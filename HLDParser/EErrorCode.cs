@@ -25,5 +25,6 @@ namespace HLDParser
         CantResolveLine,
         KeyMustHaveParent,
         CantChangeName,
+        CantAddComment,
     }
 }

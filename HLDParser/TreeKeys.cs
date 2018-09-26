@@ -85,8 +85,11 @@ namespace HLDParser
                 _values.Remove(inElement);
         }
 
-        internal void AddTokenTail(CTokenLine line, ILogger inLoger)
+        internal void AddTokenTail(CTokenLine line, bool inCommentForValue, ILogger inLoger)
         {
+            if (line.Comments != null && !inCommentForValue)
+                AddComments(line.Comments.Text);
+
             if (line.IsTailEmpty)
                 return;
 
@@ -106,7 +109,7 @@ namespace HLDParser
                     case ETokenType.False: be = new CBoolValue(this, t.Position, false); break;
                 }
 
-                if (be != null && line.Comments != null)
+                if (line.Comments != null && inCommentForValue && be != null)
                     be.AddComments(line.Comments.Text);
 
                 if (be == null)
@@ -334,31 +337,6 @@ namespace HLDParser
             return sb.ToString();
         }
 
-        bool IsKeyWithNamePresent()
-        {
-            for (int i = 0; i < _keys.Count; ++i)
-                if (!string.IsNullOrEmpty(_keys[i]._name))
-                    return true;
-            return false;
-        }
-
-        Tuple<string, int> GetHeadForSave()
-        {
-            bool write_head = !string.IsNullOrEmpty(_name) || _parent != null && _parent.IsKeyWithNamePresent();
-            if(!write_head)
-                return new Tuple<string, int>(string.Empty, 0);
-
-            if (GetElementType() == EElementType.ArrayKey && _parent != null && _parent.KeyCount > 1)
-            {
-                if (string.IsNullOrEmpty(_name))
-                    return new Tuple<string, int>(string.Empty, 0);
-                return new Tuple<string, int>(string.Format("{0}{1} {2}{3}", 
-                    CTokenFinder.Instance.GetTokenString(CTokenFinder.COMMAND_PREFIX), ECommands.Name, _name, Environment.NewLine), 0);
-            }
-            else
-                return new Tuple<string, int>(string.Format("{0}: ", Name), 1);
-        }
-
         void AddStringValuesForSave(StringBuilder sb)
         {
             for (int i = 0; i < _values.Count; ++i)
@@ -456,10 +434,7 @@ namespace HLDParser
         internal CKey(CBaseKey parent, CTokenLine line, ILogger inLoger) : base(parent, line.Head.Position)
         {
             _name = line.Head.Text;
-            AddTokenTail(line, inLoger);
-
-            if(IsEmpty && line.Comments != null)
-                AddComments(line.Comments.Text);
+            AddTokenTail(line, false, inLoger);
         }
 
         public CKey(CBaseKey parent, string inName) : base(parent, SPosition.zero)
