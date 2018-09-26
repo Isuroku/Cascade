@@ -166,7 +166,12 @@ namespace Parser
             for (int i = 0; i < key.ValuesCount; i++)
             {
                 CBaseElement el = key.GetValue(i);
-                sb.AppendFormat("{0}, ", el);
+
+                string val_comments = string.Empty;
+                if (!string.IsNullOrEmpty(el.Comments))
+                    val_comments = string.Format("[//{0}]", el.Comments);
+
+                sb.AppendFormat("{0}{1}, ", el, val_comments);
             }
 
             string arr_flag = string.Empty;

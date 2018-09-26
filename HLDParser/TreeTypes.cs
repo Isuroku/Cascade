@@ -77,7 +77,10 @@ namespace HLDParser
 
         public void AddComments(string text)
         {
-            _comments += string.Format(" {0}", text);
+            if (string.IsNullOrEmpty(_comments))
+                _comments = text;
+            else
+                _comments += string.Format(" {0}", text);
         }
     }
 
@@ -93,6 +96,13 @@ namespace HLDParser
 
         public override string GetStringForSave()
         {
+            bool only_alfa_digit = true;
+            for (int i = 0; i < _value.Length && only_alfa_digit; ++i)
+                only_alfa_digit = char.IsLetterOrDigit(_value[i]);
+
+            if (only_alfa_digit)
+                return _value;
+
             return string.Format("{0}{1}{2}", "\"", _value, "\"");
         }
     }

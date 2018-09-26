@@ -26,5 +26,7 @@ namespace HLDParser
         KeyMustHaveParent,
         CantChangeName,
         CantAddComment,
+        NextArrayKeyNameAlreadySetted,
+        NextArrayKeyNameMissParent,
     }
 }

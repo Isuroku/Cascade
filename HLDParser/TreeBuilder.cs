@@ -16,38 +16,75 @@ namespace HLDParser
 
         class CBuildCommands
         {
-            List<Tuple<int, string>> _change_name = new List<Tuple<int, string>>();
-            List<Tuple<int, string>> _add_comment = new List<Tuple<int, string>>();
+            ILogger _logger;
 
-            public void AddChangeName(int line, string name) { _change_name.Add(new Tuple<int, string>(line, name)); }
+            public CBuildCommands(ILogger logger)
+            {
+                _logger = logger;
+            }
+
+            #region WriteComments
+            List<Tuple<int, string>> _add_comment = new List<Tuple<int, string>>();
             public void AddComment(int line, string name) { _add_comment.Add(new Tuple<int, string>(line, name)); }
 
-            internal void Execute(CKey inKey, ITreeBuildSupport inSupport)
+            internal void WriteComments(CBaseKey root)
             {
-                foreach(var t in _change_name)
-                {
-                    CBaseKey fk = inKey.FindLowerNearestKey(t.Item1).Item1;
-                    if (fk == null)
-                        inSupport.GetLogger().LogError(EErrorCode.CantChangeName, t.Item2, t.Item1);
-                    else
-                        fk.SetName(t.Item2);
-                }
-
                 foreach (var t in _add_comment)
                 {
-                    CBaseKey fk = inKey.FindLowerNearestKey(t.Item1).Item1;
+                    CBaseKey fk = root.FindLowerNearestKey(t.Item1).Item1;
                     if (fk == null)
-                        inSupport.GetLogger().LogError(EErrorCode.CantAddComment, t.Item2, t.Item1);
+                        _logger.LogError(EErrorCode.CantAddComment, t.Item2, t.Item1);
                     else
                         fk.AddComments(t.Item2);
                 }
+
+                _add_comment.Clear();
+            }
+            #endregion Comments
+
+            string _next_array_key_name;
+            CBaseKey _next_array_key_parent;
+            int _next_array_key_line_number;
+            public bool IsNextArrayKeyNamePresent { get { return !string.IsNullOrEmpty(_next_array_key_name); } }
+
+            public void SetNextArrayKeyName(string inName, int inLineNumber, CBaseKey inParent)
+            {
+                if (IsNextArrayKeyNamePresent)
+                    _logger.LogError(EErrorCode.NextArrayKeyNameAlreadySetted, _next_array_key_name, inLineNumber);
+                else
+                {
+                    _next_array_key_name = inName;
+                    _next_array_key_parent = inParent;
+                    _next_array_key_line_number = inLineNumber;
+                }
+            }
+
+            public string PopNextArrayKeyName(CBaseKey inParent)
+            {
+                if(_next_array_key_parent != inParent)
+                {
+                    _logger.LogError(EErrorCode.NextArrayKeyNameMissParent,
+                        string.Format("Name {0}. Setted inside {1}. Try to use inside {2}", 
+                        _next_array_key_name,
+                        _next_array_key_parent.Name,
+                        inParent.Name), 
+                        _next_array_key_line_number);
+                    _next_array_key_name = string.Empty;
+                    return string.Empty;
+                }
+
+                string t = _next_array_key_name;
+                _next_array_key_name = string.Empty;
+                return t;
             }
         }
 
         public static CKey Build(List<CTokenLine> inLines, ITreeBuildSupport inSupport)
         {
-            CBuildCommands commands = new CBuildCommands();
             var root = new CKey();
+
+            CBuildCommands commands = new CBuildCommands(inSupport.GetLogger());
+
             Collect(root, -1, inLines, 0, inSupport, commands);
             root.CheckOnOneArray();
 
@@ -57,7 +94,7 @@ namespace HLDParser
                 root.SetParent(null);
             }
 
-            commands.Execute(root, inSupport);
+            commands.WriteComments(root);
 
             return root;
         }
@@ -154,6 +191,14 @@ namespace HLDParser
             //}
         }
 
+        static CArrayKey CreateNewArrayKey(CBaseKey inParent, CTokenLine line, CBuildCommands inCommands)
+        {
+            var res_arr_key = new CArrayKey(inParent, line.Position);
+            if (inCommands.IsNextArrayKeyNamePresent)
+                res_arr_key.SetName(inCommands.PopNextArrayKeyName(inParent));
+            return res_arr_key;
+        }
+
         static Tuple<CArrayKey, CKey, EKeyAddingMode> AddLine(CBaseKey inParent, CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
         {
             CKey key = null;
@@ -173,15 +218,15 @@ namespace HLDParser
             }
             else if (line.Head != null)
             {
-                if (arr_key == null)
-                    arr_key = new CArrayKey(inParent, line.Position);
                 res_arr_key = arr_key;
+                if (res_arr_key == null)
+                    res_arr_key = CreateNewArrayKey(inParent, line, inCommands);
 
-                if (line.AdditionMode == EKeyAddingMode.AddUnique && arr_key.IsKeyWithNamePresent(line.Head.Text))
+                if (line.AdditionMode == EKeyAddingMode.AddUnique && res_arr_key.IsKeyWithNamePresent(line.Head.Text))
                     inSupport.GetLogger().LogError(EErrorCode.ElementWithNameAlreadyPresent, line);
 
                 addition_mode = line.AdditionMode;
-                key = new CKey(arr_key, line, inSupport.GetLogger());
+                key = new CKey(res_arr_key, line, inSupport.GetLogger());
             }
             else if(!line.IsTailEmpty)
             {
@@ -189,7 +234,7 @@ namespace HLDParser
                     inParent.AddTokenTail(line, true, inSupport.GetLogger());
                 else
                 {
-                    res_arr_key = new CArrayKey(inParent, line.Position);
+                    res_arr_key = CreateNewArrayKey(inParent, line, inCommands);
                     res_arr_key.AddTokenTail(line, false, inSupport.GetLogger());
                 }
             }
@@ -206,19 +251,19 @@ namespace HLDParser
                 if (line.CommandParams.Length < 1)
                     inSupport.GetLogger().LogError(EErrorCode.EmptyCommand, line);
                 else
-                    inCommands.AddChangeName(line.Position.Line, line.CommandParams[0]);
+                    inCommands.SetNextArrayKeyName(line.CommandParams[0], line.Position.Line, inParent);
             }
             else if (line.Command == ECommands.Insert)
             {
                 if (arr_key == null)
-                    arr_key = new CArrayKey(inParent, line.Position);
+                    arr_key = CreateNewArrayKey(inParent, line, inCommands);
 
                 ExecuteCommand_Insert(arr_key, line, inSupport);
             }
             else if (line.Command == ECommands.Delete)
             {
                 if (arr_key == null)
-                    arr_key = new CArrayKey(inParent, line.Position);
+                    arr_key = CreateNewArrayKey(inParent, line, inCommands);
 
                 ExecuteCommand_Delete(arr_key, line, inSupport);
             }

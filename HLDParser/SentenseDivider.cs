@@ -18,7 +18,7 @@ namespace HLDParser
 
         public CSentense(string inText, int inLineNumber)
         {
-            _text = inText.Trim(' ');
+            _text = inText.Trim(' ').TrimEnd('\t');
             _rank = GetFirstTabCount(_text);
             _text = _text.Substring(_rank);
             _line_number = inLineNumber;

@@ -294,7 +294,7 @@ namespace HLDParser
         internal Tuple<CBaseKey, int> FindLowerNearestKey(int inLineNumber)
         {
             int dist = Position.Line - inLineNumber;
-            if (dist >= 0)
+            if (dist >= 0 && _parent != null)
                 return new Tuple<CBaseKey, int>(this, dist);
             
             CBaseKey sub_key = null;
@@ -347,13 +347,30 @@ namespace HLDParser
             }
         }
 
+        bool IsValuesHasComments()
+        {
+            for (int i = 0; i < _values.Count; ++i)
+            {
+                if (!string.IsNullOrEmpty(_values[i].Comments))
+                    return true;
+            }
+            return false;
+        }
+
         protected void SaveToString(StringBuilder sb, int intent, int parent_index)
         {
             bool was_writing = false;
             int new_int = intent;
             if (GetElementType() == EElementType.Key)
             {
-                bool vert_values_writing = _values.Count > 3 && _keys.Count == 0;
+                if (!string.IsNullOrEmpty(Comments))
+                {
+                    AppendIntent(sb, intent);
+                    sb.AppendFormat("{0}{1}", CTokenFinder.Instance.GetTokenString(ETokenType.Comment), Comments);
+                    sb.Append(Environment.NewLine);
+                }
+
+                bool vert_values_writing = _values.Count > 3 && _keys.Count == 0 || IsValuesHasComments();
                 if(vert_values_writing)
                 {
                     AppendIntent(sb, intent);
@@ -366,8 +383,8 @@ namespace HLDParser
 
                         sb.Append(_values[i].GetStringForSave());
 
-                        //if (!string.IsNullOrEmpty(_values[i].Comments))
-                        //    sb.AppendFormat("{0}{1}", CTokenFinder.Instance.GetTokenString(ETokenType.Comment), Comments);
+                        if (!string.IsNullOrEmpty(_values[i].Comments))
+                            sb.AppendFormat(" {0}{1}", CTokenFinder.Instance.GetTokenString(ETokenType.Comment), _values[i].Comments);
                     }
 
                     was_writing = true;
@@ -384,8 +401,17 @@ namespace HLDParser
             }
             else if (GetElementType() == EElementType.ArrayKey)
             {
+                if (!string.IsNullOrEmpty(Comments))
+                {
+                    AppendIntent(sb, intent);
+                    sb.AppendFormat(" {0}{1}", CTokenFinder.Instance.GetTokenString(ETokenType.Comment), Comments);
+                    was_writing = true;
+                }
+
                 if (!string.IsNullOrEmpty(_name))
                 {
+                    if (was_writing)
+                        sb.Append(Environment.NewLine);
                     AppendIntent(sb, intent);
                     sb.AppendFormat("{0}{1} {2}", CTokenFinder.Instance.GetTokenString(CTokenFinder.COMMAND_PREFIX), ECommands.Name, _name);
                     was_writing = true;
@@ -398,10 +424,10 @@ namespace HLDParser
 
                     AppendIntent(sb, intent);
                     AddStringValuesForSave(sb);
+
                     was_writing = true;
                 }
             }
-
             
             if (was_writing)
                 sb.Append(Environment.NewLine);
