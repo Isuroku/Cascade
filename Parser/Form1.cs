@@ -211,35 +211,11 @@ namespace Parser
                 lbSourceFiles.SelectedIndex = index;
         }
 
-        class CTest2Base
-        {
-            private float _float;
-
-            public CTest2Base()
-            {
-                _float = 3.1415f;
-            }
-        }
-
-        class CTest2: CTest2Base
-        {
-            private int _int;
-
-            public int PubProp { get; set; }
-
-            public CTest2()
-            {
-                _int = 9;
-
-                PubProp = 11;
-            }
-        }
-
         private void btnSerializeTests_Click(object sender, EventArgs e)
         {
             var serializer = new CKeySerializer(new CachedReflector());
             //TestObject saved_obj = TestObject.CreateTestObject();
-            CTest2 saved_obj = new CTest2();
+            CTest2 saved_obj = CTest2.CreateTestObject();
             _test_serialize = new CKey(null, "TestObject");
 
             serializer.Serialize(saved_obj, _test_serialize, this);
