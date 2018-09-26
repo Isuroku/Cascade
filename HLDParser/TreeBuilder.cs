@@ -1,4 +1,5 @@
 ﻿
+using System;
 using System.Collections.Generic;
 
 namespace HLDParser
@@ -13,15 +14,32 @@ namespace HLDParser
     {
         enum EMultiArrayType { NotMultiArray, List, MultiArray }
 
-        class CBuildObjects
+        class CBuildCommands
         {
+            List<Tuple<int, string>> _change_name = new List<Tuple<int, string>>();
+            List<Tuple<int, string>> _add_comment = new List<Tuple<int, string>>();
 
+            public void AddChangeName(int line, string name) { _change_name.Add(new Tuple<int, string>(line, name)); }
+            public void AddComment(int line, string name) { _add_comment.Add(new Tuple<int, string>(line, name)); }
+
+            internal void Execute(CKey inKey, ITreeBuildSupport inSupport)
+            {
+                foreach(var t in _change_name)
+                {
+                    CBaseKey fk = inKey.FindLowerNearestKey(t.Item1).Item1;
+                    if (fk == null)
+                        inSupport.GetLogger().LogError(EErrorCode.CantChangeName, t.Item2, t.Item1);
+                    else
+                        fk.SetName(t.Item2);
+                }
+            }
         }
 
         public static CKey Build(List<CTokenLine> inLines, ITreeBuildSupport inSupport)
         {
+            CBuildCommands commands = new CBuildCommands();
             var root = new CKey();
-            Collect(root, -1, inLines, 0, inSupport);
+            Collect(root, -1, inLines, 0, inSupport, commands);
             root.CheckOnOneArray();
 
             if(root.KeyCount == 1 && root.GetKey(0).GetElementType() == EElementType.Key)
@@ -30,10 +48,12 @@ namespace HLDParser
                 root.SetParent(null);
             }
 
+            commands.Execute(root, inSupport);
+
             return root;
         }
 
-        static int Collect(CKey inParent, int inParentRank, List<CTokenLine> inLines, int inStartIndex, ITreeBuildSupport inSupport)
+        static int Collect(CKey inParent, int inParentRank, List<CTokenLine> inLines, int inStartIndex, ITreeBuildSupport inSupport, CBuildCommands inCommands)
         {
             CArrayKey ar_key = null;
             CKey last_key = null;
@@ -46,31 +66,34 @@ namespace HLDParser
             {
                 int t = i;
                 CTokenLine line = inLines[i];
-                if (line.Rank < curr_rank)
+                if (!line.IsEmpty())
                 {
-                    OnClosingKey(last_key, last_key_add_mode, inSupport);
-                    return i;
-                }
-                else if (line.Rank > curr_rank)
-                {
-                    if (last_key == null)
+                    if (line.Rank < curr_rank)
                     {
-                        inSupport.GetLogger().LogError(EErrorCode.TooDeepRank, line);
+                        OnClosingKey(last_key, last_key_add_mode, inSupport);
+                        return i;
+                    }
+                    else if (line.Rank > curr_rank)
+                    {
+                        if (last_key == null)
+                        {
+                            inSupport.GetLogger().LogError(EErrorCode.TooDeepRank, line);
+                        }
+                        else
+                        {
+                            i = Collect(last_key, curr_rank, inLines, i, inSupport, inCommands);
+                            last_key.CheckOnOneArray();
+                        }
                     }
                     else
                     {
-                        i = Collect(last_key, curr_rank, inLines, i, inSupport);
-                        last_key.CheckOnOneArray();
-                    }
-                }
-                else
-                {
-                    OnClosingKey(last_key, last_key_add_mode, inSupport);
+                        OnClosingKey(last_key, last_key_add_mode, inSupport);
 
-                    Tuple<CArrayKey, CKey, EKeyAddingMode> res = AddLine(inParent, ar_key, line, inSupport);
-                    ar_key = res.Item1;
-                    last_key = res.Item2;
-                    last_key_add_mode = res.Item3;
+                        Tuple<CArrayKey, CKey, EKeyAddingMode> res = AddLine(inParent, ar_key, line, inSupport, inCommands);
+                        ar_key = res.Item1;
+                        last_key = res.Item2;
+                        last_key_add_mode = res.Item3;
+                    }
                 }
 
                 if (t == i)
@@ -120,7 +143,7 @@ namespace HLDParser
             //}
         }
 
-        static Tuple<CArrayKey, CKey, EKeyAddingMode> AddLine(CBaseKey inParent, CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
+        static Tuple<CArrayKey, CKey, EKeyAddingMode> AddLine(CBaseKey inParent, CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
         {
             CKey key = null;
             CArrayKey res_arr_key = null;
@@ -131,25 +154,16 @@ namespace HLDParser
             }
             else if (line.IsRecordDivider())
             {
-                int index = 0;
-                if (arr_key != null)
-                    index = arr_key.Index + 1;
-                else
-                    inSupport.GetLogger().LogError(EErrorCode.RecordBeforeRecordDividerDoesntPresent, line);
-                res_arr_key = new CArrayKey(inParent, line.Position, index);
+                res_arr_key = null;
             }
             else if (line.IsCommandLine())
             {
-                if (arr_key == null)
-                    arr_key = new CArrayKey(inParent, line.Position, 0);
-                res_arr_key = arr_key;
-
-                ExecuteCommand(arr_key, line, inSupport);
+                res_arr_key = ExecuteCommand(inParent, arr_key, line, inSupport, inCommands);
             }
             else if (line.Head != null)
             {
                 if (arr_key == null)
-                    arr_key = new CArrayKey(inParent, line.Position, 0);
+                    arr_key = new CArrayKey(inParent, line.Position);
                 res_arr_key = arr_key;
 
                 if (line.AdditionMode == EKeyAddingMode.AddUnique && arr_key.IsKeyWithNamePresent(line.Head.Text))
@@ -160,39 +174,44 @@ namespace HLDParser
             }
             else if(!line.IsTailEmpty)
             {
-                if (line.TailLength > 1)
-                {
-                    int index = 0;
-                    if (arr_key != null)
-                        index = arr_key.Index + 1;
-                    res_arr_key = new CArrayKey(inParent, line.Position, index);
-                }
+                if (line.TailLength == 1 && inParent.GetElementType() == EElementType.Key)
+                    inParent.AddTokenTail(line, inSupport.GetLogger());
                 else
                 {
-                    if (arr_key == null)
-                        arr_key = new CArrayKey(inParent, line.Position, 0);
-                    res_arr_key = arr_key;
+                    res_arr_key = new CArrayKey(inParent, line.Position);
+                    res_arr_key.AddTokenTail(line, inSupport.GetLogger());
                 }
-
-                res_arr_key.AddTokenTail(line, inSupport.GetLogger());
             }
 
             return new Tuple<CArrayKey, CKey, EKeyAddingMode>(res_arr_key, key, addition_mode);
         }
 
-        static void ExecuteCommand(CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
+        static CArrayKey ExecuteCommand(CBaseKey inParent, CArrayKey inArrKey, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
         {
+            CArrayKey arr_key = inArrKey;
+
             if (line.Command == ECommands.Name)
             {
                 if (line.CommandParams.Length < 1)
                     inSupport.GetLogger().LogError(EErrorCode.EmptyCommand, line);
                 else
-                    arr_key.SetName(line.CommandParams[0]);
+                    inCommands.AddChangeName(line.Position.Line, line.CommandParams[0]);
             }
-            else if(line.Command == ECommands.Insert)
+            else if (line.Command == ECommands.Insert)
+            {
+                if (arr_key == null)
+                    arr_key = new CArrayKey(inParent, line.Position);
+
                 ExecuteCommand_Insert(arr_key, line, inSupport);
+            }
             else if (line.Command == ECommands.Delete)
+            {
+                if (arr_key == null)
+                    arr_key = new CArrayKey(inParent, line.Position);
+
                 ExecuteCommand_Delete(arr_key, line, inSupport);
+            }
+            return arr_key;
         }
 
         static void ExecuteCommand_Delete(CArrayKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)

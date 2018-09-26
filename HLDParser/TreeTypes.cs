@@ -21,6 +21,9 @@ namespace HLDParser
         protected CBaseKey _parent;
         protected SPosition _pos;
 
+        private string _comments;
+        public string Comments { get { return _comments; } }
+
         static CultureInfo _custom_culture;
         protected static CultureInfo GetCultureInfo()
         {
@@ -71,6 +74,11 @@ namespace HLDParser
         }
 
         public abstract string GetStringForSave();
+
+        public void AddComments(string text)
+        {
+            _comments = text;
+        }
     }
 
     public class CStringValue : CBaseElement

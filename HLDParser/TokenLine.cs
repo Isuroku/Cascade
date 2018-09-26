@@ -12,6 +12,7 @@ namespace HLDParser
         public CToken[] Tokens { get { return _tokens; } }
 
         CToken _comments;
+        public CToken Comments { get { return _comments; } }
 
         CToken _head;
         public CToken Head { get { return _head; } }
@@ -32,7 +33,15 @@ namespace HLDParser
 
         public int LineNumber { get { return _sentense.LineNumber; } }
 
-        public int Rank { get { return _sentense.Rank; } }
+        public int Rank
+        {
+            get
+            {
+                if(_tokens.Length > 0)
+                    return  _sentense.Rank;
+                return 0;
+            }
+        }
 
         public SPosition Position { get { return new SPosition(LineNumber, 0); } }
 

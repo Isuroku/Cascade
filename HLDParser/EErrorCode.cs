@@ -24,5 +24,6 @@ namespace HLDParser
         ElementWithNameAlreadyPresent,
         CantResolveLine,
         KeyMustHaveParent,
+        CantChangeName,
     }
 }

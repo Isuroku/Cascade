@@ -14,7 +14,7 @@ namespace ReflectionSerializer
     public interface IKey
     {
         IKey CreateChildKey(string name);
-        IKey CreateArrayKey(int index);
+        IKey CreateArrayKey();
         void AddValue(long v);
         void AddValue(ulong v);
         void AddValue(decimal v);
@@ -83,12 +83,10 @@ namespace ReflectionSerializer
                 }
                 else
                 {
-                    int i = 0;
                     foreach (var item in collection)
                     {
-                        IKey child = inKey.CreateArrayKey(i);
+                        IKey child = inKey.CreateArrayKey();
                         Serialize(item, declaredItemType, child, inLogger);
-                        i++;
                     }
                 }
             }

@@ -106,6 +106,9 @@ namespace HLDParser
                     case ETokenType.False: be = new CBoolValue(this, t.Position, false); break;
                 }
 
+                if (be != null && line.Comments != null)
+                    be.AddComments(line.Comments.Text);
+
                 if (be == null)
                     inLoger.LogError(EErrorCode.WrongTokenInTail, t);
             }
@@ -119,9 +122,9 @@ namespace HLDParser
             return child;
         }
 
-        public IKey CreateArrayKey(int index)
+        public IKey CreateArrayKey()
         {
-            CArrayKey child = new CArrayKey(this, index);
+            CArrayKey child = new CArrayKey(this);
             return child;
         }
 
@@ -285,6 +288,27 @@ namespace HLDParser
             arr.SetParent(null);
         }
 
+        internal Tuple<CBaseKey, int> FindLowerNearestKey(int inLineNumber)
+        {
+            int dist = Position.Line - inLineNumber;
+            if (dist >= 0)
+                return new Tuple<CBaseKey, int>(this, dist);
+            
+            CBaseKey sub_key = null;
+            int key_dist = int.MaxValue;
+            for(int i = 0; i < _keys.Count; ++i)
+            {
+                var t = _keys[i].FindLowerNearestKey(inLineNumber);
+                if (t.Item1 != null && t.Item2 < key_dist)
+                {
+                    sub_key = t.Item1;
+                    key_dist = t.Item2;
+                }
+            }
+
+            return new Tuple<CBaseKey, int>(sub_key, key_dist);
+        }
+
         public override string GetStringForSave()
         {
             return Name;
@@ -296,6 +320,20 @@ namespace HLDParser
                 sb.Append('\t');
         }
 
+        string GetStringCommentsForSave(bool with_values)
+        {
+            StringBuilder sb = new StringBuilder();
+
+            if(!string.IsNullOrEmpty(Comments))
+                sb.AppendFormat("{0}; ", Comments);
+
+            for (int i = 0; i < _values.Count; ++i)
+                if(!string.IsNullOrEmpty(_values[i].Comments))
+                    sb.AppendFormat("{0}; ", _values[i].Comments);
+
+            return sb.ToString();
+        }
+
         bool IsKeyWithNamePresent()
         {
             for (int i = 0; i < _keys.Count; ++i)
@@ -304,76 +342,105 @@ namespace HLDParser
             return false;
         }
 
+        Tuple<string, int> GetHeadForSave()
+        {
+            bool write_head = !string.IsNullOrEmpty(_name) || _parent != null && _parent.IsKeyWithNamePresent();
+            if(!write_head)
+                return new Tuple<string, int>(string.Empty, 0);
+
+            if (GetElementType() == EElementType.ArrayKey && _parent != null && _parent.KeyCount > 1)
+            {
+                if (string.IsNullOrEmpty(_name))
+                    return new Tuple<string, int>(string.Empty, 0);
+                return new Tuple<string, int>(string.Format("{0}{1} {2}{3}", 
+                    CTokenFinder.Instance.GetTokenString(CTokenFinder.COMMAND_PREFIX), ECommands.Name, _name, Environment.NewLine), 0);
+            }
+            else
+                return new Tuple<string, int>(string.Format("{0}: ", Name), 1);
+        }
+
+        void AddStringValuesForSave(StringBuilder sb)
+        {
+            for (int i = 0; i < _values.Count; ++i)
+            {
+                sb.Append(_values[i].GetStringForSave());
+                if (i < _values.Count - 1)
+                    sb.Append(", ");
+            }
+        }
+
         protected void SaveToString(StringBuilder sb, int intent, int parent_index)
         {
-            if (sb.Length > 0)
-                sb.Append(Environment.NewLine);
-
-            if (parent_index > 0 && GetElementType() == EElementType.ArrayKey && KeyCount > 0)
-            {
-                AppendIntent(sb, intent);
-                string rd_str = CTokenFinder.Instance.GetTokenString(ETokenType.RecordDivider);
-                sb.Append(rd_str);
-                sb.Append(Environment.NewLine);
-            }
-
-            bool write_head = false;
-            if (!string.IsNullOrEmpty(_name))
-                write_head = true;
-            else if(_parent != null && _parent.IsKeyWithNamePresent())
-                write_head = true;
-
+            bool was_writing = false;
             int new_int = intent;
-            if (write_head)
+            if (GetElementType() == EElementType.Key)
             {
-                AppendIntent(sb, intent);
-
-                if (GetElementType() == EElementType.ArrayKey && _parent != null && _parent.KeyCount > 1)
+                bool vert_values_writing = _values.Count > 3 && _keys.Count == 0;
+                if(vert_values_writing)
                 {
-                    if(!string.IsNullOrEmpty(_name))
-                        sb.AppendFormat("{0}{1} {2}", CTokenFinder.Instance.GetTokenString(CTokenFinder.COMMAND_PREFIX), ECommands.Name, _name);
-                }
-                else
-                {
+                    AppendIntent(sb, intent);
                     sb.AppendFormat("{0}: ", Name);
+
+                    for (int i = 0; i < _values.Count; ++i)
+                    {
+                        sb.Append(Environment.NewLine);
+                        AppendIntent(sb, intent + 1);
+
+                        sb.Append(_values[i].GetStringForSave());
+
+                        //if (!string.IsNullOrEmpty(_values[i].Comments))
+                        //    sb.AppendFormat("{0}{1}", CTokenFinder.Instance.GetTokenString(ETokenType.Comment), Comments);
+                    }
+
+                    was_writing = true;
+                }
+                else if(!string.IsNullOrEmpty(Name) || _values.Count > 0)
+                {
+                    
+                    AppendIntent(sb, intent);
+                    sb.AppendFormat("{0}: ", Name);
+                    AddStringValuesForSave(sb);
+                    was_writing = true;
                     new_int = intent + 1;
                 }
             }
-            //else if (GetElementType() == EElementType.ArrayKey && !string.IsNullOrEmpty(_name))
-            //{
-            //    if (sb.Length > 0)
-            //        sb.Append(Environment.NewLine);
-
-            //    AppendIntent(sb, intent);
-
-            //    sb.AppendFormat("{0}{1} {2}", CTokenFinder.Instance.GetTokenString(CTokenFinder.COMMAND_PREFIX), ECommands.Name, _name);
-            //}
-
-            string values = string.Empty;
-            if(_values.Count > 0)
+            else if (GetElementType() == EElementType.ArrayKey)
             {
-                bool vert = _values.Count > 3 && _keys.Count == 0;
-
-                if (!vert && !write_head)
-                    AppendIntent(sb, intent);
-
-                for (int i = 0; i < _values.Count; ++i)
+                if (!string.IsNullOrEmpty(_name))
                 {
-                    if (vert)
-                    {
-                        sb.Append(Environment.NewLine);
-                        AppendIntent(sb, new_int);
-                    }
-                    
-                    sb.Append(_values[i].GetStringForSave());
+                    AppendIntent(sb, intent);
+                    sb.AppendFormat("{0}{1} {2}", CTokenFinder.Instance.GetTokenString(CTokenFinder.COMMAND_PREFIX), ECommands.Name, _name);
+                    was_writing = true;
+                }
 
-                    if (!vert && i < _values.Count - 1)
-                        sb.Append(", ");
+                if (_values.Count > 0)
+                {
+                    if (was_writing)
+                        sb.Append(Environment.NewLine);
+
+                    AppendIntent(sb, intent);
+                    AddStringValuesForSave(sb);
+                    was_writing = true;
                 }
             }
 
+            
+            if (was_writing)
+                sb.Append(Environment.NewLine);
+
             for (int i = 0; i < _keys.Count; ++i)
+            {
+                if (_keys[i].GetElementType() == EElementType.ArrayKey && i > 0 && _keys[i].KeyCount > 0)
+                {
+                    AppendIntent(sb, new_int);
+                    string rd_str = CTokenFinder.Instance.GetTokenString(ETokenType.RecordDivider);
+                    sb.Append(rd_str);
+                    sb.Append(Environment.NewLine);
+                }
                 _keys[i].SaveToString(sb, new_int, i);
+            }
+
+            
         }
     }
 
@@ -390,11 +457,9 @@ namespace HLDParser
         {
             _name = line.Head.Text;
             AddTokenTail(line, inLoger);
-        }
 
-        internal CKey(CBaseKey parent, CToken head, ILogger inLoger) : base(parent, head.Position)
-        {
-            _name = head.Text;
+            if(IsEmpty && line.Comments != null)
+                AddComments(line.Comments.Text);
         }
 
         public CKey(CBaseKey parent, string inName) : base(parent, SPosition.zero)
@@ -423,8 +488,15 @@ namespace HLDParser
     {
         public override EElementType GetElementType() { return EElementType.ArrayKey; }
 
-        int _index;
-        public int Index { get { return _index; } }
+        public int GetIndex()
+        {
+            for(int i = 0; i < _parent.KeyCount; i++)
+            {
+                if (_parent.GetKey(i) == this)
+                    return i;
+            }
+            return -1;
+        }
 
         public string RealName { get { return _name; } }
 
@@ -433,25 +505,21 @@ namespace HLDParser
             get
             {
                 if (string.IsNullOrEmpty(_name))
-                    return _index.ToString();
+                    return GetIndex().ToString();
                 return _name;
             }
         }
 
-        public CArrayKey(CBaseKey parent, SPosition pos, int index) : base(parent, pos)
+        public CArrayKey(CBaseKey parent, SPosition pos) : base(parent, pos)
         {
-            _index = index;
         }
 
-        public CArrayKey(CBaseKey parent, int index) : base(parent, SPosition.zero)
+        public CArrayKey(CBaseKey parent) : base(parent, SPosition.zero)
         {
-            _index = index;
         }
 
         public CArrayKey(CArrayKey inTemplate) : base(inTemplate)
         {
-            _index = inTemplate._index;
-            _name = inTemplate._name;
         }
 
         public override CBaseElement GetCopy()
