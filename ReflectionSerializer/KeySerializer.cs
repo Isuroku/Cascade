@@ -16,8 +16,11 @@ namespace ReflectionSerializer
         IKey CreateChildKey(string name);
         IKey CreateArrayKey();
         void AddValue(long v);
+        void AddValue(int v);
         void AddValue(ulong v);
+        void AddValue(uint v);
         void AddValue(decimal v);
+        void AddValue(float v);
         void AddValue(bool v);
         void AddValue(string v);
 
@@ -29,6 +32,10 @@ namespace ReflectionSerializer
 
         int GetValuesCount();
         string GetValueAsString(int index);
+        float GetValueAsFloat(int index);
+        int GetValueAsInt(int index);
+        uint GetValueAsUInt(int index);
+        bool GetValueAsBool(int index);
     }
 
     public class CKeySerializer
@@ -42,7 +49,7 @@ namespace ReflectionSerializer
 
         public void Serialize(object instance, IKey inKey, ILogger inLogger)
         {
-            Serialize(instance, typeof(object), inKey, inLogger);
+            Serialize(instance, instance.GetType(), inKey, inLogger);
         }
 
         void Serialize(object instance, Type declaredType, IKey inKey, ILogger inLogger)
@@ -95,23 +102,29 @@ namespace ReflectionSerializer
                 MemberInfo[] member_infos = _reflectionProvider.GetSerializableMembers(type);
                 foreach (MemberInfo memberInfo in member_infos)
                 {
-                    var memberAttr = _reflectionProvider.GetSingleAttributeOrDefault<SerializationAttribute>(memberInfo);
-                    // Make sure we want it serialized
-                    if (memberAttr.Ignore)
+                    object value = _reflectionProvider.GetValue(memberInfo, instance);
+                    if (value == null)
                         continue;
+
+                    SCustomMemberParams member_params = GetMemberParams(memberInfo);
+
+                    if (member_params.DefaultValue != null)
+                    {
+                        if (member_params.DefaultValue.Equals(value))
+                            continue;
+                    }
+                    else if (ReflectionHelper.IsDefault(value, _reflectionProvider))
+                        continue;
+                    
+                    
+                    IKey child = inKey.CreateChildKey(member_params.Name);
 
                     Type memberType = memberInfo.GetMemberType();
-                    object value = _reflectionProvider.GetValue(memberInfo, instance);
 
-                    // Optional properties are skipped when serializing a default or null value
-                    //if (!memberAttr.Required && (value == null || ReflectionHelper.IsDefault(value, _reflectionProvider)))
-                    if (value == null || ReflectionHelper.IsDefault(value, _reflectionProvider))
-                        continue;
-
-                    // If no property name is defined, use the short type name
-                    string memberName = memberAttr.Name ?? memberInfo.Name;
-                    IKey child = inKey.CreateChildKey(memberName);
-                    Serialize(value, memberType, child, inLogger);
+                    if (member_params.Converter != null && member_params.Converter.CanConvert(memberType))
+                        member_params.Converter.WriteKey(child, value, inLogger);
+                    else
+                        Serialize(value, memberType, child, inLogger);
                 }
 
                 if(inKey.GetChildCount() == 0)
@@ -123,6 +136,78 @@ namespace ReflectionSerializer
             {
                 inKey.CreateChildKey("RealObjectType").AddValue(type.FullName);
             }
+        }
+
+        struct SCustomMemberParams
+        {
+            public string Name;
+            public object DefaultValue;
+            public JsonConverter Converter;
+        }
+
+        SCustomMemberParams GetMemberParams(MemberInfo memberInfo)
+        {
+            var prms = new SCustomMemberParams();
+            object[] attributes = memberInfo.GetCustomAttributes(false);
+            for (int i = 0; i < attributes.Length; ++i)
+            {
+                if (string.IsNullOrEmpty(prms.Name))
+                {
+                    DataMemberAttribute dm = attributes[i] as DataMemberAttribute;
+                    if (dm != null && !string.IsNullOrEmpty(dm.Name))
+                        prms.Name = dm.Name;
+                }
+
+                JsonPropertyAttribute jp = attributes[i] as JsonPropertyAttribute;
+                if (jp != null)
+                {
+                    if (string.IsNullOrEmpty(prms.Name) && !string.IsNullOrEmpty(jp.Name))
+                        prms.Name = jp.Name;
+
+                    if (prms.DefaultValue == null && jp.Default != null)
+                        prms.DefaultValue = jp.Default;
+                }
+
+                if (prms.Converter == null)
+                {
+                    JsonConverterAttribute conv = attributes[i] as JsonConverterAttribute;
+                    if (conv != null && conv.CustomConverter != null)
+                        prms.Converter = conv.CustomConverter;
+                }
+            }
+
+            if (string.IsNullOrEmpty(prms.Name))
+                prms.Name = memberInfo.Name;
+
+            return prms;
+        }
+
+        string GetNameByMemberInfo(MemberInfo memberInfo)
+        {
+            object[] attributes = memberInfo.GetCustomAttributes(false);
+            for (int i = 0; i < attributes.Length; ++i)
+            {
+                DataMemberAttribute dm = attributes[i] as DataMemberAttribute;
+                if (dm != null && !string.IsNullOrEmpty(dm.Name))
+                    return dm.Name;
+
+                JsonPropertyAttribute jp = attributes[i] as JsonPropertyAttribute;
+                if (jp != null && !string.IsNullOrEmpty(jp.Name))
+                    return jp.Name;
+            }
+            return memberInfo.Name;
+        }
+
+        JsonConverter GetConverterByMemberInfo(MemberInfo memberInfo)
+        {
+            object[] attributes = memberInfo.GetCustomAttributes(false);
+            for (int i = 0; i < attributes.Length; ++i)
+            {
+                JsonConverterAttribute jp = attributes[i] as JsonConverterAttribute;
+                if (jp != null && jp.CustomConverter != null)
+                    return jp.CustomConverter;
+            }
+            return null;
         }
 
         void AddValueToKey(IKey key, object instance)
@@ -264,35 +349,28 @@ namespace ReflectionSerializer
 
                 instance = _reflectionProvider.Instantiate(type);
 
-                if (key.GetChildCount() != 0)
+                MemberInfo[] member_infos = _reflectionProvider.GetSerializableMembers(type);
+                foreach (MemberInfo memberInfo in member_infos)
                 {
-                    foreach (MemberInfo memberInfo in _reflectionProvider.GetSerializableMembers(type))
+                    SCustomMemberParams member_params = GetMemberParams(memberInfo);
+
+                    Type memberType = memberInfo.GetMemberType();
+
+                    IKey sub_key = key.GetChild(member_params.Name);
+                    if (sub_key != null)
                     {
-                        var memberAttr = _reflectionProvider.GetSingleAttributeOrDefault<SerializationAttribute>(memberInfo);
-                        if (memberAttr.Ignore)
-                            continue;
+                        object readValue;
+                        if (member_params.Converter != null)
+                            readValue = member_params.Converter.ReadKey(sub_key, inLogger);
+                        else
+                            readValue = DeserializeInternal(sub_key, memberType, inLogger);
 
-                        Type memberType = memberInfo.GetMemberType();
-                        string name = memberAttr.Name ?? memberInfo.Name;
-
-                        IKey sub_key = key.GetChild(name);
-                        //if (sub_key == null)
-                        //{
-                        //    if (memberAttr.Required)
-                        //    {
-                        //        inLogger.LogError(string.Format("Key {0} doesn't have sub_key with name {1}",
-                        //            key, name));
-                        //    }
-                        //}
-                        //else
-                        if (sub_key != null)
-                        {
-                            var readValue = DeserializeInternal(sub_key, memberType, inLogger);
-                            // This dirty check is naive and doesn't provide performance benefits
-                            //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
-                            _reflectionProvider.SetValue(memberInfo, instance, readValue);
-                        }
+                        // This dirty check is naive and doesn't provide performance benefits
+                        //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
+                        _reflectionProvider.SetValue(memberInfo, instance, readValue);
                     }
+                    else if(member_params.DefaultValue != null)
+                        _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue);
                 }
             }
 

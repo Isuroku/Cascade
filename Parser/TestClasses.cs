@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿
+using System;
+using ReflectionSerializer;
 
 namespace Parser
 {
-    class CTest2Base
+    class CTestBase
     {
         private float _base_float;
 
-        public CTest2Base()
+        public CTestBase()
         {
             _base_float = 3.1415f;
         }
@@ -21,13 +19,56 @@ namespace Parser
         }
     }
 
-    class CTest2 : CTest2Base
+    struct Vector3
     {
+        public float x;
+        public float y;
+        public float z;
+
+        public Vector3(float in_x, float in_y, float in_z) { x = in_x; y = in_y; z = in_z; }
+    }
+
+    public class VectorConverter : JsonConverter
+    {
+        public bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(Vector3);
+        }
+
+        public object ReadKey(IKey key, ILogger inLogger)
+        {
+            Vector3 v = new Vector3();
+
+            v.x = key.GetValueAsFloat(0);
+            v.y = key.GetValueAsFloat(1);
+            v.z = key.GetValueAsFloat(2);
+
+            return v;
+        }
+
+        public void WriteKey(IKey key, object instance, ILogger inLogger)
+        {
+            Vector3 v = (Vector3)instance;
+            key.AddValue(v.x);
+            key.AddValue(v.y);
+            key.AddValue(v.z);
+        }
+    }
+
+    [JsonObject(MemberSerialization.All)]
+    class CTestClass : CTestBase
+    {
+        [JsonProperty(Default = 10)]
         private int _int;
 
+        [JsonIgnore]
         public int PubProp { get; set; }
 
-        public CTest2()
+        [JsonProperty("Position")]
+        [JsonConverter(typeof(VectorConverter))]
+        Vector3 _pos;
+
+        public CTestClass()
         {
             _int = 9;
             PubProp = 11;
@@ -36,13 +77,14 @@ namespace Parser
         public override void Change()
         {
             base.Change();
-            _int = 777;
+            _int = 10;
             PubProp = 888;
+            _pos = new Vector3(1, 1, 1);
         }
 
-        public static CTest2 CreateTestObject()
+        public static CTestClass CreateTestObject()
         {
-            CTest2 obj = new CTest2();
+            CTestClass obj = new CTestClass();
             obj.Change();
             return obj;
         }

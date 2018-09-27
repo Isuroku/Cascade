@@ -117,6 +117,14 @@ namespace HLDParser
             return Name;
         }
 
+        public override float GetValueAsFloat() { return 0; }
+        public override decimal GetValueAsDecimal() { return 0; }
+        public override int GetValueAsInt() { return 0; }
+        public override long GetValueAsLong() { return 0; }
+        public override uint GetValueAsUInt() { return 0; }
+        public override ulong GetValueAsULong() { return 0; }
+        public override bool GetValueAsBool() { return false; }
+
         public void SetName(string name) { _name = name; }
 
         public void AddChild(CBaseElement inElement)
@@ -192,8 +200,11 @@ namespace HLDParser
         }
 
         public void AddValue(long v) { new CIntValue(this, SPosition.zero, v); }
+        public void AddValue(int v) { new CIntValue(this, SPosition.zero, v); }
         public void AddValue(ulong v) { new CUIntValue(this, SPosition.zero, v); }
+        public void AddValue(uint v) { new CUIntValue(this, SPosition.zero, v); }
         public void AddValue(decimal v) { new CFloatValue(this, SPosition.zero, v); }
+        public void AddValue(float v) { new CFloatValue(this, SPosition.zero, (decimal)v); }
         public void AddValue(bool v) { new CBoolValue(this, SPosition.zero, v); }
         public void AddValue(string v) { new CStringValue(this, SPosition.zero, v); }
 
@@ -205,6 +216,10 @@ namespace HLDParser
 
         public int GetValuesCount() { return _values.Count; }
         public string GetValueAsString(int index) { return _values[index].ToString(); }
+        public float GetValueAsFloat(int index) { return _values[index].GetValueAsFloat(); }
+        public int GetValueAsInt(int index) { return _values[index].GetValueAsInt(); }
+        public uint GetValueAsUInt(int index) { return _values[index].GetValueAsUInt(); }
+        public bool GetValueAsBool(int index) { return _values[index].GetValueAsBool(); }
         #endregion IKey
 
         internal void MergeKey(CKey inKey)

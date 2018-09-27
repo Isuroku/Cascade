@@ -13,68 +13,100 @@ namespace ReflectionSerializer
             return attributes.Length == 0 ? new T() : attributes[0] as T;
         }
 
-        static readonly BindingFlags CollectMembers = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
+        static readonly BindingFlags CollectMembersP = BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
+        static readonly BindingFlags CollectMembersNP = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
 
+        MemberSerialization GetMemberSerialization(Type type)
+        {
+            object[] attributes = type.GetCustomAttributes(false);
+            for (int i = 0; i < attributes.Length; ++i)
+            {
+                var dm = attributes[i] as JsonObjectAttribute;
+                if (dm != null)
+                    return dm.MemberSerialization;
+            }
+            return MemberSerialization.OptOut;
+        }
 
-//        Derived d = New Derived();
-//        Type ty = d.GetType;
-//        List<FieldInfo> l = New List<FieldInfo>;
-//l.AddRange(ty.GetFields(BindingFlags.Instance | BindingFlags.Public));
-//While ty != Nothing
-//{
-//    l.AddRange(ty.GetFields(BindingFlags.Instance | BindingFlags.NonPublic));
-//    ty = ty.BaseType;
-//}
-
-//    If you want i.e.value in name fields of Base class:
-
-//   Derived d = New Derived();
-//Type ty = d.GetType;
-//String s;
-//While ty != Nothing
-//    {
-//    If(ty = typeof(Base))
-//    {
-//        s = (String)ty.GetField("name", BindingFlags.Instance | BindingFlags.NonPublic).GetValue(d);
-//        break;
-//    }
-//    ty = ty.BaseType;
-//}
-//Debug.WriteLine(s);
-
-        private void CollectSerializableMembers(Type type, List<MemberInfo> outMembers)
+        private void CollectSerializableMembers(Type type, MemberSerialization inMemberSerialization, List<MemberInfo> outMembers)
         {
             if (type.BaseType != null)
-                CollectSerializableMembers(type.BaseType, outMembers);
+                CollectSerializableMembers(type.BaseType, inMemberSerialization, outMembers);
 
-            PropertyInfo[] properties = type.GetProperties(CollectMembers);
-            for (int i = 0; i < properties.Length; i++)
+            BindingFlags flags = CollectMembersNP;
+            if(inMemberSerialization == MemberSerialization.OptOut)
+                flags = CollectMembersP;
+
+            if (inMemberSerialization != MemberSerialization.Fields)
             {
-                PropertyInfo p = properties[i];
+                PropertyInfo[] properties = type.GetProperties(flags);
+                for (int i = 0; i < properties.Length; i++)
+                {
+                    PropertyInfo p = properties[i];
 
-                MethodInfo get_info = p.GetGetMethod();
-                int get_params_count = get_info != null ? get_info.GetParameters().Length : 0;
+                    if (IsIgnogeMember(p))
+                        continue;
 
-                MethodInfo set_info = p.GetSetMethod();
+                    if (inMemberSerialization == MemberSerialization.OptIn && !IsSerializeMember(p))
+                        continue;
 
-                if (get_info != null && set_info != null && get_params_count == 0)
-                    outMembers.Add(p);
+                    MethodInfo get_info = p.GetGetMethod();
+                    int get_params_count = get_info != null ? get_info.GetParameters().Length : 0;
+
+                    MethodInfo set_info = p.GetSetMethod();
+
+                    if (get_info != null && set_info != null && get_params_count == 0)
+                        outMembers.Add(p);
+                }
             }
 
-            FieldInfo[] fields = type.GetFields(CollectMembers);
+            FieldInfo[] fields = type.GetFields(flags);
             for (int i = 0; i < fields.Length; i++)
             {
                 FieldInfo f = fields[i];
+
+                if (IsIgnogeMember(f))
+                    continue;
+
+                if (inMemberSerialization == MemberSerialization.OptIn && !IsSerializeMember(f))
+                    continue;
+
                 if (!f.IsDefined(typeof(CompilerGeneratedAttribute), false))
                     outMembers.Add(f);
             }
         }
 
+        bool IsSerializeMember(MemberInfo memberInfo)
+        {
+            object[] attributes = memberInfo.GetCustomAttributes(false);
+            for (int i = 0; i < attributes.Length; ++i)
+            {
+                if (attributes[i] is DataMemberAttribute || attributes[i] is JsonPropertyAttribute)
+                    return true;
+            }
+            return false;
+        }
+
         public virtual MemberInfo[] GetSerializableMembers(Type type)
         {
             List<MemberInfo> lst = new List<MemberInfo>();
-            CollectSerializableMembers(type, lst);
+            MemberSerialization ms = GetMemberSerialization(type);
+            CollectSerializableMembers(type, ms, lst);
             return lst.ToArray();
+        }
+
+        bool IsIgnogeMember(MemberInfo memberInfo)
+        {
+            object[] attributes = memberInfo.GetCustomAttributes(false);
+            for (int i = 0; i < attributes.Length; ++i)
+            {
+                if (attributes[i] is JsonIgnoreAttribute || attributes[i] is NonSerializedAttribute)
+                    return true;
+                DataMemberAttribute dm = attributes[i] as DataMemberAttribute;
+                if (dm != null && dm.Ignore)
+                    return true;
+            }
+            return false;
         }
 
         public abstract object Instantiate(Type type);

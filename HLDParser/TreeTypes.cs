@@ -82,6 +82,14 @@ namespace HLDParser
             else
                 _comments += string.Format(" {0}", text);
         }
+
+        public abstract float GetValueAsFloat();
+        public abstract decimal GetValueAsDecimal();
+        public abstract int GetValueAsInt();
+        public abstract long GetValueAsLong();
+        public abstract uint GetValueAsUInt();
+        public abstract ulong GetValueAsULong();
+        public abstract bool GetValueAsBool();
     }
 
     public class CStringValue : CBaseElement
@@ -105,6 +113,62 @@ namespace HLDParser
 
             return string.Format("{0}{1}{2}", "\"", _value, "\"");
         }
+
+        public override float GetValueAsFloat()
+        {
+            float v;
+            if (!float.TryParse(_value, out v))
+                return 0;
+            return v;
+        }
+
+        public override decimal GetValueAsDecimal()
+        {
+            decimal v;
+            if (!decimal.TryParse(_value, out v))
+                return 0;
+            return v;
+        }
+
+        public override int GetValueAsInt()
+        {
+            int v;
+            if (!int.TryParse(_value, out v))
+                return 0;
+            return v;
+        }
+
+        public override long GetValueAsLong()
+        {
+            long v;
+            if (!long.TryParse(_value, out v))
+                return 0;
+            return v;
+        }
+
+        public override uint GetValueAsUInt()
+        {
+            uint v;
+            if (!uint.TryParse(_value, out v))
+                return 0;
+            return v;
+        }
+
+        public override ulong GetValueAsULong()
+        {
+            ulong v;
+            if (!ulong.TryParse(_value, out v))
+                return 0;
+            return v;
+        }
+
+        public override bool GetValueAsBool()
+        {
+            bool v;
+            if (!bool.TryParse(_value, out v))
+                return false;
+            return v;
+        }
     }
 
     public class CIntValue : CBaseElement
@@ -121,6 +185,14 @@ namespace HLDParser
         {
             return _value.ToString();
         }
+
+        public override float GetValueAsFloat() { return _value; }
+        public override decimal GetValueAsDecimal() { return _value; }
+        public override int GetValueAsInt() { return (int)_value; }
+        public override long GetValueAsLong() { return (long)_value; }
+        public override uint GetValueAsUInt() { return (uint)_value; }
+        public override ulong GetValueAsULong() { return (ulong)_value; }
+        public override bool GetValueAsBool() { return _value > 0; }
     }
 
     public class CUIntValue : CBaseElement
@@ -137,6 +209,14 @@ namespace HLDParser
         {
             return _value.ToString();
         }
+
+        public override float GetValueAsFloat() { return _value; }
+        public override decimal GetValueAsDecimal() { return _value; }
+        public override int GetValueAsInt() { return (int)_value; }
+        public override long GetValueAsLong() { return (long)_value; }
+        public override uint GetValueAsUInt() { return (uint)_value; }
+        public override ulong GetValueAsULong() { return (ulong)_value; }
+        public override bool GetValueAsBool() { return _value > 0; }
     }
 
     public class CFloatValue : CBaseElement
@@ -153,6 +233,14 @@ namespace HLDParser
         {
             return _value.ToString(GetCultureInfo());
         }
+
+        public override float GetValueAsFloat() { return (float)_value; }
+        public override decimal GetValueAsDecimal() { return _value; }
+        public override int GetValueAsInt() { return (int)_value; }
+        public override long GetValueAsLong() { return (long)_value; }
+        public override uint GetValueAsUInt() { return (uint)_value; }
+        public override ulong GetValueAsULong() { return (ulong)_value; }
+        public override bool GetValueAsBool() { return _value > 0; }
     }
 
     public class CBoolValue : CBaseElement
@@ -169,6 +257,14 @@ namespace HLDParser
         {
             return _value.ToString();
         }
+
+        public override float GetValueAsFloat() { return _value ? 1 : 0; }
+        public override decimal GetValueAsDecimal() { return _value ? 1 : 0; }
+        public override int GetValueAsInt() { return _value ? 1 : 0; }
+        public override long GetValueAsLong() { return _value ? 1 : 0; }
+        public override uint GetValueAsUInt() { return _value ? 1u : 0; }
+        public override ulong GetValueAsULong() { return _value ? 1u : 0; }
+        public override bool GetValueAsBool() { return _value; }
     }
 
 

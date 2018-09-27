@@ -64,7 +64,7 @@ namespace ReflectionSerializer
                 MemberInfo[] member_infos = reflectionProvider.GetSerializableMembers(type);
                 foreach (MemberInfo memberInfo in member_infos)
                 {
-                    var memberAttr = reflectionProvider.GetSingleAttributeOrDefault<SerializationAttribute>(memberInfo);
+                    var memberAttr = reflectionProvider.GetSingleAttributeOrDefault<DataMemberAttribute>(memberInfo);
                     // Make sure we want it serialized
                     if (memberAttr.Ignore)
                         continue;
@@ -180,7 +180,7 @@ namespace ReflectionSerializer
 
                 foreach (MemberInfo memberInfo in reflectionProvider.GetSerializableMembers(type))
                 {
-                    var memberAttr = reflectionProvider.GetSingleAttributeOrDefault<SerializationAttribute>(memberInfo);
+                    var memberAttr = reflectionProvider.GetSingleAttributeOrDefault<DataMemberAttribute>(memberInfo);
                     if (memberAttr.Ignore)
                         continue;
 
