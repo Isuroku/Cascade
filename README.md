@@ -1,2 +1,2 @@
-# HLD
-Hierarchical Language of Descriptions (HLD)
+# Cascade
+Cascade Language of Descriptions (Cascade)
