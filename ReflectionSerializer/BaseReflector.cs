@@ -21,7 +21,7 @@ namespace ReflectionSerializer
             object[] attributes = type.GetCustomAttributes(false);
             for (int i = 0; i < attributes.Length; ++i)
             {
-                var dm = attributes[i] as JsonObjectAttribute;
+                var dm = attributes[i] as CascadeObjectAttribute;
                 if (dm != null)
                     return dm.MemberSerialization;
             }
@@ -81,7 +81,7 @@ namespace ReflectionSerializer
             object[] attributes = memberInfo.GetCustomAttributes(false);
             for (int i = 0; i < attributes.Length; ++i)
             {
-                if (attributes[i] is DataMemberAttribute || attributes[i] is JsonPropertyAttribute)
+                if (attributes[i] is DataMemberAttribute || attributes[i] is CascadePropertyAttribute)
                     return true;
             }
             return false;
@@ -100,7 +100,7 @@ namespace ReflectionSerializer
             object[] attributes = memberInfo.GetCustomAttributes(false);
             for (int i = 0; i < attributes.Length; ++i)
             {
-                if (attributes[i] is JsonIgnoreAttribute || attributes[i] is NonSerializedAttribute)
+                if (attributes[i] is CascadeIgnoreAttribute || attributes[i] is NonSerializedAttribute)
                     return true;
                 DataMemberAttribute dm = attributes[i] as DataMemberAttribute;
                 if (dm != null && dm.Ignore)

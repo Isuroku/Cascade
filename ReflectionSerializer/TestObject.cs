@@ -6,7 +6,7 @@ namespace ReflectionSerializer
     public enum EntityKind { None, Fooish, Barish }
     public struct SomeStruct { public int A, B; }
 
-    [JsonObject(MemberSerialization.All)]
+    [CascadeObject(MemberSerialization.All)]
     public class TestObject
     {
         #region Atoms
@@ -29,7 +29,7 @@ namespace ReflectionSerializer
         //public TestObject Required { get; set; }
 
         //[DataMember(Name = "AnotherName")]
-        [JsonProperty("AnotherName")]
+        [CascadeProperty("AnotherName")]
         public TestObject Renamed { get; set; }
 
         #endregion
@@ -46,7 +46,7 @@ namespace ReflectionSerializer
         public Dictionary<string, int> AtomicDictionary { get; set; }
         public Dictionary<string, TestObject> HybridDictionary { get; set; }
 
-        [JsonIgnore]
+        [CascadeIgnore]
         public Dictionary<TestObject, TestObject> AggregateDictionary { get; set; }
 
         #endregion

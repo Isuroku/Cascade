@@ -28,7 +28,7 @@ namespace Parser
         public Vector3(float in_x, float in_y, float in_z) { x = in_x; y = in_y; z = in_z; }
     }
 
-    public class VectorConverter : JsonConverter
+    public class VectorConverter : CascadeConverter
     {
         public bool CanConvert(Type objectType)
         {
@@ -55,17 +55,17 @@ namespace Parser
         }
     }
 
-    [JsonObject(MemberSerialization.All)]
+    [CascadeObject(MemberSerialization.All)]
     class CTestClass : CTestBase
     {
-        [JsonProperty(Default = 10)]
+        [CascadeProperty(Default = 10)]
         private int _int;
 
-        [JsonIgnore]
+        [CascadeIgnore]
         public int PubProp { get; set; }
 
-        [JsonProperty("Position")]
-        [JsonConverter(typeof(VectorConverter))]
+        [CascadeProperty("Position")]
+        [CascadeConverter(typeof(VectorConverter))]
         Vector3 _pos;
 
         public CTestClass()

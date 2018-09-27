@@ -22,20 +22,20 @@ namespace ReflectionSerializer
     }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
-    public class JsonIgnoreAttribute : Attribute { }
+    public class CascadeIgnoreAttribute : Attribute { }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
     public class NonSerializedAttribute : Attribute { }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
-    public class JsonPropertyAttribute : Attribute
+    public class CascadePropertyAttribute : Attribute
     {
         public string Name { get; set; }
 
         public object Default { get; set; }
 
-        public JsonPropertyAttribute() { }
-        public JsonPropertyAttribute(string inName)
+        public CascadePropertyAttribute() { }
+        public CascadePropertyAttribute(string inName)
         {
             Name = inName;
         }
@@ -44,16 +44,16 @@ namespace ReflectionSerializer
     public enum MemberSerialization { OptOut, OptIn, Fields, All }
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
-    public class JsonObjectAttribute : Attribute
+    public class CascadeObjectAttribute : Attribute
     {
         public MemberSerialization MemberSerialization { get; set; }
 
-        public JsonObjectAttribute() { }
-        public JsonObjectAttribute(MemberSerialization inMemberSerialization) { MemberSerialization = inMemberSerialization; }
+        public CascadeObjectAttribute() { }
+        public CascadeObjectAttribute(MemberSerialization inMemberSerialization) { MemberSerialization = inMemberSerialization; }
     }
 
 
-    public interface JsonConverter
+    public interface CascadeConverter
     {
         bool CanConvert(Type objectType);
         object ReadKey(IKey key, ILogger inLogger);
@@ -61,30 +61,30 @@ namespace ReflectionSerializer
     }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
-    public class JsonConverterAttribute : Attribute
+    public class CascadeConverterAttribute : Attribute
     {
-        public JsonConverter CustomConverter { get; set; }
+        public CascadeConverter CustomConverter { get; set; }
 
-        public JsonConverterAttribute(Type inCustomConverter)
+        public CascadeConverterAttribute(Type inCustomConverter)
         {
 
             if(!inCustomConverter.IsClass)
-                throw new ArgumentException("Type must be inherited from class JsonConverter");
+                throw new ArgumentException("Type must be inherited from class CascadeConverter");
 
-            //if(!inCustomConverter.IsAssignableFrom(typeof(JsonConverter)))
-            //    throw new ArgumentException("Type must be inherited from class JsonConverter");
+            //if(!inCustomConverter.IsAssignableFrom(typeof(CascadeConverter)))
+            //    throw new ArgumentException("Type must be inherited from class CascadeConverter");
 
             Type[] intfs = inCustomConverter.GetInterfaces();
             if(intfs == null || intfs.Length == 0)
-                throw new ArgumentException("Type must be inherited from class JsonConverter");
+                throw new ArgumentException("Type must be inherited from class CascadeConverter");
 
-            if(!Array.Exists(intfs, i => i == typeof(JsonConverter)))
-                throw new ArgumentException("Type must be inherited from class JsonConverter");
+            if(!Array.Exists(intfs, i => i == typeof(CascadeConverter)))
+                throw new ArgumentException("Type must be inherited from class CascadeConverter");
 
-            //if (bt != typeof(JsonConverter))
-            //    throw new ArgumentException("Type must be inherited from class JsonConverter");
+            //if (bt != typeof(CascadeConverter))
+            //    throw new ArgumentException("Type must be inherited from class CascadeConverter");
 
-            CustomConverter = (JsonConverter)Activator.CreateInstance(inCustomConverter);
+            CustomConverter = (CascadeConverter)Activator.CreateInstance(inCustomConverter);
         }
     }
 }

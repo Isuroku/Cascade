@@ -379,7 +379,7 @@ namespace ReflectionSerializer
         {
             public string Name;
             public object DefaultValue;
-            public JsonConverter Converter;
+            public CascadeConverter Converter;
         }
 
         SCustomMemberParams GetMemberParams(MemberInfo memberInfo)
@@ -395,7 +395,7 @@ namespace ReflectionSerializer
                         prms.Name = dm.Name;
                 }
 
-                JsonPropertyAttribute jp = attributes[i] as JsonPropertyAttribute;
+                CascadePropertyAttribute jp = attributes[i] as CascadePropertyAttribute;
                 if (jp != null)
                 {
                     if (string.IsNullOrEmpty(prms.Name) && !string.IsNullOrEmpty(jp.Name))
@@ -407,7 +407,7 @@ namespace ReflectionSerializer
 
                 if (prms.Converter == null)
                 {
-                    JsonConverterAttribute conv = attributes[i] as JsonConverterAttribute;
+                    CascadeConverterAttribute conv = attributes[i] as CascadeConverterAttribute;
                     if (conv != null && conv.CustomConverter != null)
                         prms.Converter = conv.CustomConverter;
                 }
