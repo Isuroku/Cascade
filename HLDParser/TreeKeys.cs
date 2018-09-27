@@ -3,7 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace HLDParser
+namespace CascadeParser
 {
     public class CKey : CBaseElement, IKey
     {

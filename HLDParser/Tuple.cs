@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace HLDParser
+namespace CascadeParser
 {
     public struct Tuple<T1, T2>
     {

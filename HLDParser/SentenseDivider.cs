@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace HLDParser
+namespace CascadeParser
 {
     public class CSentense
     {

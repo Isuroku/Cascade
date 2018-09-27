@@ -7,8 +7,8 @@
     <ProjectGuid>{0BA9965A-8201-4766-8241-322FC380CA75}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>HLDParser</RootNamespace>
-    <AssemblyName>HLDParser</AssemblyName>
+    <RootNamespace>CascadeParser</RootNamespace>
+    <AssemblyName>CascadeParser</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

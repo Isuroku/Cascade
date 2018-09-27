@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace HLDParser
+namespace CascadeParser
 {
     internal class CCommandParams
     {

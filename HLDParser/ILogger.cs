@@ -1,5 +1,5 @@
 ﻿
-namespace HLDParser
+namespace CascadeParser
 {
     internal interface ILogger
     {

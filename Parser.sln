@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.27703.2035
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Parser", "Parser\Parser.csproj", "{28D09461-200C-436E-8555-AC83ED7C4A7F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HLDParser", "HLDParser\HLDParser.csproj", "{0BA9965A-8201-4766-8241-322FC380CA75}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascadeParser", "HLDParser\CascadeParser.csproj", "{0BA9965A-8201-4766-8241-322FC380CA75}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReflectionSerializer", "ReflectionSerializer\ReflectionSerializer.csproj", "{6AA90DC2-4FB2-406F-A205-682478520F8E}"
 EndProject

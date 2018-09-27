@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace HLDParser
+namespace CascadeParser
 {
     public static class Utils
     {

@@ -1,6 +1,6 @@
 ﻿using System.Globalization;
 
-namespace HLDParser
+namespace CascadeParser
 {
     public class CToken
     {

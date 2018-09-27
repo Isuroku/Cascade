@@ -1,5 +1,5 @@
 ﻿
-namespace HLDParser
+namespace CascadeParser
 {
     public struct SPosition
     {
