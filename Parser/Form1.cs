@@ -223,8 +223,8 @@ namespace Parser
         private void btnSerializeTests_Click(object sender, EventArgs e)
         {
             var serializer = new CKeySerializer(new CachedReflector());
-            //TestObject saved_obj = TestObject.CreateTestObject();
-            CTestClass saved_obj = CTestClass.CreateTestObject();
+            TestObject saved_obj = TestObject.CreateTestObject();
+            //CTestClassMA saved_obj = CTestClassMA.CreateTestObject();
             _test_serialize = CKey.CreateRoot("TestObject");
 
             serializer.Serialize(saved_obj, _test_serialize, this);
@@ -246,7 +246,7 @@ namespace Parser
         private void btnDeserializeTest_Click(object sender, EventArgs e)
         {
             var serializer = new CKeySerializer(new CachedReflector());
-            CTestClass saved_obj = serializer.Deserialize<CTestClass>(_test_serialize, this);
+            TestObject saved_obj = serializer.Deserialize<TestObject>(_test_serialize, this);
         }
 
         private void btnSaveToFile_Click(object sender, EventArgs e)

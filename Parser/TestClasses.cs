@@ -89,4 +89,18 @@ namespace Parser
             return obj;
         }
     }
+
+    class CTestClassMA
+    {
+        public int[,] _muti_array;
+        public int[] _array;
+
+        public static CTestClassMA CreateTestObject()
+        {
+            CTestClassMA obj = new CTestClassMA();
+            obj._muti_array = new int[3, 2] { { 1, 2 }, { 3, 4 }, { 5, 6 } };
+            obj._array = new int[] { 1, 2, 3, 4, 5, 6 };
+            return obj;
+        }
+    }
 }

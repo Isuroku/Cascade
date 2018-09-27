@@ -39,6 +39,7 @@ namespace ReflectionSerializer
         public List<string> AtomicList { get; set; }
         public List<TestObject> AggregateList { get; set; }
         public string[] AtomicArray { get; set; }
+        public int[,] AtomicMultiArray = new int[3, 2] { { 1, 2 }, { 3, 4 }, { 5, 6 } };
         public TestObject[] AggregateArray { get; set; }
         public HashSet<string> AtomicSet { get; set; }
         public HashSet<TestObject> AggregateSet { get; set; }

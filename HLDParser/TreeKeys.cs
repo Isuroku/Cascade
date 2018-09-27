@@ -209,6 +209,7 @@ namespace HLDParser
         public void AddValue(string v) { new CStringValue(this, SPosition.zero, v); }
 
         public string GetName() { return Name; }
+        public bool IsArrayKey() { return IsArray; }
 
         public int GetChildCount() { return _keys.Count; }
         public IKey GetChild(int index) { return _keys[index]; }
