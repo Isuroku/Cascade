@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text;
 
 namespace ReflectionSerializer
 {
@@ -370,6 +371,7 @@ namespace ReflectionSerializer
         struct SCustomMemberParams
         {
             public string Name;
+            public string ChangedName;
             public object DefaultValue;
             public CascadeConverter Converter;
         }
@@ -406,9 +408,47 @@ namespace ReflectionSerializer
             }
 
             if (string.IsNullOrEmpty(prms.Name))
+            {
                 prms.Name = memberInfo.Name;
+                prms.ChangedName = ChangeFieldName(memberInfo);
+            }
+            else
+                prms.ChangedName = prms.Name;
 
             return prms;
+        }
+
+        string ChangeFieldName(MemberInfo memberInfo)
+        {
+            string name = memberInfo.Name;
+            string[] parts = name.Split(new char[] { '_' }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+                return name;
+
+            var sb = new StringBuilder();
+            List<char> lst = new List<char>();
+            for(int i = 0; i < parts.Length; ++i)
+            {
+                string p = parts[i];
+                for (int c = 0; c < p.Length; ++c)
+                {
+                    char ch = p[c];
+
+                    if(Char.IsLetter(ch))
+                    {
+                        if (c == 0 && Char.IsLower(ch))
+                            ch = Char.ToUpper(ch);
+                        else if (c != 0 && Char.IsUpper(ch))
+                            ch = Char.ToLower(ch);
+                    }
+
+                    lst.Add(ch);
+                }
+                sb.Append(new string(lst.ToArray()));
+                lst.Clear();
+            }
+
+            return sb.ToString();
         }
 
         void SerializeClass(object instance, Type type, IKey inKey, ILogger inLogger)
@@ -431,7 +471,7 @@ namespace ReflectionSerializer
                     continue;
 
 
-                IKey child = inKey.CreateChildKey(member_params.Name);
+                IKey child = inKey.CreateChildKey(member_params.ChangedName);
 
                 Type memberType = memberInfo.GetMemberType();
 
@@ -465,7 +505,10 @@ namespace ReflectionSerializer
 
                 Type memberType = memberInfo.GetMemberType();
 
-                IKey sub_key = inKey.GetChild(member_params.Name);
+                IKey sub_key = inKey.GetChild(member_params.ChangedName);
+                if(sub_key == null)
+                    sub_key = inKey.GetChild(member_params.Name);
+
                 if (sub_key != null)
                 {
                     object readValue;
