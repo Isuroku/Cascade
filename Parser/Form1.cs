@@ -17,7 +17,7 @@ namespace Parser
 
         CParserManager _parser;
 
-        CKey _test_serialize;
+        IKey _test_serialize;
 
         public Form1()
         {
@@ -160,35 +160,35 @@ namespace Parser
             tvTree.ExpandAll();
         }
 
-        void AddToTree(CKey key, TreeNodeCollection nc)
+        void AddToTree(IKey key, TreeNodeCollection nc)
         {
             StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < key.ValuesCount; i++)
+            for (int i = 0; i < key.GetValuesCount(); i++)
             {
-                CBaseElement el = key.GetValue(i);
+                IKeyValue value = key.GetValue(i);
 
                 string val_comments = string.Empty;
-                if (!string.IsNullOrEmpty(el.Comments))
-                    val_comments = string.Format("[//{0}]", el.Comments);
+                if (!string.IsNullOrEmpty(value.Comments))
+                    val_comments = string.Format("[//{0}]", value.Comments);
 
-                sb.AppendFormat("{0}{1}, ", el, val_comments);
+                sb.AppendFormat("{0}{1}, ", value, val_comments);
             }
 
             string arr_flag = string.Empty;
-            if(key.IsArray)
+            if(key.IsArrayKey())
                 arr_flag = "[a]";
 
             string key_comments = string.Empty;
             if (!string.IsNullOrEmpty(key.Comments))
                 key_comments = string.Format(" //{0}", key.Comments);
 
-            TreeNode tn = new TreeNode(string.Format("{0}{1}: {2}{3}", key.Name, arr_flag, sb, key_comments));
+            TreeNode tn = new TreeNode(string.Format("{0}{1}: {2}{3}", key.GetName(), arr_flag, sb, key_comments));
             nc.Add(tn);
 
-            for(int i = 0; i < key.KeyCount; i++)
+            for(int i = 0; i < key.GetChildCount(); i++)
             {
-                CKey el = key.GetKey(i);
-                AddToTree(el as CKey, tn.Nodes);
+                IKey el = key.GetChild(i);
+                AddToTree(el, tn.Nodes);
             }
         }
 
@@ -222,21 +222,14 @@ namespace Parser
 
         private void btnSerializeTests_Click(object sender, EventArgs e)
         {
-            var serializer = new CKeySerializer(new CachedReflector());
+            var serializer = new CCascadeSerializer();
             TestObject saved_obj = TestObject.CreateTestObject();
             //CTestClassMA saved_obj = CTestClassMA.CreateTestObject();
-            _test_serialize = CKey.CreateRoot("TestObject");
 
-            serializer.Serialize(saved_obj, _test_serialize, this);
+            _test_serialize = serializer.SerializeToKey(saved_obj, string.Empty, this);
 
-            //var serializer = new Serializer(new CachedReflector());
-            //SerializedObject serialized = serializer.Serialize(TestObject.CreateTestObject());
-            ////SerializedObject serialized = serializer.Serialize(new CTest2());
-            //string text = serialized.Stringify();
-            //AddLogToRichText(text, Color.Green);
-
-            //CKey root = new CKey(null, serialized.Name);
-            //SaveToRoot(root, serialized);
+            //string text = serializer.SerializeToCascade(saved_obj, string.Empty, this);
+            //SaveTextToFile(text, "SerializeTest", false);
 
             tvTree.Nodes.Clear();
             AddToTree(_test_serialize, tvTree.Nodes);
@@ -245,7 +238,7 @@ namespace Parser
 
         private void btnDeserializeTest_Click(object sender, EventArgs e)
         {
-            var serializer = new CKeySerializer(new CachedReflector());
+            var serializer = new CCascadeSerializer(new CachedReflector());
             TestObject saved_obj = serializer.Deserialize<TestObject>(_test_serialize, this);
         }
 

@@ -55,5 +55,11 @@
     <Compile Include="Stringifier.cs" />
     <Compile Include="TestObject.cs" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HLDParser\CascadeParser.csproj">
+      <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
+      <Name>CascadeParser</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

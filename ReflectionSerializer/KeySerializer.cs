@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CascadeParser;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -12,41 +13,32 @@ namespace ReflectionSerializer
         void Trace(string inText);
     }
 
-    public interface IKey
-    {
-        IKey CreateChildKey(string name);
-        IKey CreateArrayKey();
-        void AddValue(long v);
-        void AddValue(int v);
-        void AddValue(ulong v);
-        void AddValue(uint v);
-        void AddValue(decimal v);
-        void AddValue(float v);
-        void AddValue(bool v);
-        void AddValue(string v);
-
-        string GetName();
-        bool IsArrayKey();
-
-        int GetChildCount();
-        IKey GetChild(int index);
-        IKey GetChild(string name);
-
-        int GetValuesCount();
-        string GetValueAsString(int index);
-        float GetValueAsFloat(int index);
-        int GetValueAsInt(int index);
-        uint GetValueAsUInt(int index);
-        bool GetValueAsBool(int index);
-    }
-
-    public class CKeySerializer
+    public class CCascadeSerializer
     {
         readonly IReflectionProvider _reflectionProvider;
 
-        public CKeySerializer(IReflectionProvider reflectionProvider)
+        public CCascadeSerializer(IReflectionProvider reflectionProvider)
         {
             _reflectionProvider = reflectionProvider;
+        }
+
+        public CCascadeSerializer(): this(new CachedReflector())
+        {
+            
+        }
+
+        public IKey SerializeToKey(object instance, string inRootName, ILogger inLogger)
+        {
+            IKey root = IKeyFactory.CreateKey(inRootName);
+            Serialize(instance, root, inLogger);
+            return root;
+        }
+
+        public string SerializeToCascade(object instance, string inRootName, ILogger inLogger)
+        {
+            IKey key = SerializeToKey(instance, inRootName, inLogger);
+            string text = key.SaveToString();
+            return text;
         }
 
         public void Serialize(object instance, IKey inKey, ILogger inLogger)

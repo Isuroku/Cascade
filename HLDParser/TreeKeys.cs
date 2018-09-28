@@ -1,11 +1,10 @@
-﻿using ReflectionSerializer;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace CascadeParser
 {
-    public class CKey : CBaseElement, IKey
+    internal class CKey : CBaseElement, IKey
     {
         public bool IsArray { get; private set; }
 
@@ -23,7 +22,7 @@ namespace CascadeParser
             }
         }
 
-        protected List<CBaseElement> _values = new List<CBaseElement>();
+        protected List<CBaseValue> _values = new List<CBaseValue>();
         protected List<CKey> _keys = new List<CKey>();
 
         public override bool IsKey() { return true; }
@@ -31,7 +30,6 @@ namespace CascadeParser
         public CKey GetKey(int index) { return _keys[index]; }
         public int KeyCount { get { return _keys.Count; } }
 
-        public CBaseElement GetValue(int index) { return _values[index]; }
         public int ValuesCount { get { return _values.Count; } }
 
         public bool IsEmpty { get { return _keys.Count == 0 && _values.Count == 0; } }
@@ -117,14 +115,6 @@ namespace CascadeParser
             return Name;
         }
 
-        public override float GetValueAsFloat() { return 0; }
-        public override decimal GetValueAsDecimal() { return 0; }
-        public override int GetValueAsInt() { return 0; }
-        public override long GetValueAsLong() { return 0; }
-        public override uint GetValueAsUInt() { return 0; }
-        public override ulong GetValueAsULong() { return 0; }
-        public override bool GetValueAsBool() { return false; }
-
         public void SetName(string name) { _name = name; }
 
         public void AddChild(CBaseElement inElement)
@@ -132,7 +122,7 @@ namespace CascadeParser
             if (inElement.IsKey())
                 _keys.Add(inElement as CKey);
             else
-                _values.Add(inElement);
+                _values.Add(inElement as CBaseValue);
         }
 
         public void RemoveChild(CBaseElement inElement)
@@ -140,7 +130,7 @@ namespace CascadeParser
             if (inElement.IsKey())
                 _keys.Remove(inElement as CKey);
             else
-                _values.Remove(inElement);
+                _values.Remove(inElement as CBaseValue);
         }
 
         internal void AddTokenTail(CTokenLine line, bool inCommentForValue, ILogger inLoger)
@@ -216,6 +206,9 @@ namespace CascadeParser
         public IKey GetChild(string name) { return FindChildKey(name); }
 
         public int GetValuesCount() { return _values.Count; }
+
+        public IKeyValue GetValue(int index) { return _values[index]; }
+
         public string GetValueAsString(int index) { return _values[index].ToString(); }
         public float GetValueAsFloat(int index) { return _values[index].GetValueAsFloat(); }
         public int GetValueAsInt(int index) { return _values[index].GetValueAsInt(); }
@@ -273,7 +266,7 @@ namespace CascadeParser
 
         void TakeAllValues(CKey other_key, bool inClear)
         {
-            List<CBaseElement> lst = new List<CBaseElement>(other_key._values);
+            List<CBaseValue> lst = new List<CBaseValue>(other_key._values);
 
             if (inClear)
                 _values.Clear();

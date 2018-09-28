@@ -52,17 +52,12 @@
     <Compile Include="TokenLine.cs" />
     <Compile Include="TokenTemplate.cs" />
     <Compile Include="TreeBuilder.cs" />
+    <Compile Include="TreeKeyFactory.cs" />
     <Compile Include="TreeKeys.cs" />
     <Compile Include="TreeTypes.cs" />
     <Compile Include="Tuple.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\ReflectionSerializer\ReflectionSerializer.csproj">
-      <Project>{6aa90dc2-4fb2-406f-a205-682478520f8e}</Project>
-      <Name>ReflectionSerializer</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

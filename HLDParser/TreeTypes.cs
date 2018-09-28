@@ -13,7 +13,7 @@ namespace CascadeParser
         Bool
     }
 
-    public abstract class CBaseElement
+    internal abstract class CBaseElement
     {
         protected CKey _parent;
         protected SPosition _pos;
@@ -79,6 +79,15 @@ namespace CascadeParser
             else
                 _comments += string.Format(" {0}", text);
         }
+    }
+
+    internal abstract class CBaseValue : CBaseElement, IKeyValue
+    {
+        IKey IKeyValue.Parent { get { return Parent; } }
+
+        public CBaseValue() { }
+        public CBaseValue(CKey parent, SPosition pos): base(parent, pos) { }
+        public CBaseValue(CBaseElement other): base(other) { }
 
         public abstract float GetValueAsFloat();
         public abstract decimal GetValueAsDecimal();
@@ -87,9 +96,11 @@ namespace CascadeParser
         public abstract uint GetValueAsUInt();
         public abstract ulong GetValueAsULong();
         public abstract bool GetValueAsBool();
+
+        public string GetValueAsString() { return ToString(); }
     }
 
-    public class CStringValue : CBaseElement
+    internal class CStringValue : CBaseValue
     {
         string _value;
         public override EElementType GetElementType() { return EElementType.String; }
@@ -168,7 +179,7 @@ namespace CascadeParser
         }
     }
 
-    public class CIntValue : CBaseElement
+    internal class CIntValue : CBaseValue
     {
         long _value;
         public override EElementType GetElementType() { return EElementType.Int; }
@@ -192,7 +203,7 @@ namespace CascadeParser
         public override bool GetValueAsBool() { return _value > 0; }
     }
 
-    public class CUIntValue : CBaseElement
+    internal class CUIntValue : CBaseValue
     {
         ulong _value;
         public override EElementType GetElementType() { return EElementType.Int; }
@@ -216,7 +227,7 @@ namespace CascadeParser
         public override bool GetValueAsBool() { return _value > 0; }
     }
 
-    public class CFloatValue : CBaseElement
+    internal class CFloatValue : CBaseValue
     {
         decimal _value;
         public override EElementType GetElementType() { return EElementType.Float; }
@@ -240,7 +251,7 @@ namespace CascadeParser
         public override bool GetValueAsBool() { return _value > 0; }
     }
 
-    public class CBoolValue : CBaseElement
+    internal class CBoolValue : CBaseValue
     {
         bool _value;
         public override EElementType GetElementType() { return EElementType.Bool; }

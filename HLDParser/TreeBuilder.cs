@@ -4,7 +4,7 @@ namespace CascadeParser
 {
     internal interface ITreeBuildSupport
     {
-        CKey GetTree(string inFileName);
+        IKey GetTree(string inFileName);
         ILogger GetLogger();
     }
 
@@ -311,7 +311,7 @@ namespace CascadeParser
             string file_name = line.CommandParams["file"];
             CKey root = null;
             if (!string.IsNullOrEmpty(file_name))
-                root = inSupport.GetTree(file_name);
+                root = (CKey)inSupport.GetTree(file_name);
             else
                 root = arr_key.GetRoot();
 

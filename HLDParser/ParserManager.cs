@@ -43,7 +43,7 @@ namespace CascadeParser
                 return _owner._loger;
             }
 
-            public CKey GetTree(string inFileName)
+            public IKey GetTree(string inFileName)
             {
                 return _owner.GetTree(inFileName);
             }
@@ -66,7 +66,7 @@ namespace CascadeParser
             _supporter = new CSupportOwner(this);
         }
 
-        public CKey Parse(string inFileName, string inText)
+        public IKey Parse(string inFileName, string inText)
         {
             _parsed.RemoveAll(p => string.Equals(p.FileName, inFileName));
 
@@ -88,7 +88,7 @@ namespace CascadeParser
             return root;
         }
 
-        public CTokenLine[] GetLineByRoot(CKey inRoot)
+        public CTokenLine[] GetLineByRoot(IKey inRoot)
         {
             CParsed parsed = _parsed.Find(p => p.Root == inRoot);
             if (parsed == null)
@@ -97,7 +97,7 @@ namespace CascadeParser
         }
 
 
-        public CKey GetTree(string inFileName)
+        public IKey GetTree(string inFileName)
         {
             CParsed parsed = _parsed.Find(p => string.Equals(p.FileName, inFileName, StringComparison.InvariantCultureIgnoreCase));
             if (parsed != null)

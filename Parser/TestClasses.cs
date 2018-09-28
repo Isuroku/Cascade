@@ -1,5 +1,6 @@
 ﻿
 using System;
+using CascadeParser;
 using ReflectionSerializer;
 
 namespace Parser
@@ -39,9 +40,9 @@ namespace Parser
         {
             Vector3 v = new Vector3();
 
-            v.x = key.GetValueAsFloat(0);
-            v.y = key.GetValueAsFloat(1);
-            v.z = key.GetValueAsFloat(2);
+            v.x = key.GetValue(0).GetValueAsFloat();
+            v.y = key.GetValue(1).GetValueAsFloat();
+            v.z = key.GetValue(2).GetValueAsFloat();
 
             return v;
         }
