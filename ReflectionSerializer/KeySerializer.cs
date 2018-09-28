@@ -438,8 +438,8 @@ namespace ReflectionSerializer
                     {
                         if (c == 0 && Char.IsLower(ch))
                             ch = Char.ToUpper(ch);
-                        else if (c != 0 && Char.IsUpper(ch))
-                            ch = Char.ToLower(ch);
+                        //else if (c != 0 && Char.IsUpper(ch))
+                        //    ch = Char.ToLower(ch);
                     }
 
                     lst.Add(ch);

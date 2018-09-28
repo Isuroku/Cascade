@@ -18,7 +18,7 @@ namespace ReflectionSerializer
 
         MemberSerialization GetMemberSerialization(Type type)
         {
-            object[] attributes = type.GetCustomAttributes(false);
+            object[] attributes = type.GetCustomAttributes(true);
             for (int i = 0; i < attributes.Length; ++i)
             {
                 var dm = attributes[i] as CascadeObjectAttribute;
@@ -28,16 +28,18 @@ namespace ReflectionSerializer
             return MemberSerialization.OptOut;
         }
 
-        private void CollectSerializableMembers(Type type, MemberSerialization inMemberSerialization, List<MemberInfo> outMembers)
+        private void CollectSerializableMembers(Type type, List<MemberInfo> outMembers)
         {
             if (type.BaseType != null)
-                CollectSerializableMembers(type.BaseType, inMemberSerialization, outMembers);
+                CollectSerializableMembers(type.BaseType, outMembers);
+
+            MemberSerialization ms = GetMemberSerialization(type);
 
             BindingFlags flags = CollectMembersNP;
-            if(inMemberSerialization == MemberSerialization.OptOut)
+            if(ms == MemberSerialization.OptOut)
                 flags = CollectMembersP;
 
-            if (inMemberSerialization != MemberSerialization.Fields)
+            if (ms != MemberSerialization.Fields)
             {
                 PropertyInfo[] properties = type.GetProperties(flags);
                 for (int i = 0; i < properties.Length; i++)
@@ -47,7 +49,7 @@ namespace ReflectionSerializer
                     if (IsIgnogeMember(p))
                         continue;
 
-                    if (inMemberSerialization == MemberSerialization.OptIn && !IsSerializeMember(p))
+                    if (ms == MemberSerialization.OptIn && !IsSerializeMember(p))
                         continue;
 
                     MethodInfo get_info = p.GetGetMethod();
@@ -68,7 +70,7 @@ namespace ReflectionSerializer
                 if (IsIgnogeMember(f))
                     continue;
 
-                if (inMemberSerialization == MemberSerialization.OptIn && !IsSerializeMember(f))
+                if (ms == MemberSerialization.OptIn && !IsSerializeMember(f))
                     continue;
 
                 if (!f.IsDefined(typeof(CompilerGeneratedAttribute), false))
@@ -90,8 +92,7 @@ namespace ReflectionSerializer
         public virtual MemberInfo[] GetSerializableMembers(Type type)
         {
             List<MemberInfo> lst = new List<MemberInfo>();
-            MemberSerialization ms = GetMemberSerialization(type);
-            CollectSerializableMembers(type, ms, lst);
+            CollectSerializableMembers(type, lst);
             return lst.ToArray();
         }
 

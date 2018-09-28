@@ -5,6 +5,7 @@ using ReflectionSerializer;
 
 namespace Parser
 {
+    [CascadeObject(MemberSerialization.Fields)]
     class CTestBase
     {
         private float _base_float;
