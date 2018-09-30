@@ -30,9 +30,6 @@ namespace ReflectionSerializer
 
         private void CollectSerializableMembers(Type type, List<MemberInfo> outMembers)
         {
-            if (type.BaseType != null)
-                CollectSerializableMembers(type.BaseType, outMembers);
-
             MemberSerialization ms = GetMemberSerialization(type);
 
             BindingFlags flags = CollectMembersNP;

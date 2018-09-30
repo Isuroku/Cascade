@@ -32,7 +32,7 @@ namespace ReflectionSerializer
 
         public static bool IsGenericCollection(this Type type)
         {
-            return type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>));
+            return type.IsGenericType && type.GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(ICollection<>));
         }
 
         public static bool IsGenericDictionary(this Type type)

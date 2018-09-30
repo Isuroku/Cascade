@@ -44,54 +44,66 @@ namespace ReflectionSerializer
 
         public void Serialize(object instance, IKey inKey, ILogger inLogger)
         {
-            Serialize(instance, instance.GetType(), inKey, inLogger);
+            Serialize(instance, instance.GetType(), inKey, 0, inLogger);
         }
 
         public T Deserialize<T>(IKey key, ILogger inLogger)
         {
-            return (T)DeserializeInternal(key, typeof(T), inLogger);
+            return (T)DeserializeInternal(null, key, typeof(T), 0, inLogger);
         }
 
-        void Serialize(object instance, Type declaredType, IKey inKey, ILogger inLogger)
+        bool IsInheriteAccess(Type inDeclaredType)
         {
-            Type type = instance == null ? declaredType : instance.GetType();
+            return inDeclaredType != null && 
+                inDeclaredType != typeof(object) && 
+                inDeclaredType != typeof(ValueType) &&
+                inDeclaredType != typeof(Enum) &&
+                inDeclaredType != typeof(Array);
+        }
 
-            if (instance == null || type.IsAtomic())
-                SerializeAtomic(instance, type, inKey, inLogger);
-            else if (type.IsGenericDictionary())
-                SerializeGenericDictionary(instance, type, inKey, inLogger);
-            else if (type.IsArray)
-                SerializeArray(instance, type, inKey, inLogger);
-            else if (type.IsGenericCollection())
-                SerializeGenericCollection(instance, type, inKey, inLogger);
+        void Serialize(object instance, Type inDeclaredType, IKey inKey, int inInheriteDeep, ILogger inLogger)
+        {
+            Type base_type = inDeclaredType.BaseType;
+            if (IsInheriteAccess(base_type))
+                Serialize(instance, base_type, inKey, inInheriteDeep + 1, inLogger);
+
+            Type type = instance == null ? inDeclaredType : instance.GetType();
+
+            if (instance == null || inDeclaredType.IsAtomic())
+                SerializeAtomic(instance, inDeclaredType, inKey, inLogger);
+            else if (inDeclaredType.IsGenericDictionary())
+                SerializeGenericDictionary(instance, inDeclaredType, inKey, inInheriteDeep, inLogger);
+            else if (inDeclaredType.IsArray)
+                SerializeArray(instance, inDeclaredType, inKey, inLogger);
+            else if (inDeclaredType.IsGenericCollection())
+                SerializeGenericCollection(instance, inDeclaredType, inKey, inInheriteDeep, inLogger);
             else
-                SerializeClass(instance, type, inKey, inLogger);
-
-            // Write the runtime type if different (except nullables since they get unboxed)
-            if (!declaredType.IsNullable() && type != declaredType)
-                inKey.CreateChildKey("RealObjectType").AddValue(type.FullName);
+                SerializeClass(instance, inDeclaredType, inKey, inLogger);
         }
 
-        public object DeserializeInternal(IKey inKey, Type declaredType, ILogger inLogger)
+        public object DeserializeInternal(object inInstance, IKey inKey, Type inDeclaredType, int inInheriteDeep, ILogger inLogger)
         {
-            Type type = declaredType;
             object instance;
 
             // Atomic or null values
-            if (type.IsAtomic())
-                instance = DeserializeAtomic(inKey, type, inLogger);
+            if (inDeclaredType.IsAtomic())
+                instance = DeserializeAtomic(inInstance, inKey, inDeclaredType, inLogger);
             // Dictionaries
-            else if (type.IsGenericDictionary())
-                instance = DeserializeDictionary(inKey, type, inLogger);
+            else if (inDeclaredType.IsGenericDictionary())
+                instance = DeserializeDictionary(inInstance, inKey, inDeclaredType, inInheriteDeep, inLogger);
             // Arrays
-            else if (type.IsArray)
-                instance = DeserializeArray(inKey, type, inLogger);
+            else if (inDeclaredType.IsArray)
+                instance = DeserializeArray(inKey, inDeclaredType, inLogger);
             // lists and sets (any collection excluding dictionaries)
-            else if (type.IsGenericCollection())
-                instance = DeserializeGenericCollection(inKey, type, inLogger);
+            else if (inDeclaredType.IsGenericCollection())
+                instance = DeserializeGenericCollection(inInstance, inKey, inDeclaredType, inInheriteDeep, inLogger);
             // Everything else (serialized with recursive property reflection)
             else
-                instance = DeserializeClass(inKey, type, inLogger);
+                instance = DeserializeClass(inInstance, inKey, inDeclaredType, inLogger);
+
+            Type base_type = inDeclaredType.BaseType;
+            if (IsInheriteAccess(base_type))
+                DeserializeInternal(instance, inKey, base_type, inInheriteDeep + 1, inLogger);
 
             return instance;
         }
@@ -102,7 +114,7 @@ namespace ReflectionSerializer
             AddValueToKey(inKey, instance);
         }
 
-        public object DeserializeAtomic(IKey inKey, Type type, ILogger inLogger)
+        public object DeserializeAtomic(object inInstance, IKey inKey, Type type, ILogger inLogger)
         {
             object instance;
             if (inKey.GetValuesCount() == 0)
@@ -128,48 +140,71 @@ namespace ReflectionSerializer
         #endregion Atomic
 
         #region Dictionary
-        void SerializeGenericDictionary(object instance, Type declaredType, IKey inKey, ILogger inLogger)
+        void SerializeGenericDictionary(object instance, Type declaredType, IKey inKey, int inInheriteDeep, ILogger inLogger)
         {
             var dictionary = instance as IDictionary;
-            Type[] genericArguments = dictionary.GetType().GetGenericArguments();
-            Type keyDeclaredType = genericArguments[0];
-            Type valueDeclaredType = genericArguments[1];
+            Type[] gen_args = declaredType.GetGenericArguments();
+            if (gen_args.Length < 2)
+            {
+                inLogger.LogError(string.Format("SerializeGenericDictionary: Generic Arguments are None. Type {0}. Instance {1}", declaredType.Name, instance));
+                return;
+            }
+
+            Type keyDeclaredType = gen_args[0];
+            Type valueDeclaredType = gen_args[1];
 
             if (!keyDeclaredType.IsAtomic())
                 inLogger.LogError("Dictionary must simple key.");
             else
             {
+                IKey tree_key = inKey;
+                if (inInheriteDeep > 0)
+                    tree_key = inKey.CreateChildKey("BaseDictionary");
+
                 foreach (var key in dictionary.Keys)
                 {
-                    IKey child = inKey.CreateChildKey(key.ToString());
-                    Serialize(dictionary[key], valueDeclaredType, child, inLogger);
+                    IKey child = tree_key.CreateChildKey(key.ToString());
+                    Serialize(dictionary[key], valueDeclaredType, child, 0, inLogger);
                 }
             }
         }
 
-        public object DeserializeDictionary(IKey inKey, Type type, ILogger inLogger)
+        public object DeserializeDictionary(object inInstance, IKey inKey, Type declaredType, int inInheriteDeep, ILogger inLogger)
         {
+            Type[] gen_args = declaredType.GetGenericArguments();
+            if (gen_args.Length < 2)
+            {
+                inLogger.LogError(string.Format("DeserializeDictionary: Generic Arguments are None. Type {0}", declaredType.Name));
+                return inInstance;
+            }
+
+            object instance = inInstance;
             // Instantiate if necessary
-            object instance = _reflectionProvider.Instantiate(type);
+            if (instance == null)
+                instance = _reflectionProvider.Instantiate(declaredType);
 
             var dictionary = instance as IDictionary;
-            Type[] genericArguments = dictionary.GetType().GetGenericArguments();
-            Type keyDeclaredType = genericArguments[0];
-            Type valueDeclaredType = genericArguments[1];
+            
+            Type keyDeclaredType = gen_args[0];
+            Type valueDeclaredType = gen_args[1];
 
-            for (int i = 0; i < inKey.GetChildCount(); ++i)
+            IKey tree_key = inKey;
+            if (inInheriteDeep > 0)
+                tree_key = inKey.GetChild("BaseDictionary");
+
+            for (int i = 0; i < tree_key.GetChildCount(); ++i)
             {
-                IKey sub_key = inKey.GetChild(i);
+                IKey sub_key = tree_key.GetChild(i);
 
                 object dic_key;
                 if (!ReflectionHelper.StringToAtomicValue(sub_key.GetName(), keyDeclaredType, out dic_key))
                 {
                     inLogger.LogError(string.Format("SubKey {0} for dictionary with key type {1} can't convert value {2}",
-                        inKey, keyDeclaredType.Name, sub_key.GetName()));
+                        tree_key, keyDeclaredType.Name, sub_key.GetName()));
                 }
                 else
                 {
-                    object dic_value = DeserializeInternal(sub_key, valueDeclaredType, inLogger);
+                    object dic_value = DeserializeInternal(null, sub_key, valueDeclaredType, 0, inLogger);
 
                     if (dictionary.Contains(dic_key))
                         dictionary.Remove(dic_key);
@@ -227,7 +262,7 @@ namespace ReflectionSerializer
                 else
                 {
                     IKey child = dim_child.CreateArrayKey();
-                    Serialize(value, declaredItemType, child, inLogger);
+                    Serialize(value, declaredItemType, child, 0, inLogger);
                 }
             }
         }
@@ -294,7 +329,7 @@ namespace ReflectionSerializer
                     else
                     {
                         IKey sub_key = dim_child.GetChild(last_index);
-                        obj_value = DeserializeInternal(sub_key, declaredItemType, inLogger);
+                        obj_value = DeserializeInternal(null, sub_key, declaredItemType, 0, inLogger);
                     }
 
                     multi_dim_array.SetValue(obj_value, indexer.Current);
@@ -306,29 +341,55 @@ namespace ReflectionSerializer
         #endregion Array
 
         #region GenericCollection
-        void SerializeGenericCollection(object instance, Type type, IKey inKey, ILogger inLogger)
+        void SerializeGenericCollection(object instance, Type type, IKey inKey, int inInheriteDeep, ILogger inLogger)
         {
             var collection = instance as IEnumerable;
-            Type declaredItemType = type.GetGenericArguments()[0];
+
+            Type[] gen_args = type.GetGenericArguments();
+            if(gen_args.Length == 0)
+            {
+                inLogger.LogError(string.Format("SerializeGenericCollection: Generic Arguments are None. Type {0}. Instance {1}", type.Name, instance));
+                return;
+            }
+            
+            Type declaredItemType = gen_args[0];
             bool atomic_member = declaredItemType.IsAtomic();
+
+            IKey tree_key = inKey;
+            if (inInheriteDeep > 0)
+                tree_key = inKey.CreateChildKey("BaseCollection");
+
             foreach (var item in collection)
             {
                 if (atomic_member)
-                    AddValueToKey(inKey, item);
+                    AddValueToKey(tree_key, item);
                 else
                 {
-                    IKey child = inKey.CreateArrayKey();
-                    Serialize(item, declaredItemType, child, inLogger);
+                    IKey child = tree_key.CreateArrayKey();
+                    Serialize(item, declaredItemType, child, 0, inLogger);
                 }
             }
         }
 
-        public object DeserializeGenericCollection(IKey inKey, Type type, ILogger inLogger)
+        public object DeserializeGenericCollection(object inInstance, IKey inKey, Type type, int inInheriteDeep, ILogger inLogger)
         {
-            bool isHashSet = type.IsHashSet();
+            Type[] gen_args = type.GetGenericArguments();
+            if (gen_args.Length == 0)
+            {
+                inLogger.LogError(string.Format("DeserializeGenericCollection: Generic Arguments are None. Type {0}", type.Name));
+                return inInstance;
+            }
+
             Type declaredItemType = type.GetGenericArguments()[0];
-            object instance = _reflectionProvider.Instantiate(type) as IEnumerable;
             bool is_atomic_elems = declaredItemType.IsAtomic();
+
+            bool isHashSet = type.IsHashSet();
+
+            object instance = inInstance;
+            if (instance == null)
+                instance = _reflectionProvider.Instantiate(type);
+
+            instance = instance as IEnumerable;
 
             MethodHandler addToHashSet = null;
             if (isHashSet)
@@ -336,22 +397,26 @@ namespace ReflectionSerializer
 
             int element_count = is_atomic_elems ? inKey.GetValuesCount() : inKey.GetChildCount();
 
+            IKey tree_key = inKey;
+            if (inInheriteDeep > 0)
+                tree_key = inKey.GetChild("BaseCollection");
+
             for (int i = 0; i < element_count; i++)
             {
                 object obj_value;
                 if (is_atomic_elems)
                 {
-                    string str_value = inKey.GetValueAsString(i);
+                    string str_value = tree_key.GetValueAsString(i);
                     if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
                     {
                         inLogger.LogError(string.Format("Key {0} for collection with element type {1} can't convert value {2}",
-                            inKey, declaredItemType.Name, str_value));
+                            tree_key, declaredItemType.Name, str_value));
                     }
                 }
                 else
                 {
-                    IKey sub_key = inKey.GetChild(i);
-                    obj_value = DeserializeInternal(sub_key, declaredItemType, inLogger);
+                    IKey sub_key = tree_key.GetChild(i);
+                    obj_value = DeserializeInternal(null, sub_key, declaredItemType, 0, inLogger);
                 }
 
                 if (isHashSet)
@@ -473,30 +538,51 @@ namespace ReflectionSerializer
 
                 IKey child = inKey.CreateChildKey(member_params.ChangedName);
 
-                Type memberType = memberInfo.GetMemberType();
+                Type real_type = value.GetType();
+                Type member_type = memberInfo.GetMemberType();
 
-                if (member_params.Converter != null && member_params.Converter.CanConvert(memberType))
+                if (member_params.Converter != null && member_params.Converter.CanConvert(real_type))
                     member_params.Converter.WriteKey(child, value, inLogger);
                 else
-                    Serialize(value, memberType, child, inLogger);
+                    Serialize(value, real_type, child, 0, inLogger);
+
+                // Write the runtime type if different (except nullables since they get unboxed)
+                if (real_type != member_type && !member_type.IsNullable())
+                {
+                    IKey obj_type_key = child.CreateChildKey("RealObjectType");
+                    obj_type_key.AddValue(real_type.FullName);
+                    obj_type_key.AddValue(real_type.Assembly.FullName);
+                }
             }
 
             if (inKey.GetChildCount() == 0)
                 inKey.AddValue("default");
         }
 
-        public object DeserializeClass(IKey inKey, Type type, ILogger inLogger)
+        public object DeserializeClass(object inInstance, IKey inKey, Type type, ILogger inLogger)
         {
             IKey type_key = inKey.GetChild("RealObjectType");
             if (type_key != null)
             {
                 string type_name = type_key.GetValueAsString(0);
-                Type obj_type = Type.GetType(type_name, false);
-                if (obj_type != null)
-                    type = obj_type;
+                string assembly_name = type_key.GetValueAsString(1);
+                
+                try
+                {
+                    Assembly assembly = Assembly.Load(assembly_name);
+                    Type obj_type = assembly.GetType(type_name, true);
+                    if (obj_type != null)
+                        type = obj_type;
+                }
+                catch(Exception ex)
+                {
+                    inLogger.LogError(string.Format("Cant take type from RealObjectType {0}. Exception: {1}", type_name, ex.Message));
+                }
             }
 
-            object instance = _reflectionProvider.Instantiate(type);
+            object instance = inInstance;
+            if (instance == null)
+                instance = _reflectionProvider.Instantiate(type);
 
             MemberInfo[] member_infos = _reflectionProvider.GetSerializableMembers(type);
             foreach (MemberInfo memberInfo in member_infos)
@@ -515,7 +601,7 @@ namespace ReflectionSerializer
                     if (member_params.Converter != null)
                         readValue = member_params.Converter.ReadKey(sub_key, inLogger);
                     else
-                        readValue = DeserializeInternal(sub_key, memberType, inLogger);
+                        readValue = DeserializeInternal(null, sub_key, memberType, 0, inLogger);
 
                     // This dirty check is naive and doesn't provide performance benefits
                     //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))

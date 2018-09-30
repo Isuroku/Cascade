@@ -381,6 +381,14 @@ namespace CascadeParser
             }
         }
 
+        int GetCommonLengthStringsValuesForSave()
+        {
+            int len = 0;
+            for (int i = 0; i < _values.Count; ++i)
+                len += _values[i].GetStringForSave().Length;
+            return len;
+        }
+
         bool IsValuesHasComments()
         {
             for (int i = 0; i < _values.Count; ++i)
@@ -404,7 +412,8 @@ namespace CascadeParser
                     sb.Append(Environment.NewLine);
                 }
 
-                bool vert_values_writing = _values.Count > 3 && _keys.Count == 0 || IsValuesHasComments();
+                int values_string_length = GetCommonLengthStringsValuesForSave();
+                bool vert_values_writing = values_string_length > 50 && _keys.Count == 0 || IsValuesHasComments();
                 if (vert_values_writing)
                 {
                     AppendIntent(sb, intent);

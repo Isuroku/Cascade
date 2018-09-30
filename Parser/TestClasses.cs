@@ -1,12 +1,13 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using CascadeParser;
 using ReflectionSerializer;
 
 namespace Parser
 {
     [CascadeObject(MemberSerialization.Fields)]
-    class CTestBase
+    public class CTestBase
     {
         private float _base_float;
 
@@ -92,16 +93,73 @@ namespace Parser
         }
     }
 
-    class CTestClassMA
+    public class CTestClassMA : CTestBase
     {
         public int[,] _multi_array;
         public int[] _array;
+        public Dictionary<string, int> _dict;
 
         public static CTestClassMA CreateTestObject()
         {
             CTestClassMA obj = new CTestClassMA();
             obj._multi_array = new int[3, 2] { { 1, 2 }, { 3, 4 }, { 5, 6 } };
             obj._array = new int[] { 1, 2, 3, 4, 5, 6 };
+            obj._dict = new Dictionary<string, int>();
+            obj._dict.Add("dickey1", 1);
+            obj._dict.Add("dickey2", 2);
+            return obj;
+        }
+    }
+
+    public class CAIActionDescrs : Dictionary<string, string>
+    {
+        public int _some_int;
+
+        public static CAIActionDescrs CreateTestObject()
+        {
+            CAIActionDescrs obj = new CAIActionDescrs();
+            obj.Add("aikey", "aivalue");
+            obj._some_int = 99;
+            return obj;
+        }
+    }
+
+    public class CListInheriteTest: List<int>
+    {
+        public int _some_int;
+
+        public static CListInheriteTest CreateTestObject()
+        {
+            CListInheriteTest obj = new CListInheriteTest();
+            obj.Add(101);
+            obj._some_int = 99;
+            return obj;
+        }
+    }
+
+    public class CTestEnum
+    {
+        public enum ETestEnum { TestEnum1, TestEnum2 }
+        public ETestEnum _enum_field;
+        public object _polimorf;
+
+        public static CTestEnum CreateTestObject()
+        {
+            CTestEnum obj = new CTestEnum();
+            obj._enum_field = ETestEnum.TestEnum2;
+            obj._polimorf = new CTestBase();
+            return obj;
+        }
+    }
+
+    public class CTestNullable
+    {
+        public double? Nullable { get; set; }
+
+        public static CTestNullable CreateTestObject()
+        {
+            CTestNullable obj = new CTestNullable();
+            obj.Nullable = 9;
             return obj;
         }
     }

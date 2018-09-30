@@ -224,7 +224,7 @@ namespace Parser
         {
             var serializer = new CCascadeSerializer();
             //TestObject saved_obj = TestObject.CreateTestObject();
-            CTestClass saved_obj = CTestClass.CreateTestObject();
+            TestObject saved_obj = TestObject.CreateTestObject();
 
             _test_serialize = serializer.SerializeToKey(saved_obj, string.Empty, this);
 
@@ -238,8 +238,8 @@ namespace Parser
 
         private void btnDeserializeTest_Click(object sender, EventArgs e)
         {
-            var serializer = new CCascadeSerializer(new CachedReflector());
-            CTestClass saved_obj = serializer.Deserialize<CTestClass>(_test_serialize, this);
+            var serializer = new CCascadeSerializer();
+            TestObject saved_obj = serializer.Deserialize<TestObject>(_test_serialize, this);
 
             string text = serializer.SerializeToCascade(saved_obj, string.Empty, this);
             SaveTextToFile(text, "SerializeTest", false);
