@@ -68,35 +68,63 @@ namespace ReflectionSerializer
 
         public static bool IsDefault(object value, IReflectionProvider provider)
         {
-            if (value is string)
-                return (string)value == string.Empty;
-            if (value is char)
-                return (char)value == '\0';
-            if(IsINT(value))
-                return Convert.ToInt64(value) == 0;
-            if (IsUINT(value))
-                return Convert.ToUInt64(value) == 0;
-            if (IsFLOAT(value))
-                return Convert.ToDecimal(value) == 0;
-            if (value is bool)
-                return (bool)value == false;
-            if (value is ICollection)
-                return (value as ICollection).Count == 0;
-            if (value is Array)
-                return (value as Array).Length == 0;
-
             Type type = value.GetType();
-            if (type.IsEnum)
-                return (int)value == 0;
+            if (type.IsValueType)
+            {
+                var t = provider.Instantiate(type);
+                return t.Equals(value);
+            }
+            else
+            {
+                if (value == null)
+                    return true;
 
-            if (type.IsHashSet())
-                return (int)provider.GetValue(type
-                    .GetProperty("Count", BindingFlags.ExactBinding | ReflectionHelper.PublicInstanceMembers, null, typeof(int), Type.EmptyTypes, null),
-                    value) == 0;
+                if (value is string)
+                    return string.IsNullOrEmpty((string)value);
 
+                if (value is ICollection)
+                    return (value as ICollection).Count == 0;
 
-            return value.Equals(provider.Instantiate(type));
+                if (type.IsHashSet())
+                    return (int)provider.GetValue(type
+                        .GetProperty("Count", BindingFlags.ExactBinding | ReflectionHelper.PublicInstanceMembers, null, typeof(int), Type.EmptyTypes, null),
+                        value) == 0;
+
+                return false;
+            }
         }
+
+        //public static bool IsDefault(object value, IReflectionProvider provider)
+        //{
+        //    if (value is string)
+        //        return (string)value == string.Empty;
+        //    if (value is char)
+        //        return (char)value == '\0';
+        //    if(IsINT(value))
+        //        return Convert.ToInt64(value) == 0;
+        //    if (IsUINT(value))
+        //        return Convert.ToUInt64(value) == 0;
+        //    if (IsFLOAT(value))
+        //        return Convert.ToDecimal(value) == 0;
+        //    if (value is bool)
+        //        return (bool)value == false;
+        //    if (value is ICollection)
+        //        return (value as ICollection).Count == 0;
+        //    if (value is Array)
+        //        return (value as Array).Length == 0;
+
+        //    Type type = value.GetType();
+        //    if (type.IsEnum)
+        //        return (int)value == 0;
+
+        //    if (type.IsHashSet())
+        //        return (int)provider.GetValue(type
+        //            .GetProperty("Count", BindingFlags.ExactBinding | ReflectionHelper.PublicInstanceMembers, null, typeof(int), Type.EmptyTypes, null),
+        //            value) == 0;
+
+
+        //    return value.Equals(provider.Instantiate(type));
+        //}
 
         public static object GetDefaultValue(Type inType, IReflectionProvider provider)
         {

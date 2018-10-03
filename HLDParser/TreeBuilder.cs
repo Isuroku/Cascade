@@ -228,7 +228,7 @@ namespace CascadeParser
             }
             else if(!line.IsTailEmpty)
             {
-                if (line.TailLength == 1 && inParent.GetElementType() == EElementType.Key)
+                if (!line.IsNewArrayLine && line.TailLength == 1 && !inParent.IsArray)
                     inParent.AddTokenTail(line, true, inSupport.GetLogger());
                 else
                 {

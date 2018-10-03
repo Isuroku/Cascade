@@ -23,6 +23,8 @@ namespace CascadeParser
         public bool IsTailEmpty { get { return _tail == null || _tail.Length == 0; } }
         public int TailLength { get { return _tail == null ? 0 : _tail.Length; } }
 
+        public bool IsNewArrayLine { get; private set; }
+
         ECommands _command;
         public ECommands Command { get { return _command; } }
         CCommandParams _command_params = new CCommandParams();
@@ -114,14 +116,16 @@ namespace CascadeParser
             }
 
             toc = _tokens[cur_index + 1];
-            if(toc.TokenType == ETokenType.Colon)
+            if (toc.TokenType == ETokenType.Colon)
             {
                 _head = _tokens[cur_index];
                 cur_index += 2;
-                if (_head.TokenType != ETokenType.Word)
+                if (!Utils.IsDataType(_head.TokenType))
                     inLoger.LogError(EErrorCode.StrangeHeadType, _head);
             }
-            
+            else if (_tokens[0].TokenType == ETokenType.Colon)
+                IsNewArrayLine = true;
+
             List<CToken> lst = new List<CToken>();
             for(int i = cur_index; i < _tokens.Length; ++i)
             {

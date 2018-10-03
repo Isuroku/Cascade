@@ -5,6 +5,9 @@ namespace CascadeParser
     {
         IKey CreateChildKey(string name);
         IKey CreateArrayKey();
+
+        void SetName(string name);
+
         void AddValue(long v);
         void AddValue(int v);
         void AddValue(ulong v);
@@ -29,6 +32,7 @@ namespace CascadeParser
         string GetValueAsString(int index);
 
         string SaveToString();
+        
     }
 
     public interface IKeyValue

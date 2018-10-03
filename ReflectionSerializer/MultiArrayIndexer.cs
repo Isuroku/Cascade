@@ -9,6 +9,7 @@ namespace ReflectionSerializer
         int[] _current;
 
         public int[] Current { get { return _current; } }
+        public int[] Lengthes { get { return _lengthes; } }
         public int LineIndex { get; private set; }
 
         public CMultiArrayIndexer(Array array)

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascadeParser", "HLDParser\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReflectionSerializer", "ReflectionSerializer\ReflectionSerializer.csproj", "{6AA90DC2-4FB2-406F-A205-682478520F8E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascadeUnitTest", "CascadeUnitTest\CascadeUnitTest.csproj", "{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -27,6 +29,10 @@ Global
 		{6AA90DC2-4FB2-406F-A205-682478520F8E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6AA90DC2-4FB2-406F-A205-682478520F8E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6AA90DC2-4FB2-406F-A205-682478520F8E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

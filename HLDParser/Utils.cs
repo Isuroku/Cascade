@@ -32,7 +32,8 @@ namespace CascadeParser
 
         public static bool IsDataType(ETokenType inType)
         {
-            return inType == ETokenType.Word || inType == ETokenType.Float || inType == ETokenType.Int ||
+            return inType == ETokenType.Word || inType == ETokenType.Float || 
+                inType == ETokenType.Int || inType == ETokenType.UInt ||
                 inType == ETokenType.True || inType == ETokenType.False;
         }
 

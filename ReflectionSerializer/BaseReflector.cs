@@ -13,8 +13,12 @@ namespace ReflectionSerializer
             return attributes.Length == 0 ? new T() : attributes[0] as T;
         }
 
-        static readonly BindingFlags CollectMembersP = BindingFlags.Public | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
-        static readonly BindingFlags CollectMembersNP = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.FlattenHierarchy;
+        static readonly BindingFlags CollectMembersP = 
+            BindingFlags.Public | 
+            BindingFlags.Instance | 
+            BindingFlags.DeclaredOnly;
+
+        static readonly BindingFlags CollectMembersNP = CollectMembersP | BindingFlags.NonPublic;
 
         MemberSerialization GetMemberSerialization(Type type)
         {

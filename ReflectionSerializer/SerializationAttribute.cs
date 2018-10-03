@@ -57,8 +57,8 @@ namespace ReflectionSerializer
     public interface CascadeConverter
     {
         bool CanConvert(Type objectType);
-        object ReadKey(IKey key, ILogger inLogger);
-        void WriteKey(IKey key, object instance, ILogger inLogger);
+        object ReadKey(IKey key, ILogPrinter inLogger);
+        void WriteKey(IKey key, object instance, ILogPrinter inLogger);
     }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]

@@ -466,6 +466,8 @@ namespace CascadeParser
                         sb.Append(Environment.NewLine);
 
                     AppendIntent(sb, intent);
+                    if(_values.Count == 1)
+                        sb.AppendFormat("{0} ", CTokenFinder.Instance.GetTokenString(ETokenType.Colon));
                     AddStringValuesForSave(sb);
 
                     was_writing = true;

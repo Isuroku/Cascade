@@ -9,7 +9,7 @@ using System.Windows.Forms;
 
 namespace Parser
 {
-    public partial class Form1 : Form, ILogPrinter, IParserOwner, ILogger
+    public partial class Form1 : Form, ILogPrinter, IParserOwner
     {
         const string _path_to_data = "Data";
 
@@ -56,6 +56,8 @@ namespace Parser
             m_uiLogLinesCount++;
         }
 
+        public enum ELogLevel { Info, Warning, Error }
+
         public void AddLogToConsole(string inText, ELogLevel inLogLevel)
         {
             if (rtLog.IsDisposed)
@@ -69,7 +71,6 @@ namespace Parser
                 case ELogLevel.Info: clr = Color.Black; break;
                 case ELogLevel.Warning: clr = Color.Brown; break;
                 case ELogLevel.Error: clr = Color.Red; break;
-                case ELogLevel.InternalError: clr = Color.Green; break;
             }
 
             //tbLog.BeginInvoke(new Action<string>(s => tbLog.AppendText(s)), sres);
@@ -141,11 +142,14 @@ namespace Parser
         {
             ClearLog();
 
-            tvTree.Nodes.Clear();
-
             _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text);
+            ShowTokenLines(_test_serialize);
+            AddToTree(_test_serialize);
+        }
 
-            CTokenLine[] lines = _parser.GetLineByRoot(_test_serialize);
+        void ShowTokenLines(IKey key)
+        {
+            CTokenLine[] lines = _parser.GetLineByRoot(key);
 
             StringBuilder sb = new StringBuilder();
 
@@ -153,10 +157,14 @@ namespace Parser
             {
                 sb.Append(string.Format("{0}: {1}{2}", i.ToString("D4"), lines[i], Environment.NewLine));
             }
-            
-            tbResult.Text = sb.ToString();
 
-            AddToTree(_test_serialize, tvTree.Nodes);
+            tbResult.Text = sb.ToString();
+        }
+
+        void AddToTree(IKey key)
+        {
+            tvTree.Nodes.Clear();
+            AddToTree(key, tvTree.Nodes);
             tvTree.ExpandAll();
         }
 
@@ -224,12 +232,12 @@ namespace Parser
         {
             var serializer = new CCascadeSerializer();
             //TestObject saved_obj = TestObject.CreateTestObject();
-            TestObject saved_obj = TestObject.CreateTestObject();
+            CCharacterDescr saved_obj = CCharacterDescr.CreateTestObject();
 
             _test_serialize = serializer.SerializeToKey(saved_obj, string.Empty, this);
 
-            //string text = serializer.SerializeToCascade(saved_obj, string.Empty, this);
-            //SaveTextToFile(text, "SerializeTest", false);
+            string text = _test_serialize.SaveToString();
+            SaveTextToFile(text, "SerializeTest", false);
 
             tvTree.Nodes.Clear();
             AddToTree(_test_serialize, tvTree.Nodes);
@@ -238,11 +246,14 @@ namespace Parser
 
         private void btnDeserializeTest_Click(object sender, EventArgs e)
         {
-            var serializer = new CCascadeSerializer();
-            TestObject saved_obj = serializer.Deserialize<TestObject>(_test_serialize, this);
+            ClearLog();
 
-            string text = serializer.SerializeToCascade(saved_obj, string.Empty, this);
-            SaveTextToFile(text, "SerializeTest", false);
+            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text);
+            ShowTokenLines(_test_serialize);
+            AddToTree(_test_serialize);
+
+            var serializer = new CCascadeSerializer();
+            CCharacterDescr saved_obj = serializer.Deserialize<CCharacterDescr>(_test_serialize, this);
         }
 
         private void btnSaveToFile_Click(object sender, EventArgs e)

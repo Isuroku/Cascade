@@ -66,9 +66,15 @@ namespace CascadeParser
             _supporter = new CSupportOwner(this);
         }
 
+        public IKey Parse(string inText)
+        {
+            return Parse(string.Empty, inText);
+        }
+
         public IKey Parse(string inFileName, string inText)
         {
-            _parsed.RemoveAll(p => string.Equals(p.FileName, inFileName));
+            if(!string.IsNullOrEmpty(inFileName))
+                _parsed.RemoveAll(p => string.Equals(p.FileName, inFileName));
 
             _sentenser.ParseText(inText, _loger);
 
