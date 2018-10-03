@@ -8,6 +8,9 @@ namespace CascadeUnitTest
     {
         public static bool IsHashSetEquals<T>(HashSet<T> col1, HashSet<T> col2)
         {
+            if (col1 == null && col2 == null)
+                return true;
+
             if (col1 == null || col2 == null)
                 return false;
 
@@ -27,6 +30,9 @@ namespace CascadeUnitTest
 
         public static bool IsArrayEquals(Array col1, Array col2)
         {
+            if (col1 == null && col2 == null)
+                return true;
+
             if (col1 == null || col2 == null)
                 return false;
 
@@ -49,6 +55,9 @@ namespace CascadeUnitTest
 
         public static bool IsCollectionEquals(ICollection col1, ICollection col2)
         {
+            if (col1 == null && col2 == null)
+                return true;
+
             if (col1 == null || col2 == null)
                 return false;
 

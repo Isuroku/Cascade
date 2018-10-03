@@ -19,17 +19,4 @@ namespace Parser
             return obj;
         }
     }
-
-    public class CListInheriteTest: List<int>
-    {
-        public int _some_int;
-
-        public static CListInheriteTest CreateTestObject()
-        {
-            CListInheriteTest obj = new CListInheriteTest();
-            obj.Add(101);
-            obj._some_int = 99;
-            return obj;
-        }
-    }
 }

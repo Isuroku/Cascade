@@ -400,5 +400,36 @@ namespace CascadeUnitTest
             Assert.AreEqual(v1, v2);
         }
 
+        [TestMethod]
+        public void TestMethodCharacterDescr()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            var v1 = CCharacterDescr.CreateTestObject();
+
+            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CCharacterDescr>(text, this);
+
+            CheckInternalErrors();
+            Assert.AreEqual(v1, v2);
+        }
+
+        [TestMethod]
+        public void TestMethodConditionArrayTest()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            var v1 = new CConditionArrayTest();
+            v1.Init();
+
+            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CConditionArrayTest>(text, this);
+
+            CheckInternalErrors();
+            Assert.AreEqual(v1, v2);
+        }
+
     }
 }

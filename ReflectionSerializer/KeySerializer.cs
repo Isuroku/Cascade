@@ -359,6 +359,7 @@ namespace ReflectionSerializer
                 {
                     object obj_value;
                     int last_index = indexer.Current[indexer.Current.Length - 1];
+                    int last_length = indexer.Lengthes[indexer.Lengthes.Length - 1];
 
                     if (is_atomic_elems)
                     {
@@ -371,8 +372,13 @@ namespace ReflectionSerializer
                     }
                     else
                     {
-                        IKey sub_key = dim_child.GetChild(last_index);
-                        obj_value = DeserializeInternal(null, sub_key, declaredItemType, 0, inLogger);
+                        IKey child;
+                        if (multi_dim_array.Rank > 1 || last_length > 1)
+                            child = dim_child.GetChild(last_index);
+                        else
+                            child = dim_child;
+
+                        obj_value = DeserializeInternal(null, child, declaredItemType, 0, inLogger);
                     }
 
                     multi_dim_array.SetValue(obj_value, indexer.Current);

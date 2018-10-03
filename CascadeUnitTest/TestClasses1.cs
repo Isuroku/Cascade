@@ -246,6 +246,7 @@ namespace CascadeUnitTest
         public void Init1()
         {
             var to = new CSimpleClass();
+            to._int_data = 10;
             _array = new CSimpleClass[] { to, to };
             _dict = new Dictionary<string, CSimpleClass>();
             _dict.Add("dickey1", to);
@@ -259,6 +260,7 @@ namespace CascadeUnitTest
         {
             //_array = new int[] { };
             var to = new CSimpleClass();
+            to._int_data = 10;
             _array = new CSimpleClass[] { to };
             _dict = new Dictionary<string, CSimpleClass>();
             _dict.Add("dickey1", to);
@@ -290,6 +292,7 @@ namespace CascadeUnitTest
         public void Init1()
         {
             var to = new CSimpleClass();
+            to._int_data = 10;
             Console.WriteLine("3, 2, 2");
             _multi_array_r3 = new CSimpleClass[3, 2, 2] { { { to, to }, { to, to } }, { { to, to }, { to, to } }, { { to, to }, { to, to } } };
             Console.WriteLine("3, 2");
@@ -301,6 +304,7 @@ namespace CascadeUnitTest
             //_multi_array = new int[,] { { } };
             //_array = new int[] { };
             var to = new CSimpleClass();
+            to._int_data = 10;
             Console.WriteLine("1, 1, 1");
             _multi_array_r3 = new CSimpleClass[1, 1, 1] { { { to } } };
             Console.WriteLine("1, 1");
@@ -383,6 +387,14 @@ namespace CascadeUnitTest
             Add("aikey1", "aivalue1");
             Add("aikey2", "aivalue1");
             _some_int = 99;
+        }
+
+        public static CAIActionDescrs CreateTestObject()
+        {
+            CAIActionDescrs obj = new CAIActionDescrs();
+            obj.Add("aikey", "aivalue");
+            obj._some_int = 99;
+            return obj;
         }
 
         public override bool Equals(object obj)
