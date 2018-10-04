@@ -374,6 +374,40 @@ namespace CascadeUnitTest
 
     public class CAIActionDescrs : Dictionary<string, string>
     {
+        public void Init1()
+        {
+            Add("aikey", "aivalue");
+        }
+
+        public void Init2()
+        {
+            Add("aikey1", "aivalue1");
+            Add("aikey2", "aivalue1");
+        }
+
+        public static CAIActionDescrs CreateTestObject()
+        {
+            CAIActionDescrs obj = new CAIActionDescrs();
+            obj.Add("aikey", "aivalue");
+            return obj;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            if (obj.GetType() != GetType())
+                return false;
+
+            var v = obj as CAIActionDescrs;
+
+            return Utils.IsCollectionEquals(this, v);
+        }
+    }
+
+    public class CDicInheriteWithField : Dictionary<string, string>
+    {
         public int _some_int;
 
         public void Init1()
@@ -389,14 +423,6 @@ namespace CascadeUnitTest
             _some_int = 99;
         }
 
-        public static CAIActionDescrs CreateTestObject()
-        {
-            CAIActionDescrs obj = new CAIActionDescrs();
-            obj.Add("aikey", "aivalue");
-            obj._some_int = 99;
-            return obj;
-        }
-
         public override bool Equals(object obj)
         {
             if (obj == null)
@@ -405,7 +431,7 @@ namespace CascadeUnitTest
             if (obj.GetType() != GetType())
                 return false;
 
-            var v = obj as CAIActionDescrs;
+            var v = obj as CDicInheriteWithField;
 
             return _some_int.Equals(v._some_int) &&
                 Utils.IsCollectionEquals(this, v);

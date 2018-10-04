@@ -83,10 +83,11 @@ namespace CascadeParser
 
             CBuildCommands commands = new CBuildCommands(inSupport.GetLogger());
 
-            Collect(root, -1, inLines, 0, inSupport, commands);
-            root.CheckOnOneArray();
+            SCollectResult collect_res = Collect(root, -1, inLines, 0, inSupport, commands);
+            if(!collect_res.WasRecordDivider)
+                root.CheckOnOneArray();
 
-            if(root.KeyCount == 1 && root.GetKey(0).GetElementType() == EElementType.Key)
+            if (root.KeyCount == 1 && !root.GetKey(0).IsArray)
             {
                 root = root.GetKey(0);
                 root.SetParent(null);
@@ -102,13 +103,22 @@ namespace CascadeParser
             public CKey current_array_key;
             public CKey last_record_key;
             public EKeyAddingMode last_key_add_mode;
+            public bool WasRecordDivider;
         }
 
-        static int Collect(CKey inParent, int inParentRank, List<CTokenLine> inLines, int inStartIndex, ITreeBuildSupport inSupport, CBuildCommands inCommands)
+        struct SCollectResult
+        {
+            public int CurrentLineIndex;
+            public bool WasRecordDivider;
+        }
+
+        static SCollectResult Collect(CKey inParent, int inParentRank, List<CTokenLine> inLines, int inStartIndex, ITreeBuildSupport inSupport, CBuildCommands inCommands)
         {
             SAddLineResult current_state = new SAddLineResult();
 
             int curr_rank = inParentRank + 1;
+
+            bool rec_divider_was = false;
 
             int i = inStartIndex;
             while (i < inLines.Count)
@@ -120,7 +130,11 @@ namespace CascadeParser
                     if (line.Rank < curr_rank)
                     {
                         OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
-                        return i;
+                        return new SCollectResult
+                        {
+                            CurrentLineIndex = i,
+                            WasRecordDivider = rec_divider_was
+                        };
                     }
                     else if (line.Rank > curr_rank)
                     {
@@ -130,14 +144,19 @@ namespace CascadeParser
                         }
                         else
                         {
-                            i = Collect(current_state.last_record_key, curr_rank, inLines, i, inSupport, inCommands);
-                            current_state.last_record_key.CheckOnOneArray();
+                            SCollectResult collect_res = Collect(current_state.last_record_key, curr_rank, inLines, i, inSupport, inCommands);
+                            if(!collect_res.WasRecordDivider)
+                                current_state.last_record_key.CheckOnOneArray();
+                            i = collect_res.CurrentLineIndex;
                         }
                     }
                     else
                     {
                         OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
                         current_state = AddLine(inParent, current_state.current_array_key, line, inSupport, inCommands);
+
+                        if (current_state.WasRecordDivider)
+                            rec_divider_was = true;
                     }
                 }
                 else if (line.Comments != null)
@@ -150,7 +169,12 @@ namespace CascadeParser
             //if(last_key != null)
             //    last_key.CheckOnOneArray(inSupport);
             OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
-            return i;
+
+            return new SCollectResult
+            {
+                CurrentLineIndex = i,
+                WasRecordDivider = rec_divider_was
+            };
         }
 
         static void OnClosingKey(CKey key, EKeyAddingMode inKeyAddMode, ITreeBuildSupport inSupport)
@@ -209,6 +233,7 @@ namespace CascadeParser
             else if (line.IsRecordDivider())
             {
                 result.current_array_key = null;
+                result.WasRecordDivider = true;
             }
             else if (line.IsCommandLine())
             {
@@ -228,9 +253,9 @@ namespace CascadeParser
             }
             else if(!line.IsTailEmpty)
             {
-                if (!line.IsNewArrayLine && line.TailLength == 1 && !inParent.IsArray)
-                    inParent.AddTokenTail(line, true, inSupport.GetLogger());
-                else
+                //if (!line.IsNewArrayLine && line.TailLength == 1 && !inParent.IsArray)
+                //    inParent.AddTokenTail(line, true, inSupport.GetLogger());
+                //else
                 {
                     result.current_array_key = CreateNewArrayKey(inParent, line, inCommands);
                     result.current_array_key.AddTokenTail(line, false, inSupport.GetLogger());

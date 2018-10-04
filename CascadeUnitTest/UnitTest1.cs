@@ -7,49 +7,10 @@ using ReflectionSerializer;
 namespace CascadeUnitTest
 {
     [TestClass]
-    public class UnitTest1: IParserOwner, ILogPrinter
+    public class UnitTest1: BaseUnitTest
     {
-        CParserManager _parser;
-        CCascadeSerializer _serializer;
-
-        int _error_count;
-
         public UnitTest1()
         {
-            _parser = new CParserManager(this, this);
-            _serializer = new CCascadeSerializer(_parser);
-        }
-
-        public string GetTextFromFile(string inFileName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void LogError(string inText)
-        {
-            _error_count++;
-            Console.WriteLine("Error: {0}", inText);
-        }
-
-        public void LogWarning(string inText)
-        {
-            _error_count++;
-            Console.WriteLine("Warning: {0}", inText);
-        }
-
-        public void ResetTestState()
-        {
-            _error_count = 0;
-        }
-
-        public void CheckInternalErrors()
-        {
-            Assert.IsTrue(_error_count == 0, "Internal errors were detected!");
-        }
-
-        public void Trace(string inText)
-        {
-            Console.WriteLine(inText);
         }
 
         [TestMethod]
@@ -304,101 +265,7 @@ namespace CascadeUnitTest
             Assert.AreEqual(v1, v2);
         }
 
-        [TestMethod]
-        public void TestMethodDicInherite1()
-        {
-            ResetTestState();
-            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
-            var v1 = new CAIActionDescrs();
-            v1.Init1();
-
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
-            Console.WriteLine(text);
-            var v2 = _serializer.Deserialize<CAIActionDescrs>(text, this);
-
-            CheckInternalErrors();
-            Assert.AreEqual(v1, v2);
-        }
-
-        [TestMethod]
-        public void TestMethodDicInherite2()
-        {
-            ResetTestState();
-            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
-            var v1 = new CAIActionDescrs();
-            v1.Init2();
-
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
-            Console.WriteLine(text);
-            var v2 = _serializer.Deserialize<CAIActionDescrs>(text, this);
-
-            CheckInternalErrors();
-            Assert.AreEqual(v1, v2);
-        }
-
-        [TestMethod]
-        public void TestMethodDicInherite3()
-        {
-            ResetTestState();
-            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
-            var v1 = new CDicInherite();
-            v1.Init2();
-
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
-            Console.WriteLine(text);
-            var v2 = _serializer.Deserialize<CDicInherite>(text, this);
-
-            CheckInternalErrors();
-            Assert.AreEqual(v1, v2);
-        }
-
-        [TestMethod]
-        public void TestMethodListInherite1()
-        {
-            ResetTestState();
-            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
-            var v1 = new CListInheriteTest();
-            v1.Init1();
-
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
-            Console.WriteLine(text);
-            var v2 = _serializer.Deserialize<CListInheriteTest>(text, this);
-
-            CheckInternalErrors();
-            Assert.AreEqual(v1, v2);
-        }
-
-        [TestMethod]
-        public void TestMethodListInherite2()
-        {
-            ResetTestState();
-            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
-            var v1 = new CListInheriteTest();
-            v1.Init2();
-
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
-            Console.WriteLine(text);
-            var v2 = _serializer.Deserialize<CListInheriteTest>(text, this);
-
-            CheckInternalErrors();
-            Assert.AreEqual(v1, v2);
-        }
-
-        [TestMethod]
-        public void TestMethodListInherite3()
-        {
-            ResetTestState();
-            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
-            var v1 = new CListInheriteTestObj();
-            v1.Init2();
-
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
-            Console.WriteLine(text);
-            var v2 = _serializer.Deserialize<CListInheriteTestObj>(text, this);
-
-            CheckInternalErrors();
-            Assert.AreEqual(v1, v2);
-        }
+        
 
         [TestMethod]
         public void TestMethodCharacterDescr()
@@ -426,6 +293,37 @@ namespace CascadeUnitTest
             string text = _serializer.SerializeToCascade(v1, string.Empty, this);
             Console.WriteLine(text);
             var v2 = _serializer.Deserialize<CConditionArrayTest>(text, this);
+
+            CheckInternalErrors();
+            Assert.AreEqual(v1, v2);
+        }
+
+        [TestMethod]
+        public void TestMethodAllDefaultClass()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            var v1 = CMoverDescr.CreateTestObject();
+
+            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CMoverDescr>(text, this);
+
+            CheckInternalErrors();
+            Assert.AreEqual(v1, v2);
+        }
+
+        [TestMethod]
+        public void TestMethodAllDefaultClassWithOwner()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            var v1 = new CMoverDescrOwner();
+            v1.Init();
+
+            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CMoverDescrOwner>(text, this);
 
             CheckInternalErrors();
             Assert.AreEqual(v1, v2);

@@ -21,14 +21,14 @@ namespace CascadeParser
         bool IsArrayKey();
         string Comments { get; }
 
+        bool IsEmpty { get; }
+
         int GetChildCount();
         IKey GetChild(int index);
         IKey GetChild(string name);
 
         int GetValuesCount();
-
         IKeyValue GetValue(int index);
-
         string GetValueAsString(int index);
 
         string SaveToString();

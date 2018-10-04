@@ -167,6 +167,8 @@ namespace CascadeParser
 
         public int GetIndex()
         {
+            if (_parent == null)
+                return 0;
             for (int i = 0; i < _parent.KeyCount; i++)
             {
                 if (_parent.GetKey(i) == this)
@@ -305,6 +307,9 @@ namespace CascadeParser
             if (!_keys[0].IsArray)
                 return;
 
+            if (_keys[0].ValuesCount > 0)
+                return;
+
             CKey arr = _keys[0];
 
             if (!string.IsNullOrEmpty(arr._name) &&
@@ -399,8 +404,24 @@ namespace CascadeParser
             return false;
         }
 
+        public bool IsEmptyWithChild()
+        {
+            if (_values.Count > 0)
+                return false;
+
+            for (int i = 0; i < _keys.Count; ++i)
+            {
+                if (!_keys[i].IsEmptyWithChild())
+                    return false;
+            }
+            return true;
+        }
+
         protected void SaveToString(StringBuilder sb, int intent, int parent_index)
         {
+            if (IsEmptyWithChild())
+                return;
+
             bool was_writing = false;
             int new_int = intent;
             if (!IsArray)
@@ -412,29 +433,8 @@ namespace CascadeParser
                     sb.Append(Environment.NewLine);
                 }
 
-                int values_string_length = GetCommonLengthStringsValuesForSave();
-                bool vert_values_writing = values_string_length > 50 && _keys.Count == 0 || IsValuesHasComments();
-                if (vert_values_writing)
+                if (!string.IsNullOrEmpty(Name) || _values.Count > 0)
                 {
-                    AppendIntent(sb, intent);
-                    sb.AppendFormat("{0}: ", Name);
-
-                    for (int i = 0; i < _values.Count; ++i)
-                    {
-                        sb.Append(Environment.NewLine);
-                        AppendIntent(sb, intent + 1);
-
-                        sb.Append(_values[i].GetStringForSave());
-
-                        if (!string.IsNullOrEmpty(_values[i].Comments))
-                            sb.AppendFormat(" {0}{1}", CTokenFinder.Instance.GetTokenString(ETokenType.Comment), _values[i].Comments);
-                    }
-
-                    was_writing = true;
-                }
-                else if (!string.IsNullOrEmpty(Name) || _values.Count > 0)
-                {
-
                     AppendIntent(sb, intent);
                     sb.AppendFormat("{0}: ", Name);
                     AddStringValuesForSave(sb);
@@ -466,8 +466,9 @@ namespace CascadeParser
                         sb.Append(Environment.NewLine);
 
                     AppendIntent(sb, intent);
-                    if(_values.Count == 1)
-                        sb.AppendFormat("{0} ", CTokenFinder.Instance.GetTokenString(ETokenType.Colon));
+                    //IsNewArrayLine
+                    //if(_values.Count == 1)
+                    //    sb.AppendFormat("{0} ", CTokenFinder.Instance.GetTokenString(ETokenType.Colon));
                     AddStringValuesForSave(sb);
 
                     was_writing = true;
@@ -479,7 +480,9 @@ namespace CascadeParser
 
             for (int i = 0; i < _keys.Count; ++i)
             {
-                if (_keys[i].IsArray && i > 0 && _keys[i].KeyCount > 0)
+                if (_keys[i].IsArray && 
+                    (i > 0 || _keys.Count == 1) && 
+                    _keys[i].KeyCount > 0)
                 {
                     AppendIntent(sb, new_int);
                     string rd_str = CTokenFinder.Instance.GetTokenString(ETokenType.RecordDivider);

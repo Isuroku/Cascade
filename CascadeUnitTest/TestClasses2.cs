@@ -1,9 +1,6 @@
 ﻿using ReflectionSerializer;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace CascadeUnitTest
 {
@@ -39,28 +36,25 @@ namespace CascadeUnitTest
 
             var v = obj as CCharacterDescr;
 
-            return Equals(_character_type, v._character_type) &&
-                Equals(_default_prefab, v._default_prefab) &&
-                Equals(_move_type, v._move_type) &&
-                Equals(_mover_descr, v._mover_descr) &&
-                Equals(_brain_descr, v._brain_descr);
+            bool res = true;
+            res = res && Equals(_character_type, v._character_type);
+            res = res && Equals(_default_prefab, v._default_prefab);
+            res = res && Equals(_move_type, v._move_type);
+            res = res && Equals(_mover_descr, v._mover_descr);
+            res = res && Equals(_brain_descr, v._brain_descr);
+            return res;
         }
 
-        public CCharacterDescr()
+        public CCharacterDescr(): this(string.Empty)
+        {
+        }
+
+        public CCharacterDescr(string inName): base(inName)
         {
             _default_prefab = string.Empty;
+            _mover_descr = new CMoverDescr();
+            _brain_descr = new CAIBrainDescr();
         }
-
-        public CCharacterDescr(string inName) : base(inName)
-        {
-            _default_prefab = string.Empty;
-        }
-
-        public string GetDefaultPrefab()
-        {
-            return _default_prefab;
-        }
-
 
         public static CCharacterDescr CreateTestObject()
         {
@@ -79,6 +73,34 @@ namespace CascadeUnitTest
         CarRoad,
         AirRoad,
         GlobalFlyPath,
+    }
+
+    public class CMoverDescrOwner
+    {
+        public CMoverDescr _mover_descr;
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            if (obj.GetType() != GetType())
+                return false;
+
+            var v = obj as CMoverDescrOwner;
+
+            return Equals(_mover_descr, v._mover_descr);
+        }
+
+        public CMoverDescrOwner()
+        {
+            _mover_descr = new CMoverDescr();
+        }
+
+        public void Init()
+        {
+            _mover_descr = CMoverDescr.CreateTestObject();
+        }
     }
 
     [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
@@ -659,19 +681,22 @@ namespace CascadeUnitTest
 
             var v = obj as CAIBehaviorDescr;
 
-            return
-                Utils.IsArrayEquals(_cond_aliases, v._cond_aliases) &&
-                Utils.IsArrayEquals(_reset_behavior_cond_aliases, v._reset_behavior_cond_aliases) &&
-                Utils.IsArrayEquals(_action_descrs, v._action_descrs) &&
-                Utils.IsArrayEquals(_enable_in_states, v._enable_in_states) &&
-                Equals(_behavior_name, v._behavior_name) &&
-                Equals(_ai_signal, v._ai_signal) &&
-                Equals(_ai_signal_message_name, v._ai_signal_message_name) &&
-                Equals(_ai_signal_message_reply, v._ai_signal_message_reply) &&
-                Equals(_priority, v._priority) &&
-                Equals(_priority_current, v._priority_current) &&
-                Equals(_no_circle, v._no_circle) &&
-                Equals(_report_descr, v._report_descr);
+            bool res = true;
+
+            res = res && Utils.IsArrayEquals(_cond_aliases, v._cond_aliases);
+            res = res && Utils.IsArrayEquals(_reset_behavior_cond_aliases, v._reset_behavior_cond_aliases);
+            res = res && Utils.IsArrayEquals(_action_descrs, v._action_descrs);
+            res = res && Utils.IsArrayEquals(_enable_in_states, v._enable_in_states);
+            res = res && Equals(_behavior_name, v._behavior_name);
+            res = res && Equals(_ai_signal, v._ai_signal);
+            res = res && Equals(_ai_signal_message_name, v._ai_signal_message_name);
+            res = res && Equals(_ai_signal_message_reply, v._ai_signal_message_reply);
+            res = res && Equals(_priority, v._priority);
+            res = res && Equals(_priority_current, v._priority_current);
+            res = res && Equals(_no_circle, v._no_circle);
+            res = res && Equals(_report_descr, v._report_descr);
+
+            return res;
         }
 
         public CAIBehaviorReportDescr ReportDescr
@@ -726,6 +751,35 @@ namespace CascadeUnitTest
             descr._priority = 7;
 
             return descr;
+        }
+    }
+
+    public class CArrayOfDicInheritance
+    {
+        public CAIActionDescrs[] _action_descrs;
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            if (obj.GetType() != GetType())
+                return false;
+
+            var v = obj as CArrayOfDicInheritance;
+
+            bool res = true;
+            res = res && Utils.IsArrayEquals(_action_descrs, v._action_descrs);
+            return res;
+        }
+
+        public void Init1()
+        {
+            _action_descrs = new CAIActionDescrs[]
+            {
+                CAIActionDescrs.CreateTestObject(),
+                CAIActionDescrs.CreateTestObject()
+            };
         }
     }
 

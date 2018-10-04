@@ -114,7 +114,7 @@ namespace CascadeParser
         {
             bool only_alfa_digit = true;
             for (int i = 0; i < _value.Length && only_alfa_digit; ++i)
-                only_alfa_digit = char.IsLetterOrDigit(_value[i]);
+                only_alfa_digit = char.IsLetterOrDigit(_value[i]) || _value[i] == '_';
 
             if (only_alfa_digit)
                 return _value;

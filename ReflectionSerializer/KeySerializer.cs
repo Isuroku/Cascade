@@ -13,6 +13,8 @@ namespace ReflectionSerializer
 
         CParserManager _parser;
 
+        const string _array_prefix = "$a";
+
         public CCascadeSerializer(IReflectionProvider reflectionProvider, CParserManager parser)
         {
             _reflectionProvider = reflectionProvider;
@@ -78,10 +80,6 @@ namespace ReflectionSerializer
 
         void Serialize(object instance, Type inDeclaredType, IKey inKey, int inInheriteDeep, ILogPrinter inLogger)
         {
-            Type base_type = inDeclaredType.BaseType;
-            if (IsInheriteAccess(base_type))
-                Serialize(instance, base_type, inKey, inInheriteDeep + 1, inLogger);
-
             Type type = instance == null ? inDeclaredType : instance.GetType();
 
             if (instance == null || inDeclaredType.IsAtomic())
@@ -94,6 +92,13 @@ namespace ReflectionSerializer
                 SerializeGenericCollection(instance, inDeclaredType, inKey, inInheriteDeep, inLogger);
             else
                 SerializeClass(instance, inDeclaredType, inKey, inInheriteDeep, inLogger);
+
+            Type base_type = inDeclaredType.BaseType;
+            if (IsInheriteAccess(base_type))
+                Serialize(instance, base_type, inKey, inInheriteDeep + 1, inLogger);
+
+            //if (inKey.GetChildCount() == 0 && inInheriteDeep == 0)
+            //    inKey.AddValue("default");
         }
 
         public object DeserializeInternal(object inInstance, IKey inKey, Type inDeclaredType, int inInheriteDeep, ILogPrinter inLogger)
@@ -173,7 +178,7 @@ namespace ReflectionSerializer
             else
             {
                 IKey tree_key = inKey;
-                if (inInheriteDeep > 0)
+                if (tree_key.GetChildCount() > 0)
                     tree_key = inKey.CreateChildKey("BaseDictionary");
 
                 foreach (var key in dictionary.Keys)
@@ -203,9 +208,9 @@ namespace ReflectionSerializer
             Type keyDeclaredType = gen_args[0];
             Type valueDeclaredType = gen_args[1];
 
-            IKey tree_key = inKey;
-            if (inInheriteDeep > 0)
-                tree_key = inKey.GetChild("BaseDictionary");
+            IKey tree_key = inKey.GetChild("BaseDictionary");
+            if (tree_key == null)
+                tree_key = inKey;
 
             for (int i = 0; i < tree_key.GetChildCount(); ++i)
             {
@@ -231,21 +236,22 @@ namespace ReflectionSerializer
         #endregion Dictionary
 
         #region Array
-        IKey GetOrCreateKeyByArrayIndex(IKey inParent, int[] indicies, int[] lengthes)
+        IKey GetOrCreateKeyByArrayIndex(IKey inParent, int[] indicies, int[] lengthes, bool atomic_elems)
         {
             IKey key = inParent;
             int keys_length = indicies.Length - 1; //length of key chaine
             //indicies.Length - 1 - last array to one key
+
             for (int i = 0; i < keys_length; i++)
             {
                 int index = indicies[i];
                 int length = lengthes[i];
                 while (index >= key.GetChildCount())
                 {
-                    if(length > 1 && i == keys_length - 1)
+                    if (i == keys_length - 1 && atomic_elems) //&& length > 1
                         key.CreateArrayKey();
                     else
-                        key.CreateChildKey(string.Format("a{0}", index));
+                        key.CreateChildKey(string.Format("{0}{1}", _array_prefix, index));
                 }
 
                 key = key.GetChild(index);
@@ -278,19 +284,12 @@ namespace ReflectionSerializer
             while (indexer.MoveNext())
             {
                 object value = multi_dim_array.GetValue(indexer.Current);
-                IKey dim_child = GetOrCreateKeyByArrayIndex(inKey, indexer.Current, indexer.Lengthes);
+                IKey dim_child = GetOrCreateKeyByArrayIndex(inKey, indexer.Current, indexer.Lengthes, atomic_member);
                 if (atomic_member)
                     AddValueToKey(dim_child, value);
                 else
                 {
-                    IKey child;
-                    if (multi_dim_array.Rank > 1)
-                    {
-                        int last_index = indexer.Current[indexer.Current.Length - 1];
-                        child = dim_child.CreateChildKey(string.Format("a{0}", last_index));
-                    }
-                    else
-                        child = dim_child.CreateArrayKey();
+                    IKey child = dim_child.CreateArrayKey();
                     Serialize(value, declaredItemType, child, 0, inLogger);
                 }
             }
@@ -306,11 +305,11 @@ namespace ReflectionSerializer
                 if (!inKey.GetChild(i).IsArrayKey())
                     all = false;
 
-            if(!all)
+            if (!all)
             {
                 all = true;
                 for (int i = 0; i < inKey.GetChildCount() && all; ++i)
-                    if (!inKey.GetChild(i).GetName().StartsWith("a"))
+                    if (!inKey.GetChild(i).GetName().StartsWith(_array_prefix))
                         all = false;
             }
 
@@ -335,6 +334,9 @@ namespace ReflectionSerializer
 
         public object DeserializeArray(IKey inKey, Type type, ILogPrinter inLogger)
         {
+            if(inKey.IsEmpty)
+                return null;
+
             Array multi_dim_array = null;
             Type declaredItemType = type.GetElementType();
 
@@ -363,7 +365,11 @@ namespace ReflectionSerializer
 
                     if (is_atomic_elems)
                     {
-                        string str_value = dim_child.GetValueAsString(last_index);
+                        string str_value;
+                        if (dim_child.GetValuesCount() == 0)
+                            str_value = string.Empty;
+                        else
+                            str_value = dim_child.GetValueAsString(last_index);
                         if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
                         {
                             inLogger.LogError(string.Format("Key {0} for collection with element type {1} can't convert value {2}",
@@ -372,12 +378,7 @@ namespace ReflectionSerializer
                     }
                     else
                     {
-                        IKey child;
-                        if (multi_dim_array.Rank > 1 || last_length > 1)
-                            child = dim_child.GetChild(last_index);
-                        else
-                            child = dim_child;
-
+                        IKey child = dim_child.GetChild(last_index);
                         obj_value = DeserializeInternal(null, child, declaredItemType, 0, inLogger);
                     }
 
@@ -405,14 +406,21 @@ namespace ReflectionSerializer
             bool atomic_member = declaredItemType.IsAtomic();
 
             IKey tree_key = inKey;
-            if (inInheriteDeep > 0)
-                tree_key = inKey.CreateChildKey("BaseCollection");
+            //if (inInheriteDeep > 0)
+            //    tree_key = inKey.CreateChildKey("BaseCollection");
 
-            foreach (var item in collection)
+            if (atomic_member)
             {
-                if (atomic_member)
+                if (tree_key.GetValuesCount() > 0)
+                    tree_key = inKey.CreateChildKey("BaseCollection");
+                foreach (var item in collection)
                     AddValueToKey(tree_key, item);
-                else
+            }
+            else
+            {
+                if (tree_key.GetChildCount() > 0)
+                    tree_key = inKey.CreateChildKey("BaseCollection");
+                foreach (var item in collection)
                 {
                     IKey child = tree_key.CreateArrayKey();
                     Serialize(item, declaredItemType, child, 0, inLogger);
@@ -473,9 +481,9 @@ namespace ReflectionSerializer
 
             SCollect collect = new SCollect(instance, type, _reflectionProvider);
 
-            IKey tree_key = inKey;
-            if (inInheriteDeep > 0)
-                tree_key = inKey.GetChild("BaseCollection");
+            IKey tree_key = inKey.GetChild("BaseCollection");
+            if (tree_key == null)
+                tree_key = inKey;
 
             if(is_atomic_elems)
             {
@@ -647,9 +655,6 @@ namespace ReflectionSerializer
                     obj_type_key.AddValue(real_type.Assembly.FullName);
                 }
             }
-
-            if (inKey.GetChildCount() == 0 && inInheriteDeep == 0)
-                inKey.AddValue("default");
         }
 
         public object DeserializeClass(object inInstance, IKey inKey, Type type, ILogPrinter inLogger)
@@ -702,6 +707,12 @@ namespace ReflectionSerializer
                 }
                 else if (member_params.DefaultValue != null)
                     _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue);
+                else if(memberType.IsClass)
+                {
+                    object already_member = _reflectionProvider.GetValue(memberInfo, instance);
+                    if(already_member != null)
+                        DeserializeInternal(already_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inLogger);
+                }
             }
 
             return instance;
