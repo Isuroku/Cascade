@@ -330,7 +330,7 @@ namespace CascadeUnitTest
         }
 
         [TestMethod]
-        public void TestMethodFromText1()
+        public void TestMethodSerArrayObjects()
         {
             ResetTestState();
             Console.WriteLine(MethodBase.GetCurrentMethod().Name);
@@ -346,6 +346,18 @@ namespace CascadeUnitTest
 
             CheckInternalErrors();
             Assert.IsTrue(Utils.IsArrayEquals(v1, v2));
+        }
+
+        [TestMethod]
+        public void TestMethodWithouDefCtor()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            CClassWithoutDefCtor v1 = new CClassWithoutDefCtor(3);
+
+            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CClassWithoutDefCtor>(text, this);
         }
 
     }

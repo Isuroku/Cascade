@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using System.Collections;
+using CascadeParser;
 
 namespace ReflectionSerializer
 {
@@ -13,12 +14,12 @@ namespace ReflectionSerializer
             this.reflectionProvider = reflectionProvider;
         }
 
-        public SerializedObject Serialize(object instance)
+        public SerializedObject Serialize(object instance, ILogPrinter inLogger)
         {
-            return SerializeInternal(instance.GetType().Name, instance, typeof(object));
+            return SerializeInternal(instance.GetType().Name, instance, typeof(object), inLogger);
         }
 
-        SerializedObject SerializeInternal(string name, object instance, Type declaredType)
+        SerializedObject SerializeInternal(string name, object instance, Type declaredType, ILogPrinter inLogger)
         {
             SerializedObject child;
             Type type = instance == null ? declaredType : instance.GetType();
@@ -39,8 +40,8 @@ namespace ReflectionSerializer
                 var childAggregation = child as SerializedAggregate;
                 foreach (var key in dictionary.Keys)
                     childAggregation.Children.Add(
-                        SerializeInternal(null, key, keyDeclaredType),
-                        SerializeInternal(null, dictionary[key], valueDeclaredType));
+                        SerializeInternal(null, key, keyDeclaredType, inLogger),
+                        SerializeInternal(null, dictionary[key], valueDeclaredType, inLogger));
             }
 
             // Arrays, lists and sets (any collection excluding dictionaries)
@@ -52,7 +53,7 @@ namespace ReflectionSerializer
                 child = new SerializedCollection { Name = name, Type = type };
                 var childCollection = child as SerializedCollection;
                 foreach (var item in collection)
-                    childCollection.Items.Add(SerializeInternal(null, item, declaredItemType));
+                    childCollection.Items.Add(SerializeInternal(null, item, declaredItemType, inLogger));
             }
 
             // Everything else (serialized with recursive property reflection)
@@ -74,12 +75,12 @@ namespace ReflectionSerializer
 
                     // Optional properties are skipped when serializing a default or null value
                     //if (!memberAttr.Required && (value == null || IsDefault(value)))
-                    if (value == null || IsDefault(value))
+                    if (value == null || IsDefault(value, inLogger))
                         continue;
 
                     // If no property name is defined, use the short type name
                     string memberName = memberAttr.Name ?? memberInfo.Name;
-                    childAggregation.Children.Add(memberName, SerializeInternal(memberName, value, memberType));
+                    childAggregation.Children.Add(memberName, SerializeInternal(memberName, value, memberType, inLogger));
                 }
             }
 
@@ -90,12 +91,12 @@ namespace ReflectionSerializer
             return child;
         }
 
-        public T Deserialize<T>(SerializedObject instance)
+        public T Deserialize<T>(SerializedObject instance, ILogPrinter inLogger)
         {
-            return (T)DeserializeInternal(instance, typeof(T), null);
+            return (T)DeserializeInternal(instance, typeof(T), null, inLogger);
         }
 
-        public object DeserializeInternal(SerializedObject serialized, Type declaredType, object existingInstance)
+        public object DeserializeInternal(SerializedObject serialized, Type declaredType, object existingInstance, ILogPrinter inLogger)
         {
             Type type = declaredType;
             object instance = existingInstance;
@@ -110,7 +111,7 @@ namespace ReflectionSerializer
             {
                 // Instantiate if necessary
                 if (instance == null)
-                    instance = reflectionProvider.Instantiate(type);
+                    instance = reflectionProvider.Instantiate(type, inLogger);
 
                 var dictionary = instance as IDictionary;
                 Type[] genericArguments = dictionary.GetType().GetGenericArguments();
@@ -121,8 +122,8 @@ namespace ReflectionSerializer
                 foreach (var key in serializedAggregation.Children.Keys)
                     // Dictionaries always contain atoms as keys
                     SafeAddToDictionary(dictionary,
-                        DeserializeInternal(key as SerializedObject, keyDeclaredType, null),
-                        DeserializeInternal(serializedAggregation.Children[key], valueDeclaredType, null));
+                        DeserializeInternal(key as SerializedObject, keyDeclaredType, null, inLogger),
+                        DeserializeInternal(serializedAggregation.Children[key], valueDeclaredType, null, inLogger));
             }
 
             // Arrays, lists and sets (any collection excluding dictionaries)
@@ -139,7 +140,7 @@ namespace ReflectionSerializer
                     if (isArray)
                         instance = Array.CreateInstance(declaredItemType, serializedCollection.Items.Count);
                     else
-                        instance = reflectionProvider.Instantiate(declaredType) as IEnumerable;
+                        instance = reflectionProvider.Instantiate(declaredType, inLogger) as IEnumerable;
 
                 MethodHandler addToHashSet = null;
                 if (isHashSet)
@@ -148,7 +149,7 @@ namespace ReflectionSerializer
                 int valueIndex = 0;
                 foreach (var item in serializedCollection.Items)
                 {
-                    object value = DeserializeInternal(item, declaredItemType, null);
+                    object value = DeserializeInternal(item, declaredItemType, null, inLogger);
 
                     if (isArray)
                         (instance as IList)[valueIndex++] = value;
@@ -174,7 +175,7 @@ namespace ReflectionSerializer
                 }
 
                 if (mustInstantiate)
-                    instance = reflectionProvider.Instantiate(type);
+                    instance = reflectionProvider.Instantiate(type, inLogger);
 
                 var serializedAggregation = serialized as SerializedAggregate;
 
@@ -191,15 +192,9 @@ namespace ReflectionSerializer
                     object currentValue = reflectionProvider.GetValue(memberInfo, instance);
                     bool valueFound = serializedAggregation.Children.ContainsKey(name);
 
-                    //if (!valueFound)
-                    //{
-                    //    if (memberAttr.Required)
-                    //        throw new InvalidOperationException(string.Format("MissingRequiredValue: {0} {1} ", name, type.Name));
-                    //}
-                    //else
                     if (valueFound)
                     {
-                        var readValue = DeserializeInternal(serializedAggregation[name], memberType, currentValue);
+                        var readValue = DeserializeInternal(serializedAggregation[name], memberType, currentValue, inLogger);
                         // This dirty check is naive and doesn't provide performance benefits
                         //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
                         reflectionProvider.SetValue(memberInfo, instance, readValue);
@@ -217,7 +212,7 @@ namespace ReflectionSerializer
             dictionary.Add(key, value);
         }
 
-        bool IsDefault(object value)
+        bool IsDefault(object value, ILogPrinter inLogger)
         {
             if (value is string)
                 return (string)value == string.Empty;
@@ -241,7 +236,7 @@ namespace ReflectionSerializer
             if (type.IsEnum)
                 return (int)value == 0;
 
-            return value.Equals(reflectionProvider.Instantiate(type));
+            return value.Equals(reflectionProvider.Instantiate(type, inLogger));
         }
     }
 }

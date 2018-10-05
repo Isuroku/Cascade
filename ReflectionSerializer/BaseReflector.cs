@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CascadeParser;
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -111,7 +112,7 @@ namespace ReflectionSerializer
             return false;
         }
 
-        public abstract object Instantiate(Type type);
+        public abstract object Instantiate(Type type, ILogPrinter inLogger);
         public abstract object GetValue(MemberInfo member, object instance);
         public abstract void SetValue(MemberInfo member, object instance, object value);
         public abstract MethodHandler GetDelegate(MethodBase method);

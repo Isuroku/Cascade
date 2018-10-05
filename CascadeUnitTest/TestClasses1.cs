@@ -533,4 +533,14 @@ namespace CascadeUnitTest
                 Utils.IsCollectionEquals(this, v);
         }
     }
+
+    public class CClassWithoutDefCtor
+    {
+        public int _int_data = 9;
+
+        public CClassWithoutDefCtor(int v)
+        {
+            _int_data = v;
+        }
+    }
 }

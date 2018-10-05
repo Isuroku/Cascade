@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CascadeParser;
+using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -131,7 +132,7 @@ namespace ReflectionSerializer
             return (Func<object, object>)dynam.CreateDelegate(typeof(Func<object, object>));
         }
 
-        public static Func<object> CreateParameterlessConstructorHandler(Type type)
+        public static Func<object> CreateParameterlessConstructorHandler(Type type, ILogPrinter inLogger)
         {
             var dynam = new DynamicMethod(string.Empty, typeof(object), Type.EmptyTypes, Module, true);
             ILGenerator il = dynam.GetILGenerator();
@@ -143,7 +144,15 @@ namespace ReflectionSerializer
                 il.Emit(OpCodes.Box, type);
             }
             else
-                il.Emit(OpCodes.Newobj, type.GetConstructor(Type.EmptyTypes));
+            {
+                ConstructorInfo ci = type.GetConstructor(Type.EmptyTypes);
+                if(ci == null)
+                {
+                    inLogger.LogError(string.Format("Type {0} hasnt default constructor", type.Name));
+                    return null;
+                }
+                il.Emit(OpCodes.Newobj, ci);
+            }
 
             il.Emit(OpCodes.Ret);
 

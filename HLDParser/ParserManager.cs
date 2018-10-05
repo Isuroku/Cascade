@@ -62,6 +62,11 @@ namespace CascadeParser
             _owner = owner;
         }
 
+        public void ClearParsed()
+        {
+            _parsed.Clear();
+        }
+
         public IKey Parse(string inText, ILogPrinter inLogger)
         {
             return Parse(string.Empty, inText, inLogger);

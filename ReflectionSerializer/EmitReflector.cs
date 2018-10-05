@@ -1,13 +1,17 @@
-﻿using System;
+﻿using CascadeParser;
+using System;
 using System.Reflection;
 
 namespace ReflectionSerializer
 {
     class EmitReflector : BaseReflector
     {
-        public override object Instantiate(Type type)
+        public override object Instantiate(Type type, ILogPrinter inLogger)
         {
-            return EmitHelper.CreateParameterlessConstructorHandler(type)();
+            var ctor = EmitHelper.CreateParameterlessConstructorHandler(type, inLogger);
+            if (ctor == null)
+                return null;
+            return ctor();
         }
 
         public override object GetValue(MemberInfo member, object instance)

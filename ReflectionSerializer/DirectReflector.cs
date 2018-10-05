@@ -1,11 +1,12 @@
-﻿using System;
+﻿using CascadeParser;
+using System;
 using System.Reflection;
 
 namespace ReflectionSerializer
 {
     class DirectReflector : BaseReflector
     {
-        public override object Instantiate(Type type)
+        public override object Instantiate(Type type, ILogPrinter inLogger)
         {
             if (type.IsArray)
                 return Array.CreateInstance(type.GetElementType(), 0);

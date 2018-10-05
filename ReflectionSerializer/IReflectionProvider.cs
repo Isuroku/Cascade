@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Reflection;
-using System.Collections.Generic;
+using CascadeParser;
 
 namespace ReflectionSerializer
 {
@@ -10,7 +10,7 @@ namespace ReflectionSerializer
     {
         T GetSingleAttributeOrDefault<T>(MemberInfo memberInfo) where T : Attribute, new();
         MemberInfo[] GetSerializableMembers(Type type);
-        object Instantiate(Type type);
+        object Instantiate(Type type, ILogPrinter inLogger);
         object GetValue(MemberInfo member, object instance);
         void SetValue(MemberInfo member, object instance, object value);
         MethodHandler GetDelegate(MethodBase method);

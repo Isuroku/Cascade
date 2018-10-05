@@ -55,12 +55,17 @@ namespace ReflectionSerializer
 
         public T Deserialize<T>(string text, ILogPrinter inLogger)
         {
+            return Deserialize<T>(string.Empty, text, inLogger);
+        }
+
+        public T Deserialize<T>(string file_name, string text, ILogPrinter inLogger)
+        {
             if(_parser == null)
             {
                 inLogger.LogError("Cascade Parser doesnt present!");
                 return default(T);
             }
-            IKey key = _parser.Parse(text, inLogger);
+            IKey key = _parser.Parse(file_name, text, inLogger);
             return Deserialize<T>(key, inLogger);
         }
 
@@ -139,12 +144,12 @@ namespace ReflectionSerializer
             object instance;
             if (inKey.GetValuesCount() == 0)
             {
-                instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider);
+                instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
             }
             else if (inKey.GetValuesCount() > 1)
             {
                 inLogger.LogError(string.Format("Need one value for type {1}. Key: {0} ", inKey, type.Name));
-                instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider);
+                instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
             }
             else
             {
@@ -152,7 +157,7 @@ namespace ReflectionSerializer
                 if (!ReflectionHelper.StringToAtomicValue(key_value, type, out instance))
                 {
                     inLogger.LogError(string.Format("Key {0} with value {1} can't convert value to type {2}", inKey, key_value, type.Name));
-                    instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider);
+                    instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
                 }
             }
             return instance;
@@ -201,7 +206,7 @@ namespace ReflectionSerializer
             object instance = inInstance;
             // Instantiate if necessary
             if (instance == null)
-                instance = _reflectionProvider.Instantiate(declaredType);
+                instance = _reflectionProvider.Instantiate(declaredType, inLogger);
 
             var dictionary = instance as IDictionary;
             
@@ -472,7 +477,7 @@ namespace ReflectionSerializer
 
             object instance = inInstance;
             if (instance == null)
-                instance = _reflectionProvider.Instantiate(type);
+                instance = _reflectionProvider.Instantiate(type, inLogger);
 
             instance = instance as IEnumerable;
 
@@ -630,7 +635,7 @@ namespace ReflectionSerializer
                     else if (member_params.DefaultValue.Equals(value))
                         continue;
                 }
-                else if (ReflectionHelper.IsDefault(value, _reflectionProvider))
+                else if (ReflectionHelper.IsDefault(value, _reflectionProvider, inLogger))
                     continue;
 
 
@@ -677,38 +682,41 @@ namespace ReflectionSerializer
 
             object instance = inInstance;
             if (instance == null)
-                instance = _reflectionProvider.Instantiate(type);
+                instance = _reflectionProvider.Instantiate(type, inLogger);
 
-            MemberInfo[] member_infos = _reflectionProvider.GetSerializableMembers(type);
-            foreach (MemberInfo memberInfo in member_infos)
+            if (instance != null)
             {
-                SCustomMemberParams member_params = GetMemberParams(memberInfo);
-
-                Type memberType = memberInfo.GetMemberType();
-
-                IKey sub_key = inKey.GetChild(member_params.ChangedName);
-                if(sub_key == null)
-                    sub_key = inKey.GetChild(member_params.Name);
-
-                if (sub_key != null)
+                MemberInfo[] member_infos = _reflectionProvider.GetSerializableMembers(type);
+                foreach (MemberInfo memberInfo in member_infos)
                 {
-                    object readValue;
-                    if (member_params.Converter != null)
-                        readValue = member_params.Converter.ReadKey(sub_key, inLogger);
-                    else
-                        readValue = DeserializeInternal(null, sub_key, memberType, 0, inLogger);
+                    SCustomMemberParams member_params = GetMemberParams(memberInfo);
 
-                    // This dirty check is naive and doesn't provide performance benefits
-                    //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
-                    _reflectionProvider.SetValue(memberInfo, instance, readValue);
-                }
-                else if (member_params.DefaultValue != null)
-                    _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue);
-                else if(memberType.IsClass)
-                {
-                    object already_member = _reflectionProvider.GetValue(memberInfo, instance);
-                    if(already_member != null)
-                        DeserializeInternal(already_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inLogger);
+                    Type memberType = memberInfo.GetMemberType();
+
+                    IKey sub_key = inKey.GetChild(member_params.ChangedName);
+                    if (sub_key == null)
+                        sub_key = inKey.GetChild(member_params.Name);
+
+                    if (sub_key != null)
+                    {
+                        object readValue;
+                        if (member_params.Converter != null)
+                            readValue = member_params.Converter.ReadKey(sub_key, inLogger);
+                        else
+                            readValue = DeserializeInternal(null, sub_key, memberType, 0, inLogger);
+
+                        // This dirty check is naive and doesn't provide performance benefits
+                        //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
+                        _reflectionProvider.SetValue(memberInfo, instance, readValue);
+                    }
+                    else if (member_params.DefaultValue != null)
+                        _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue);
+                    else if (memberType.IsClass)
+                    {
+                        object already_member = _reflectionProvider.GetValue(memberInfo, instance);
+                        if (already_member != null)
+                            DeserializeInternal(already_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inLogger);
+                    }
                 }
             }
 

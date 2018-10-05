@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.ComponentModel;
+using CascadeParser;
 
 namespace ReflectionSerializer
 {
@@ -66,12 +67,12 @@ namespace ReflectionSerializer
             return value is float || value is double || value is decimal;
         }
 
-        public static bool IsDefault(object value, IReflectionProvider provider)
+        public static bool IsDefault(object value, IReflectionProvider provider, ILogPrinter inLogger)
         {
             Type type = value.GetType();
             if (type.IsValueType)
             {
-                var t = provider.Instantiate(type);
+                var t = provider.Instantiate(type, inLogger);
                 return t.Equals(value);
             }
             else
@@ -126,10 +127,10 @@ namespace ReflectionSerializer
         //    return value.Equals(provider.Instantiate(type));
         //}
 
-        public static object GetDefaultValue(Type inType, IReflectionProvider provider)
+        public static object GetDefaultValue(Type inType, IReflectionProvider provider, ILogPrinter inLogger)
         {
             if (inType.IsValueType)
-                return provider.Instantiate(inType);
+                return provider.Instantiate(inType, inLogger);
             return null;
         }
 

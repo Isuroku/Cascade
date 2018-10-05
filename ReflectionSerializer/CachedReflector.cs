@@ -1,4 +1,5 @@
-﻿using System;
+﻿using CascadeParser;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -49,11 +50,19 @@ namespace ReflectionSerializer
             return properties;
         }
 
-        public override object Instantiate(Type type)
+        public override object Instantiate(Type type, ILogPrinter inLogger)
         {
             Func<object> constructor;
             if (!constructorCache.TryGetValue(type.TypeHandle.Value, out constructor))
-                constructorCache.Add(type.TypeHandle.Value, constructor = EmitHelper.CreateParameterlessConstructorHandler(type));
+            {
+                constructor = EmitHelper.CreateParameterlessConstructorHandler(type, inLogger);
+                if (constructor == null)
+                {
+                    inLogger.LogError(string.Format("Cant create {0} object.", type.Name));
+                    return null;
+                }
+                constructorCache.Add(type.TypeHandle.Value, constructor);
+            }
             return constructor();
         }
 
