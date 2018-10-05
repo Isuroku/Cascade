@@ -329,5 +329,24 @@ namespace CascadeUnitTest
             Assert.AreEqual(v1, v2);
         }
 
+        [TestMethod]
+        public void TestMethodFromText1()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            CSimpleClass[] v1 = new CSimpleClass[]
+            {
+                new CSimpleClass(),
+                //new CSimpleClass()
+            };
+
+            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CSimpleClass[]>(text, this);
+
+            CheckInternalErrors();
+            Assert.IsTrue(Utils.IsArrayEquals(v1, v2));
+        }
+
     }
 }

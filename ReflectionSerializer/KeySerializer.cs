@@ -49,8 +49,8 @@ namespace ReflectionSerializer
         {
             Type type = instance.GetType();
             Serialize(instance, type, inKey, 0, inLogger);
-            if (inKey.GetChildCount() == 1 && type.IsClass && string.IsNullOrEmpty(inKey.GetName()))
-                inKey.SetName(type.Name);
+            //if (inKey.GetChildCount() == 1 && type.IsClass && string.IsNullOrEmpty(inKey.GetName()))
+            //    inKey.SetName(type.Name);
         }
 
         public T Deserialize<T>(string text, ILogPrinter inLogger)
@@ -101,7 +101,7 @@ namespace ReflectionSerializer
             //    inKey.AddValue("default");
         }
 
-        public object DeserializeInternal(object inInstance, IKey inKey, Type inDeclaredType, int inInheriteDeep, ILogPrinter inLogger)
+        object DeserializeInternal(object inInstance, IKey inKey, Type inDeclaredType, int inInheriteDeep, ILogPrinter inLogger)
         {
             object instance;
 
@@ -134,7 +134,7 @@ namespace ReflectionSerializer
             AddValueToKey(inKey, instance);
         }
 
-        public object DeserializeAtomic(object inInstance, IKey inKey, Type type, ILogPrinter inLogger)
+        object DeserializeAtomic(object inInstance, IKey inKey, Type type, ILogPrinter inLogger)
         {
             object instance;
             if (inKey.GetValuesCount() == 0)
@@ -189,7 +189,7 @@ namespace ReflectionSerializer
             }
         }
 
-        public object DeserializeDictionary(object inInstance, IKey inKey, Type declaredType, int inInheriteDeep, ILogPrinter inLogger)
+        object DeserializeDictionary(object inInstance, IKey inKey, Type declaredType, int inInheriteDeep, ILogPrinter inLogger)
         {
             Type[] gen_args = declaredType.GetGenericArguments();
             if (gen_args.Length < 2)
@@ -332,7 +332,7 @@ namespace ReflectionSerializer
             return lst.ToArray();
         }
 
-        public object DeserializeArray(IKey inKey, Type type, ILogPrinter inLogger)
+        object DeserializeArray(IKey inKey, Type type, ILogPrinter inLogger)
         {
             if(inKey.IsEmpty)
                 return null;
@@ -361,8 +361,6 @@ namespace ReflectionSerializer
                 {
                     object obj_value;
                     int last_index = indexer.Current[indexer.Current.Length - 1];
-                    int last_length = indexer.Lengthes[indexer.Lengthes.Length - 1];
-
                     if (is_atomic_elems)
                     {
                         string str_value;
@@ -406,12 +404,11 @@ namespace ReflectionSerializer
             bool atomic_member = declaredItemType.IsAtomic();
 
             IKey tree_key = inKey;
-            //if (inInheriteDeep > 0)
-            //    tree_key = inKey.CreateChildKey("BaseCollection");
 
             if (atomic_member)
             {
-                if (tree_key.GetValuesCount() > 0)
+                if (tree_key.GetValuesCount() > 0 ||
+                    !tree_key.IsArrayKey() && string.IsNullOrEmpty(tree_key.GetName()))
                     tree_key = inKey.CreateChildKey("BaseCollection");
                 foreach (var item in collection)
                     AddValueToKey(tree_key, item);
@@ -461,7 +458,7 @@ namespace ReflectionSerializer
             }
         }
 
-        public object DeserializeGenericCollection(object inInstance, IKey inKey, Type type, int inInheriteDeep, ILogPrinter inLogger)
+        object DeserializeGenericCollection(object inInstance, IKey inKey, Type type, int inInheriteDeep, ILogPrinter inLogger)
         {
             Type[] gen_args = type.GetGenericArguments();
             if (gen_args.Length == 0)
@@ -657,7 +654,7 @@ namespace ReflectionSerializer
             }
         }
 
-        public object DeserializeClass(object inInstance, IKey inKey, Type type, ILogPrinter inLogger)
+        object DeserializeClass(object inInstance, IKey inKey, Type type, ILogPrinter inLogger)
         {
             IKey type_key = inKey.GetChild("RealObjectType");
             if (type_key != null)

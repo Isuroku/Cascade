@@ -87,11 +87,11 @@ namespace CascadeParser
             if(!collect_res.WasRecordDivider)
                 root.CheckOnOneArray();
 
-            if (root.KeyCount == 1 && !root.GetKey(0).IsArray)
-            {
-                root = root.GetKey(0);
-                root.SetParent(null);
-            }
+            //if (root.KeyCount == 1 && !root.GetKey(0).IsArray)
+            //{
+            //    root = root.GetKey(0);
+            //    root.SetParent(null);
+            //}
 
             commands.WriteComments(root);
 
