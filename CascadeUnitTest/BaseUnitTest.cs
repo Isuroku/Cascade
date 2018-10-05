@@ -15,7 +15,7 @@ namespace CascadeUnitTest
 
         public BaseUnitTest()
         {
-            _parser = new CParserManager(this, this);
+            _parser = new CParserManager(this);
             _serializer = new CCascadeSerializer(_parser);
         }
 

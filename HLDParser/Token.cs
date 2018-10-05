@@ -58,7 +58,7 @@ namespace CascadeParser
             return decimal.Parse(_text, NumberStyles.Any, ci);
         }
 
-        internal void CheckInLine(CToken[] inTokensInLine, int inMyIndex, CLoger inLoger)
+        internal void CheckInLine(CToken[] inTokensInLine, int inMyIndex, ILogger inLoger)
         {
             switch(_token_type)
             {

@@ -99,7 +99,7 @@ namespace Parser
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            _parser = new CParserManager(this, this);
+            _parser = new CParserManager(this);
 
             string path = Path.Combine(Application.StartupPath, _path_to_data);
             string[] files = Directory.GetFiles(path, "*.txt", SearchOption.TopDirectoryOnly);
@@ -143,7 +143,7 @@ namespace Parser
         {
             ClearLog();
 
-            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text);
+            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text, this);
             ShowTokenLines(_test_serialize);
             AddToTree(_test_serialize);
         }
@@ -249,7 +249,7 @@ namespace Parser
         {
             ClearLog();
 
-            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text);
+            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text, this);
             ShowTokenLines(_test_serialize);
             AddToTree(_test_serialize);
 

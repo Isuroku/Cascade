@@ -54,7 +54,7 @@ namespace CascadeParser
         {
         }
 
-        internal void Init(CSentense sentense, CLoger inLoger)
+        internal void Init(CSentense sentense, ILogger inLoger)
         {
             _sentense = sentense;
             BuildTokens(sentense, inLoger);
@@ -62,7 +62,7 @@ namespace CascadeParser
             FindCommandParams(inLoger);
         }
 
-        void BuildTokens(CSentense sentense, CLoger inLoger)
+        void BuildTokens(CSentense sentense, ILogger inLoger)
         {
             CToken[] tokens = CTokenFinder.Instance.GetTokens(sentense);
 
@@ -78,7 +78,7 @@ namespace CascadeParser
             _error_count += Check(inLoger);
         }
 
-        void FindHeadAndTail(CLoger inLoger)
+        void FindHeadAndTail(ILogger inLoger)
         {
             if (_tokens.Length == 0)
                 return;
@@ -135,7 +135,7 @@ namespace CascadeParser
             _tail = lst.ToArray();
         }
 
-        void FindCommandParams(CLoger inLoger)
+        void FindCommandParams(ILogger inLoger)
         {
             if (_tokens.Length == 0)
                 return;
@@ -220,7 +220,7 @@ namespace CascadeParser
             return _tokens.Length == 0;
         }
 
-        int Check(CLoger inLoger)
+        int Check(ILogger inLoger)
         {
             int ecount = 0;
             for(int i = 0; i < _tokens.Length; ++i)

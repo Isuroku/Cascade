@@ -32,20 +32,22 @@ namespace CascadeParser
         class CSupportOwner: ITreeBuildSupport
         {
             CParserManager _owner;
+            CLoger _loger;
 
-            public CSupportOwner(CParserManager owner)
+            public CSupportOwner(CParserManager owner, ILogPrinter inLogger)
             {
                 _owner = owner;
+                _loger = new CLoger(inLogger);
             }
 
             public ILogger GetLogger()
             {
-                return _owner._loger;
+                return _loger;
             }
 
             public IKey GetTree(string inFileName)
             {
-                return _owner.GetTree(inFileName);
+                return _owner.GetTree(inFileName, _loger.LogPrinter);
             }
         }
 
@@ -53,41 +55,37 @@ namespace CascadeParser
 
         CSentenseDivider _sentenser = new CSentenseDivider();
 
-        CLoger _loger;
-
         IParserOwner _owner;
 
-        CSupportOwner _supporter;
-
-        public CParserManager(IParserOwner owner, ILogPrinter inLogPrinter)
+        public CParserManager(IParserOwner owner)
         {
             _owner = owner;
-            _loger = new CLoger(inLogPrinter);
-            _supporter = new CSupportOwner(this);
         }
 
-        public IKey Parse(string inText)
+        public IKey Parse(string inText, ILogPrinter inLogger)
         {
-            return Parse(string.Empty, inText);
+            return Parse(string.Empty, inText, inLogger);
         }
 
-        public IKey Parse(string inFileName, string inText)
+        public IKey Parse(string inFileName, string inText, ILogPrinter inLogger)
         {
             if(!string.IsNullOrEmpty(inFileName))
                 _parsed.RemoveAll(p => string.Equals(p.FileName, inFileName));
 
-            _sentenser.ParseText(inText, _loger);
+            var supporter = new CSupportOwner(this, inLogger);
+
+            _sentenser.ParseText(inText, supporter.GetLogger());
 
             List<CTokenLine> lines = new List<CTokenLine>();
             for (int i = 0; i < _sentenser.SentenseCount; i++)
             {
                 CSentense sentense = _sentenser[i];
                 CTokenLine tl = new CTokenLine();
-                tl.Init(sentense, _loger);
+                tl.Init(sentense, supporter.GetLogger());
                 lines.Add(tl);
             }
 
-            CKey root = CTreeBuilder.Build(lines, _supporter);
+            CKey root = CTreeBuilder.Build(lines, supporter);
 
             _parsed.Add(new CParsed(root, lines, inFileName));
 
@@ -103,7 +101,7 @@ namespace CascadeParser
         }
 
 
-        public IKey GetTree(string inFileName)
+        public IKey GetTree(string inFileName, ILogPrinter inLogger)
         {
             CParsed parsed = _parsed.Find(p => string.Equals(p.FileName, inFileName, StringComparison.InvariantCultureIgnoreCase));
             if (parsed != null)
@@ -113,7 +111,7 @@ namespace CascadeParser
             if (string.IsNullOrEmpty(text))
                 return null;
 
-            return Parse(inFileName, text);
+            return Parse(inFileName, text, inLogger);
         }
     }
 }

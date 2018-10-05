@@ -60,7 +60,7 @@ namespace ReflectionSerializer
                 inLogger.LogError("Cascade Parser doesnt present!");
                 return default(T);
             }
-            IKey key = _parser.Parse(text);
+            IKey key = _parser.Parse(text, inLogger);
             return Deserialize<T>(key, inLogger);
         }
 

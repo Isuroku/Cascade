@@ -12,6 +12,8 @@ namespace CascadeParser
     {
         ILogPrinter _printer;
 
+        public ILogPrinter LogPrinter { get { return _printer; } }
+
         int _error_count;
         public int ErrorCount { get { return _error_count; } }
 
