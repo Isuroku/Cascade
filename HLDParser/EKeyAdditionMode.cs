@@ -5,7 +5,7 @@ namespace CascadeParser
     {
         AddUnique,
         Add,
-        //Override,
-        Delete,
+        Override,
+        //Delete,
     }
 }

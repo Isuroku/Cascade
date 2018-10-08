@@ -19,6 +19,6 @@ namespace CascadeParser
         RecordDivider, //--
         Sharp, //#
         AddKey, //+
-        //OverrideKey, //^
+        OverrideKey, //^
     }
 }

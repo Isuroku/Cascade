@@ -200,6 +200,20 @@ namespace CascadeParser
 
             key.SetParent(null);
 
+            if (inKeyAddMode == EKeyAddingMode.Override)
+            {
+                var pathes = new List<List<string>>();
+                key.GetTerminalPathes(pathes, new List<string>());
+
+                for(int i = 0; i < pathes.Count; ++i)
+                {
+                    var path = pathes[i];
+                    RemoveKeysByPath(parent, path);
+                }
+
+                inKeyAddMode = EKeyAddingMode.Add;
+            }
+            
             if (inKeyAddMode == EKeyAddingMode.Add)
             {
                 CKey child_key = parent.FindChildKey(key.Name);
@@ -208,10 +222,7 @@ namespace CascadeParser
                 else
                     key.SetParent(parent);
             }
-            //if (inKeyAddMode == EKeyAddingMode.Override)
-            //{
-            //    parent.OverrideKey(key);
-            //}
+            
         }
 
         static CKey CreateNewArrayKey(CKey inParent, CTokenLine line, CBuildCommands inCommands)
@@ -309,7 +320,7 @@ namespace CascadeParser
                 inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
         }
 
-        static bool RemoveKeysByPath(CKey inParent, string[] inPath)
+        static bool RemoveKeysByPath(CKey inParent, IList<string> inPath)
         {
             CKey key = inParent.FindKey(inPath);
             if (key == null)
@@ -356,9 +367,9 @@ namespace CascadeParser
             }
 
 
-            bool insert_only_elements = line.CommandParams.ContainsKey("elems");
+            bool insert_parent = line.CommandParams.ContainsKey("parent");
             CKey copy_key = key.GetCopy() as CKey;
-            if (!insert_only_elements)
+            if (insert_parent)
                 copy_key.SetParent(arr_key);
             else
                 arr_key.TakeAllElements(copy_key, false);

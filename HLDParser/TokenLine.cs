@@ -96,6 +96,11 @@ namespace CascadeParser
                 _addition_mode = EKeyAddingMode.Add;
                 cur_index++;
             }
+            else if (toc.TokenType == ETokenType.OverrideKey)
+            {
+                _addition_mode = EKeyAddingMode.Override;
+                cur_index++;
+            }
             //if (toc.TokenType == ETokenType.OverrideKey)
             //{
             //    _addition_mode = EKeyAddingMode.Override;

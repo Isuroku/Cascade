@@ -253,7 +253,7 @@ namespace CascadeParser
             return null;
         }
 
-        public CKey FindKey(string[] path, int index = 0)
+        public CKey FindKey(IList<string> path, int index = 0)
         {
             string need_name = path[index];
 
@@ -261,7 +261,7 @@ namespace CascadeParser
             if (key == null)
                 return null;
 
-            if (index == path.Length - 1)
+            if (index == path.Count - 1)
                 return key;
             return key.FindKey(path, index + 1);
         }
@@ -491,8 +491,30 @@ namespace CascadeParser
                 }
                 _keys[i].SaveToString(sb, new_int, i);
             }
+        }
 
+        internal void GetTerminalPathes(List<List<string>> outPathes, List<string> ioPath)
+        {
+            ioPath.Add(Name);
 
+            if (_keys.Count == 0)
+                outPathes.Add(ioPath);
+            else
+            {
+                List<string>[] pathes = new List<string>[_keys.Count];
+                for (int i = 0; i < _keys.Count; i++)
+                {
+                    List<string> path = ioPath;
+                    if (i != 0)
+                        path = new List<string>(ioPath);
+                    pathes[i] = path;
+                }
+                for (int i = 0; i < _keys.Count; i++)
+                {
+                    List<string> path = pathes[i];
+                    _keys[i].GetTerminalPathes(outPathes, path);
+                }
+            }
         }
     }
 }
