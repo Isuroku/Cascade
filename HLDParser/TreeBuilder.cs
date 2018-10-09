@@ -308,7 +308,7 @@ namespace CascadeParser
         {
             if (line.CommandParams.Length == 0 || string.IsNullOrEmpty(line.CommandParams[0]))
             {
-                inSupport.GetLogger().LogError(EErrorCode.LocalPathEmpty, line);
+                inSupport.GetLogger().LogError(EErrorCode.PathEmpty, line);
                 return;
             }
 
@@ -339,12 +339,12 @@ namespace CascadeParser
 
         static void ExecuteCommand_Insert(CKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
         {
+            string file_name = line.CommandParams["file"];
             string key_path = line.CommandParams["key"];
 
-            if (string.IsNullOrEmpty(key_path))
-                inSupport.GetLogger().LogError(EErrorCode.LocalPathEmpty, line);
-
-            string file_name = line.CommandParams["file"];
+            if (string.IsNullOrEmpty(file_name) && string.IsNullOrEmpty(key_path))
+                inSupport.GetLogger().LogError(EErrorCode.PathEmpty, line);
+            
             CKey root = null;
             if (!string.IsNullOrEmpty(file_name))
                 root = (CKey)inSupport.GetTree(file_name);
@@ -357,15 +357,18 @@ namespace CascadeParser
                 return;
             }
 
-            string[] path = key_path.Split(new char[] { '\\', '/' });
-
-            CKey key = root.FindKey(path);
-            if (key == null)
+            CKey key = root;
+            if (!string.IsNullOrEmpty(key_path))
             {
-                inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
-                return;
-            }
+                string[] path = key_path.Split(new char[] { '\\', '/' });
 
+                key = root.FindKey(path);
+                if (key == null)
+                {
+                    inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
+                    return;
+                }
+            }
 
             bool insert_parent = line.CommandParams.ContainsKey("parent");
             CKey copy_key = key.GetCopy() as CKey;

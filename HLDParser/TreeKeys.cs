@@ -92,6 +92,8 @@ namespace CascadeParser
         {
             _name = other._name;
 
+            IsArray = other.IsArray;
+
             foreach (var el in other._values)
             {
                 var copy = el.GetCopy();

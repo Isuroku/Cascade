@@ -18,7 +18,7 @@ namespace CascadeParser
         TooDeepRank,
         RecordBeforeRecordDividerDoesntPresent,
         CantTransferName,
-        LocalPathEmpty,
+        PathEmpty,
         CantFindRootInFile,
         CantFindKey,
         ElementWithNameAlreadyPresent,
