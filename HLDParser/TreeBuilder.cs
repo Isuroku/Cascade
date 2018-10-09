@@ -12,71 +12,6 @@ namespace CascadeParser
     {
         enum EMultiArrayType { NotMultiArray, List, MultiArray }
 
-        class CBuildCommands
-        {
-            ILogger _logger;
-
-            public CBuildCommands(ILogger logger)
-            {
-                _logger = logger;
-            }
-
-            #region WriteComments
-            List<Tuple<int, string>> _add_comment = new List<Tuple<int, string>>();
-            public void AddComment(int line, string name) { _add_comment.Add(new Tuple<int, string>(line, name)); }
-
-            internal void WriteComments(CKey root)
-            {
-                foreach (var t in _add_comment)
-                {
-                    CKey fk = root.FindLowerNearestKey(t.Item1).Item1;
-                    if (fk == null)
-                        _logger.LogError(EErrorCode.CantAddComment, t.Item2, t.Item1);
-                    else
-                        fk.AddComments(t.Item2);
-                }
-
-                _add_comment.Clear();
-            }
-            #endregion Comments
-
-            string _next_array_key_name;
-            CKey _next_array_key_parent;
-            int _next_array_key_line_number;
-            public bool IsNextArrayKeyNamePresent { get { return !string.IsNullOrEmpty(_next_array_key_name); } }
-
-            public void SetNextArrayKeyName(string inName, int inLineNumber, CKey inParent)
-            {
-                if (IsNextArrayKeyNamePresent)
-                    _logger.LogError(EErrorCode.NextArrayKeyNameAlreadySetted, _next_array_key_name, inLineNumber);
-                else
-                {
-                    _next_array_key_name = inName;
-                    _next_array_key_parent = inParent;
-                    _next_array_key_line_number = inLineNumber;
-                }
-            }
-
-            public string PopNextArrayKeyName(CKey inParent)
-            {
-                if(_next_array_key_parent != inParent)
-                {
-                    _logger.LogError(EErrorCode.NextArrayKeyNameMissParent,
-                        string.Format("Name {0}. Setted inside {1}. Try to use inside {2}", 
-                        _next_array_key_name,
-                        _next_array_key_parent.Name,
-                        inParent.Name), 
-                        _next_array_key_line_number);
-                    _next_array_key_name = string.Empty;
-                    return string.Empty;
-                }
-
-                string t = _next_array_key_name;
-                _next_array_key_name = string.Empty;
-                return t;
-            }
-        }
-
         public static CKey Build(List<CTokenLine> inLines, ITreeBuildSupport inSupport)
         {
             var root = CKey.CreateRoot();
@@ -86,14 +21,6 @@ namespace CascadeParser
             SCollectResult collect_res = Collect(root, -1, inLines, 0, inSupport, commands);
             if(!collect_res.WasRecordDivider)
                 root.CheckOnOneArray();
-
-            //if (root.KeyCount == 1 && !root.GetKey(0).IsArray)
-            //{
-            //    root = root.GetKey(0);
-            //    root.SetParent(null);
-            //}
-
-            commands.WriteComments(root);
 
             return root;
         }
@@ -125,7 +52,7 @@ namespace CascadeParser
             {
                 int t = i;
                 CTokenLine line = inLines[i];
-                if (!line.IsEmpty())
+                if (!line.IsEmpty() || line.Comments != null)
                 {
                     if (line.Rank < curr_rank)
                     {
@@ -159,8 +86,6 @@ namespace CascadeParser
                             rec_divider_was = true;
                     }
                 }
-                else if (line.Comments != null)
-                    inCommands.AddComment(line.Position.Line, line.Comments.Text);
 
                 if (t == i)
                     i++;
@@ -239,6 +164,8 @@ namespace CascadeParser
 
             if (line.IsEmpty())
             {
+                if (line.Comments != null)
+                    inCommands.SetNextLineComment(line.Comments.Text, line.Position.Line, inParent);
                 result.current_array_key = inCurrentArrayKey;
             }
             else if (line.IsRecordDivider())
@@ -261,6 +188,9 @@ namespace CascadeParser
 
                 result.last_key_add_mode = line.AdditionMode;
                 result.last_record_key = CKey.Create(result.current_array_key, line, inSupport.GetLogger());
+
+                if (inCommands.IsNextLineCommentPresent)
+                    result.last_record_key.AddComments(inCommands.PopNextLineComments(inParent));
             }
             else if(!line.IsTailEmpty)
             {
@@ -296,10 +226,8 @@ namespace CascadeParser
             }
             else if (line.Command == ECommands.Delete)
             {
-                if (arr_key == null)
-                    arr_key = CreateNewArrayKey(inParent, line, inCommands);
-
-                ExecuteCommand_Delete(arr_key, line, inSupport);
+                if (arr_key != null)
+                    ExecuteCommand_Delete(arr_key, line, inSupport);
             }
             return arr_key;
         }

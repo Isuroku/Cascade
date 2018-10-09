@@ -28,5 +28,6 @@ namespace CascadeParser
         CantAddComment,
         NextArrayKeyNameAlreadySetted,
         NextArrayKeyNameMissParent,
+        NextLineCommentMissParent,
     }
 }

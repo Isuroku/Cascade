@@ -222,6 +222,8 @@ namespace CascadeParser
 
         internal void MergeKey(CKey inKey)
         {
+            AddComments(inKey.Comments);
+
             TakeAllValues(inKey, false);
 
             List<CKey> keys = new List<CKey>(inKey._keys);

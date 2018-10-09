@@ -51,6 +51,7 @@ namespace CascadeParser
         public CBaseElement(CBaseElement other)
         {
             _pos = other._pos;
+            _comments = other._comments;
         }
 
         public abstract CBaseElement GetCopy();
