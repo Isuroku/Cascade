@@ -114,7 +114,7 @@ namespace Parser
                 lbSourceFiles.SelectedIndex = 0;
         }
 
-        public string GetTextFromFile(string inFileName)
+        public string GetTextFromFile(string inFileName, object inContextData)
         {
             string path = Path.Combine(Application.StartupPath, _path_to_data, inFileName);
             if (!File.Exists(path))
@@ -143,7 +143,7 @@ namespace Parser
         {
             ClearLog();
 
-            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text, this);
+            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text, this, 98);
             ShowTokenLines(_test_serialize);
             AddToTree(_test_serialize);
         }
@@ -249,7 +249,7 @@ namespace Parser
         {
             ClearLog();
 
-            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text, this);
+            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text, this, null);
             ShowTokenLines(_test_serialize);
             AddToTree(_test_serialize);
 

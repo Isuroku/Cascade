@@ -19,7 +19,7 @@ namespace CascadeUnitTest
             _serializer = new CCascadeSerializer(_parser);
         }
 
-        public string GetTextFromFile(string inFileName)
+        public string GetTextFromFile(string inFileName, object inContextData)
         {
             throw new NotImplementedException();
         }

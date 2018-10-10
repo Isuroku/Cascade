@@ -55,17 +55,22 @@ namespace ReflectionSerializer
 
         public T Deserialize<T>(string text, ILogPrinter inLogger)
         {
-            return Deserialize<T>(string.Empty, text, inLogger);
+            return Deserialize<T>(string.Empty, text, inLogger, null);
         }
 
-        public T Deserialize<T>(string file_name, string text, ILogPrinter inLogger)
+        public T Deserialize<T>(string text, ILogPrinter inLogger, object inContextData)
+        {
+            return Deserialize<T>(string.Empty, text, inLogger, inContextData);
+        }
+
+        public T Deserialize<T>(string file_name, string text, ILogPrinter inLogger, object inContextData)
         {
             if(_parser == null)
             {
                 inLogger.LogError("Cascade Parser doesnt present!");
                 return default(T);
             }
-            IKey key = _parser.Parse(file_name, text, inLogger);
+            IKey key = _parser.Parse(file_name, text, inLogger, inContextData);
             return Deserialize<T>(key, inLogger);
         }
 

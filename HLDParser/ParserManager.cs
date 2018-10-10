@@ -5,7 +5,7 @@ namespace CascadeParser
 {
     public interface IParserOwner
     {
-        string GetTextFromFile(string inFileName);
+        string GetTextFromFile(string inFileName, object inContextData);
     }
 
     public class CParserManager
@@ -33,11 +33,13 @@ namespace CascadeParser
         {
             CParserManager _owner;
             CLoger _loger;
+            object _context_data;
 
-            public CSupportOwner(CParserManager owner, ILogPrinter inLogger)
+            public CSupportOwner(CParserManager owner, ILogPrinter inLogger, object inContextData)
             {
                 _owner = owner;
                 _loger = new CLoger(inLogger);
+                _context_data = inContextData;
             }
 
             public ILogger GetLogger()
@@ -47,7 +49,7 @@ namespace CascadeParser
 
             public IKey GetTree(string inFileName)
             {
-                return _owner.GetTree(inFileName, _loger.LogPrinter);
+                return _owner.GetTree(inFileName, _context_data, _loger.LogPrinter);
             }
         }
 
@@ -67,17 +69,17 @@ namespace CascadeParser
             _parsed.Clear();
         }
 
-        public IKey Parse(string inText, ILogPrinter inLogger)
+        public IKey Parse(string inText, ILogPrinter inLogger, object inContextData)
         {
-            return Parse(string.Empty, inText, inLogger);
+            return Parse(string.Empty, inText, inLogger, inContextData);
         }
 
-        public IKey Parse(string inFileName, string inText, ILogPrinter inLogger)
+        public IKey Parse(string inFileName, string inText, ILogPrinter inLogger, object inContextData)
         {
             if(!string.IsNullOrEmpty(inFileName))
                 _parsed.RemoveAll(p => string.Equals(p.FileName, inFileName));
 
-            var supporter = new CSupportOwner(this, inLogger);
+            var supporter = new CSupportOwner(this, inLogger, inContextData);
 
             _sentenser.ParseText(inText, supporter.GetLogger());
 
@@ -106,17 +108,17 @@ namespace CascadeParser
         }
 
 
-        public IKey GetTree(string inFileName, ILogPrinter inLogger)
+        public IKey GetTree(string inFileName, object inContextData, ILogPrinter inLogger)
         {
             CParsed parsed = _parsed.Find(p => string.Equals(p.FileName, inFileName, StringComparison.InvariantCultureIgnoreCase));
             if (parsed != null)
                 return parsed.Root;
 
-            string text = _owner.GetTextFromFile(inFileName);
+            string text = _owner.GetTextFromFile(inFileName, inContextData);
             if (string.IsNullOrEmpty(text))
                 return null;
 
-            return Parse(inFileName, text, inLogger);
+            return Parse(inFileName, text, inLogger, inContextData);
         }
     }
 }
