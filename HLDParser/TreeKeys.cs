@@ -221,7 +221,11 @@ namespace CascadeParser
             {
                 var in_sub_key = keys[i];
 
-                CKey child_key = FindChildKey(in_sub_key.Name);
+                CKey child_key = null;
+
+                if(!in_sub_key.IsArray)
+                    child_key = FindChildKey(in_sub_key.Name);
+
                 if (child_key != null)
                     child_key.MergeKey(in_sub_key);
                 else
