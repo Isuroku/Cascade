@@ -147,17 +147,7 @@ namespace CascadeParser
             {
                 CToken t = line.Tail[i];
 
-                CBaseElement be = null;
-
-                switch (t.TokenType)
-                {
-                    case ETokenType.Word: be = new CStringValue(this, t.Position, t.Text); break;
-                    case ETokenType.Int: be = new CIntValue(this, t.Position, t.GetIntValue()); break;
-                    case ETokenType.UInt: be = new CUIntValue(this, t.Position, t.GetUIntValue()); break;
-                    case ETokenType.Float: be = new CFloatValue(this, t.Position, t.GetFloatValue()); break;
-                    case ETokenType.True: be = new CBoolValue(this, t.Position, true); break;
-                    case ETokenType.False: be = new CBoolValue(this, t.Position, false); break;
-                }
+                CBaseElement be = CBaseValue.CreateBaseValue(this, t);
 
                 if (line.Comments != null && inCommentForValue && be != null)
                     be.AddComments(line.Comments.Text);
@@ -519,6 +509,30 @@ namespace CascadeParser
                     _keys[i].GetTerminalPathes(outPathes, path);
                 }
             }
+        }
+
+        internal void ChangeValues(IDictionary<string, string> dictionary)
+        {
+            for (int i = 0; i < _values.Count; ++i)
+            {
+                CBaseValue old_val = _values[i];
+                string val = old_val.GetValueAsString();
+                string new_val;
+                if (dictionary.TryGetValue(val, out new_val))
+                {
+                    ETokenType tt = Utils.GetTokenType(new_val);
+                    var t = new CToken(tt, new_val, old_val.Position);
+
+                    CBaseValue be = CBaseValue.CreateBaseValue(this, t); //_values + 1 to end
+                    _values[i] = _values[_values.Count - 1]; //insert to need pos
+
+                    old_val.SetParent(null); //_values count same
+                    _values.RemoveAt(_values.Count - 1); //_values - 1
+                }
+            }
+
+            for (int i = 0; i < _keys.Count; ++i)
+                _keys[i].ChangeValues(dictionary);
         }
     }
 }

@@ -6,6 +6,7 @@ namespace CascadeParser
         None,
         Name,
         Delete,
-        Insert
+        Insert,
+        ChangeValue
     }
 }

@@ -41,5 +41,50 @@ namespace CascadeParser
         {
             return inType == ETokenType.AddKey;// || inType == ETokenType.OverrideKey;
         }
+
+        public static ETokenType GetTokenType(string string_value)
+        {
+            return GetTokenType(string_value.Length, 0, string_value).Item1;
+        }
+
+        public static Tuple<ETokenType, string> GetTokenType(int curr_pos, int world_start_pos, string line)
+        {
+            int len = curr_pos - world_start_pos;
+            string word = line.Substring(world_start_pos, len);
+
+            bool only_digit = true;
+            int point_count = 0;
+            bool minus_was = false;
+            for (int i = 0; i < word.Length && only_digit; ++i)
+            {
+                char c = word[i];
+
+                bool point = c == '.';
+                point_count += point ? 1 : 0;
+
+                bool minus = c == '-' && i == 0;
+                if (minus)
+                    minus_was = true;
+
+                only_digit = (minus || point || char.IsDigit(c)) && point_count < 2;
+            }
+
+            ETokenType tt = ETokenType.Word;
+            if (only_digit)
+            {
+                if (point_count > 0)
+                    tt = ETokenType.Float;
+                else if (word.Length <= 20)
+                {
+                    //long:  -9223372036854775808   to 9223372036854775807
+                    //ulong: 0                      to 18446744073709551615
+                    if (!minus_was && word.Length == 20)
+                        tt = ETokenType.UInt;
+                    else
+                        tt = ETokenType.Int;
+                }
+            }
+            return new Tuple<ETokenType, string>(tt, word);
+        }
     }
 }

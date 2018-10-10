@@ -5,26 +5,29 @@ namespace CascadeParser
     public class CToken
     {
         ETokenType _token_type;
-        int _line_number;
-        int _line_position;
+        SPosition _position;
         string _text;
 
         int _error_count;
 
         public ETokenType TokenType { get { return _token_type; } }
         public string Text { get { return _text; } }
-        public int LinePosition { get { return _line_position; } }
-        public int LineNumber { get { return _line_number; } }
-        public SPosition Position { get { return new SPosition(_line_number, _line_position); } }
+        public int LinePosition { get { return _position.Col; } }
+        public int LineNumber { get { return _position.Line; } }
+        public SPosition Position { get { return _position; } }
         public bool IsErrorPresent { get { return _error_count > 0; } }
         public int ErrorCount { get { return _error_count; } }
 
-        public CToken(ETokenType token_type, string text, int line_number, int line_position)
+        public CToken(ETokenType token_type, string text, int line_number, int line_position):
+            this(token_type, text, new SPosition(line_number, line_position))
+        {
+        }
+
+        public CToken(ETokenType token_type, string text, SPosition inPos)
         {
             _token_type = token_type;
             _text = text;
-            _line_number = line_number;
-            _line_position = line_position;
+            _position = inPos;
         }
 
         public override string ToString()

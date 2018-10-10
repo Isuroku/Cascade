@@ -99,6 +99,22 @@ namespace CascadeParser
         public abstract bool GetValueAsBool();
 
         public string GetValueAsString() { return ToString(); }
+
+        public static CBaseValue CreateBaseValue(CKey parent, CToken token)
+        {
+            CBaseValue be = null;
+
+            switch (token.TokenType)
+            {
+                case ETokenType.Word: be = new CStringValue(parent, token.Position, token.Text); break;
+                case ETokenType.Int: be = new CIntValue(parent, token.Position, token.GetIntValue()); break;
+                case ETokenType.UInt: be = new CUIntValue(parent, token.Position, token.GetUIntValue()); break;
+                case ETokenType.Float: be = new CFloatValue(parent, token.Position, token.GetFloatValue()); break;
+                case ETokenType.True: be = new CBoolValue(parent, token.Position, true); break;
+                case ETokenType.False: be = new CBoolValue(parent, token.Position, false); break;
+            }
+            return be;
+        }
     }
 
     internal class CStringValue : CBaseValue

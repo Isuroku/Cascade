@@ -5,21 +5,24 @@ namespace CascadeParser
     internal class CCommandParams
     {
         Dictionary<string, string> _dic = new Dictionary<string, string>();
-        List<Tuple<string, string>> _list = new List<Tuple<string, string>>();
+        List<KeyValuePair<string, string>> _list = new List<KeyValuePair<string, string>>();
 
         internal void Add(string text1, string text2)
         {
             _dic.Add(text1, text2);
-            _list.Add(new Tuple<string, string>(text1, text2));
+            _list.Add(new KeyValuePair<string, string>(text1, text2));
         }
 
-        public int Length { get { return _dic.Count; } }
+        public int Length { get { return _list.Count; } }
 
         public string this[int index]
         {
             get
             {
-                return _list[index].Item1;
+                if (index < 0 || index >= _list.Count)
+                    return string.Empty;
+
+                return _list[index].Key;
             }
         }
 
@@ -37,6 +40,18 @@ namespace CascadeParser
         internal bool ContainsKey(string v)
         {
             return _dic.ContainsKey(v);
+        }
+
+        public KeyValuePair<string, string> GetPair(int index)
+        {
+            if (index < 0 || index >= _list.Count)
+                return new KeyValuePair<string, string>(string.Empty, string.Empty);
+            return _list[index];
+        }
+
+        public IDictionary<string, string> GetDictionary()
+        {
+            return _dic;
         }
     }
 }

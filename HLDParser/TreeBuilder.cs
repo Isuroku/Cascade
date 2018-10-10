@@ -229,6 +229,11 @@ namespace CascadeParser
                 if (arr_key != null)
                     ExecuteCommand_Delete(arr_key, line, inSupport);
             }
+            else if (line.Command == ECommands.ChangeValue)
+            {
+                if (arr_key != null)
+                    arr_key.ChangeValues(line.CommandParams.GetDictionary());
+            }
             return arr_key;
         }
 

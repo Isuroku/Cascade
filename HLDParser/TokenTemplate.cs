@@ -142,42 +142,8 @@ namespace CascadeParser
 
         void AddWorld(int curr_pos, int world_start_pos, string line, List<CToken> out_lst, int lnum, int tab_shift)
         {
-            int len = curr_pos - world_start_pos;
-            string word = line.Substring(world_start_pos, len);
-
-            bool only_digit = true;
-            int point_count = 0;
-            bool minus_was = false;
-            for (int i = 0; i < word.Length && only_digit; ++i)
-            {
-                char c = word[i];
-
-                bool point = c == '.';
-                point_count += point ? 1 : 0;
-
-                bool minus = c == '-' && i == 0;
-                if (minus)
-                    minus_was = true;
-
-                only_digit = (minus || point || char.IsDigit(c)) && point_count < 2;
-            }
-
-            ETokenType tt = ETokenType.Word;
-            if (only_digit)
-            {
-                if (point_count > 0)
-                    tt = ETokenType.Float;
-                else if(word.Length <= 20)
-                {
-                    //long:  -9223372036854775808   to 9223372036854775807
-                    //ulong: 0                      to 18446744073709551615
-                    if (!minus_was && word.Length == 20)
-                        tt = ETokenType.UInt;
-                    else
-                        tt = ETokenType.Int;
-                }
-            }
-            out_lst.Add(new CToken(tt, word, lnum, world_start_pos + tab_shift));
+            Tuple<ETokenType, string> tt = Utils.GetTokenType(curr_pos, world_start_pos, line);
+            out_lst.Add(new CToken(tt.Item1, tt.Item2, lnum, world_start_pos + tab_shift));
         }
 
         Tuple<CToken, int> FindComments(CSentense inSentense)
