@@ -39,7 +39,7 @@ namespace CascadeParser
         {
             get
             {
-                if(_tokens.Length > 0)
+                if(_tokens.Length > 0 || _comments != null || _command != ECommands.None)
                     return  _sentense.Rank;
                 return 0;
             }
