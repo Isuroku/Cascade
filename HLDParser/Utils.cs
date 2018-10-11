@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace CascadeParser
 {
-    public static class Utils
+    internal static class Utils
     {
         internal static Tuple<int, int>[] GetStringPairs(string line, int line_number, ILogger inLoger)
         {
@@ -30,24 +30,19 @@ namespace CascadeParser
             return pairs;
         }
 
-        public static bool IsDataType(ETokenType inType)
+        internal static bool IsDataType(ETokenType inType)
         {
             return inType == ETokenType.Word || inType == ETokenType.Float || 
                 inType == ETokenType.Int || inType == ETokenType.UInt ||
                 inType == ETokenType.True || inType == ETokenType.False;
         }
 
-        public static bool IsChangeKeyPrefix(ETokenType inType)
-        {
-            return inType == ETokenType.AddKey;// || inType == ETokenType.OverrideKey;
-        }
-
-        public static ETokenType GetTokenType(string string_value)
+        internal static ETokenType GetTokenType(string string_value)
         {
             return GetTokenType(string_value.Length, 0, string_value).Item1;
         }
 
-        public static Tuple<ETokenType, string> GetTokenType(int curr_pos, int world_start_pos, string line)
+        internal static Tuple<ETokenType, string> GetTokenType(int curr_pos, int world_start_pos, string line)
         {
             int len = curr_pos - world_start_pos;
             string word = line.Substring(world_start_pos, len);
@@ -85,6 +80,21 @@ namespace CascadeParser
                 }
             }
             return new Tuple<ETokenType, string>(tt, word);
+        }
+
+        internal static bool Empty<T>(this T[] array) { return array == null || array.Length == 0; }
+
+        internal static bool ContainsCheck<T>(this T[] array, T value)
+        {
+            if (array.Empty())
+                return false;
+
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (Equals(array[i], value))
+                    return true;
+            }
+            return false;
         }
     }
 }

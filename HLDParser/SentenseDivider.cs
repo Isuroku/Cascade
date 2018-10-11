@@ -13,14 +13,22 @@ namespace CascadeParser
         public string Text { get { return _text; } }
         public int Rank { get { return _rank; } }
         public int LineNumber { get { return _line_number; } }
+        public int StartTextIndex { get; private set; }
 
         //List<CTokenTemplate> _tokens = new List<CTokenTemplate>();
 
         public CSentense(string inText, int inLineNumber)
         {
-            _text = inText.Trim(' ').TrimEnd('\t');
-            _rank = GetFirstTabCount(_text);
-            _text = _text.Substring(_rank);
+            _text = inText.TrimEnd(' ').TrimEnd('\t');
+
+            StartTextIndex = GetFirstCharCount(_text, _text.Length, '\t', ' ');
+            _rank = GetFirstCharCount(_text, StartTextIndex, '\t');
+            if (_rank == 0)
+            {
+                _rank = GetFirstCharCount(_text, StartTextIndex, ' ');
+                _rank = _rank / 4;
+            }
+            _text = _text.Substring(StartTextIndex);
             _line_number = inLineNumber;
         }
 
@@ -29,12 +37,11 @@ namespace CascadeParser
             return string.Format("{0}:{1}", _rank, _text);
         }
 
-        int GetFirstTabCount(string inLine)
+        int GetFirstCharCount(string inLine, int MaxCount, params char[] inChar)
         {
             int i = 0;
-            int count = inLine.Length;
-            char tab = '\t';
-            while (i < count && inLine[i] == tab)
+            int count = Math.Min(inLine.Length, MaxCount);
+            while (i < count && inChar.ContainsCheck(inLine[i]))
                 ++i;
             return i;
         }
