@@ -102,7 +102,7 @@ namespace Parser
             _parser = new CParserManager(this);
 
             string path = Path.Combine(Application.StartupPath, _path_to_data);
-            string[] files = Directory.GetFiles(path, "*.txt", SearchOption.TopDirectoryOnly);
+            string[] files = Directory.GetFiles(path, "*.csc*", SearchOption.TopDirectoryOnly);
 
             foreach (var fn in files)
             {
@@ -208,7 +208,10 @@ namespace Parser
 
         void SaveTextToFile(string inText, string inFileName, bool inCheckExists)
         {
-            string new_file_name = inFileName + ".txt";
+            string new_file_name = inFileName;
+            if(string.IsNullOrEmpty(Path.GetExtension(new_file_name)))
+                new_file_name = inFileName + ".cscd";
+
             string path = Path.Combine(Application.StartupPath, _path_to_data, new_file_name);
 
             if (inCheckExists && File.Exists(path))
