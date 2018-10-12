@@ -35,10 +35,10 @@ namespace CascadeParser
             CLoger _loger;
             object _context_data;
 
-            public CSupportOwner(CParserManager owner, ILogPrinter inLogger, object inContextData)
+            public CSupportOwner(CParserManager owner, ILogPrinter inLogger, object inContextData, string inFileName)
             {
                 _owner = owner;
-                _loger = new CLoger(inLogger);
+                _loger = new CLoger(inLogger, inFileName);
                 _context_data = inContextData;
             }
 
@@ -79,7 +79,7 @@ namespace CascadeParser
             if(!string.IsNullOrEmpty(inFileName))
                 _parsed.RemoveAll(p => string.Equals(p.FileName, inFileName));
 
-            var supporter = new CSupportOwner(this, inLogger, inContextData);
+            var supporter = new CSupportOwner(this, inLogger, inContextData, inFileName);
 
             _sentenser.ParseText(inText, supporter.GetLogger());
 
