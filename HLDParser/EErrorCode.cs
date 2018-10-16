@@ -19,7 +19,7 @@ namespace CascadeParser
         RecordBeforeRecordDividerDoesntPresent,
         CantTransferName,
         PathEmpty,
-        CantFindRootInFile,
+        CantFindInsertFile,
         CantFindKey,
         ElementWithNameAlreadyPresent,
         CantResolveLine,

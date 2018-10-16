@@ -130,7 +130,8 @@ namespace CascadeParser
                 var pathes = new List<List<string>>();
                 key.GetTerminalPathes(pathes, new List<string>());
 
-                for(int i = 0; i < pathes.Count; ++i)
+                //for correct deleting array elems
+                for(int i = pathes.Count - 1; i >= 0; --i)
                 {
                     var path = pathes[i];
                     RemoveKeysByPath(parent, path);
@@ -286,9 +287,12 @@ namespace CascadeParser
 
             if (root == null)
             {
-                inSupport.GetLogger().LogError(EErrorCode.CantFindRootInFile, line);
+                inSupport.GetLogger().LogError(EErrorCode.CantFindInsertFile, line);
                 return;
             }
+
+            if (root.KeyCount == 1 && root.GetKey(0).IsArrayKey())
+                root = root.GetKey(0);
 
             CKey key = root;
             if (!string.IsNullOrEmpty(key_path))
