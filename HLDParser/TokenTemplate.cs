@@ -83,7 +83,7 @@ namespace CascadeParser
             Tuple<CToken, int> comment_pos = FindComments(inSentense);
             CToken comment = comment_pos.Item1;
             if (comment != null)
-                line = line.Substring(0, comment_pos.Item2);
+                line = line.Substring(0, comment_pos.Item2).TrimEnd(' ').TrimEnd('\t');
 
             List<CToken> lst = new List<CToken>();
 

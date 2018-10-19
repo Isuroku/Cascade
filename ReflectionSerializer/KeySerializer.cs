@@ -15,6 +15,9 @@ namespace ReflectionSerializer
 
         const string _array_prefix = "$a";
 
+        string _debug_file_name;
+        string _debug_text;
+
         public CCascadeSerializer(IReflectionProvider reflectionProvider, CParserManager parser)
         {
             _reflectionProvider = reflectionProvider;
@@ -67,9 +70,11 @@ namespace ReflectionSerializer
         {
             if(_parser == null)
             {
-                inLogger.LogError("Cascade Parser doesnt present!");
+                LogError(inLogger, "Cascade Parser doesnt present!");
                 return default(T);
             }
+            _debug_file_name = file_name;
+            _debug_text = text;
             IKey key = _parser.Parse(file_name, text, inLogger, inContextData);
             return Deserialize<T>(key, inLogger);
         }
@@ -144,6 +149,19 @@ namespace ReflectionSerializer
             AddValueToKey(inKey, instance);
         }
 
+        void LogError(ILogPrinter inLogger, string inText)
+        {
+            string pt = string.Empty;
+            if(!string.IsNullOrEmpty(_debug_text))
+            {
+                if (_debug_text.Length > 30)
+                    pt = _debug_text.Substring(0, 30);
+                else
+                    pt = _debug_text;
+            }
+            inLogger.LogError(string.Format("{2}: [File: {0}. Text: {1}]", _debug_file_name, _debug_text, inText));
+        }
+
         object DeserializeAtomic(object inInstance, IKey inKey, Type type, ILogPrinter inLogger)
         {
             object instance;
@@ -153,7 +171,17 @@ namespace ReflectionSerializer
             }
             else if (inKey.GetValuesCount() > 1)
             {
-                inLogger.LogError(string.Format("Need one value for type {1}. Key: {0} ", inKey, type.Name));
+                var sb = new StringBuilder();
+                sb.Append("\"");
+                for (int i = 0; i < inKey.GetValuesCount(); ++i)
+                {
+                    if(i > 0)
+                        sb.Append(",");
+                    sb.Append(inKey.GetValueAsString(i));
+                }
+                sb.Append("\"");
+
+                LogError(inLogger, string.Format("Need one value for type {1}. Key: {0}; Values: {2} ", inKey, type.Name, sb));
                 instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
             }
             else
@@ -161,7 +189,7 @@ namespace ReflectionSerializer
                 string key_value = inKey.GetValueAsString(0);
                 if (!ReflectionHelper.StringToAtomicValue(key_value, type, out instance))
                 {
-                    inLogger.LogError(string.Format("Key {0} with value {1} can't convert value to type {2}", inKey, key_value, type.Name));
+                    LogError(inLogger, string.Format("Key {0} with value {1} can't convert value to type {2}", inKey, key_value, type.Name));
                     instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
                 }
             }
@@ -176,7 +204,7 @@ namespace ReflectionSerializer
             Type[] gen_args = declaredType.GetGenericArguments();
             if (gen_args.Length < 2)
             {
-                inLogger.LogError(string.Format("SerializeGenericDictionary: Generic Arguments are None. Type {0}. Instance {1}", declaredType.Name, instance));
+                LogError(inLogger, string.Format("SerializeGenericDictionary: Generic Arguments are None. Type {0}. Instance {1}", declaredType.Name, instance));
                 return;
             }
 
@@ -184,7 +212,7 @@ namespace ReflectionSerializer
             Type valueDeclaredType = gen_args[1];
 
             if (!keyDeclaredType.IsAtomic())
-                inLogger.LogError("Dictionary must simple key.");
+                LogError(inLogger, "Dictionary must simple key.");
             else
             {
                 IKey tree_key = inKey;
@@ -204,7 +232,7 @@ namespace ReflectionSerializer
             Type[] gen_args = declaredType.GetGenericArguments();
             if (gen_args.Length < 2)
             {
-                inLogger.LogError(string.Format("DeserializeDictionary: Generic Arguments are None. Type {0}", declaredType.Name));
+                LogError(inLogger, string.Format("DeserializeDictionary: Generic Arguments are None. Type {0}", declaredType.Name));
                 return inInstance;
             }
 
@@ -229,7 +257,7 @@ namespace ReflectionSerializer
                 object dic_key;
                 if (!ReflectionHelper.StringToAtomicValue(sub_key.GetName(), keyDeclaredType, out dic_key))
                 {
-                    inLogger.LogError(string.Format("SubKey {0} for dictionary with key type {1} can't convert value {2}",
+                    LogError(inLogger, string.Format("SubKey {0} for dictionary with key type {1} can't convert value {2}",
                         tree_key, keyDeclaredType.Name, sub_key.GetName()));
                 }
                 else
@@ -366,7 +394,7 @@ namespace ReflectionSerializer
             {
                 IKey dim_child = GetKeyByArrayIndex(inKey, indexer.Current);
                 if (dim_child == null)
-                    inLogger.LogError(string.Format("Cant get value for multi array index {0}", indexer));
+                    LogError(inLogger, string.Format("Cant get value for multi array index {0}", indexer));
                 else
                 {
                     object obj_value;
@@ -380,7 +408,7 @@ namespace ReflectionSerializer
                             str_value = dim_child.GetValueAsString(last_index);
                         if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
                         {
-                            inLogger.LogError(string.Format("Key {0} for collection with element type {1} can't convert value {2}",
+                            LogError(inLogger, string.Format("Key {0} for collection with element type {1} can't convert value {2}",
                                 inKey, declaredItemType.Name, str_value));
                         }
                     }
@@ -406,7 +434,7 @@ namespace ReflectionSerializer
             Type[] gen_args = type.GetGenericArguments();
             if(gen_args.Length == 0)
             {
-                inLogger.LogError(string.Format("SerializeGenericCollection: Generic Arguments are None. Type {0}. Instance {1}", type.Name, instance));
+                LogError(inLogger, string.Format("SerializeGenericCollection: Generic Arguments are None. Type {0}. Instance {1}", type.Name, instance));
                 return;
             }
             
@@ -473,7 +501,7 @@ namespace ReflectionSerializer
             Type[] gen_args = type.GetGenericArguments();
             if (gen_args.Length == 0)
             {
-                inLogger.LogError(string.Format("DeserializeGenericCollection: Generic Arguments are None. Type {0}", type.Name));
+                LogError(inLogger, string.Format("DeserializeGenericCollection: Generic Arguments are None. Type {0}", type.Name));
                 return inInstance;
             }
 
@@ -501,7 +529,7 @@ namespace ReflectionSerializer
                     string str_value = tree_key.GetValueAsString(i);
                     if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
                     {
-                        inLogger.LogError(string.Format("Key {0} for collection with element type {1} can't convert value {2}",
+                        LogError(inLogger, string.Format("Key {0} for collection with element type {1} can't convert value {2}",
                             tree_key, declaredItemType.Name, str_value));
                     }
 
@@ -631,7 +659,7 @@ namespace ReflectionSerializer
                 {
                     if(member_params.DefaultValue.GetType() != value.GetType())
                     {
-                        inLogger.LogError(string.Format("DefaultValue and member {2} of class {3} have difference types: {0} and {1}",
+                        LogError(inLogger, string.Format("DefaultValue and member {2} of class {3} have difference types: {0} and {1}",
                             member_params.DefaultValue.GetType().Name,
                             value.GetType().Name,
                             member_params.Name,
@@ -681,7 +709,7 @@ namespace ReflectionSerializer
                 }
                 catch(Exception ex)
                 {
-                    inLogger.LogError(string.Format("Cant take type from RealObjectType {0}. Exception: {1}", type_name, ex.Message));
+                    LogError(inLogger, string.Format("Cant take type from RealObjectType {0}. Exception: {1}", type_name, ex.Message));
                 }
             }
 
