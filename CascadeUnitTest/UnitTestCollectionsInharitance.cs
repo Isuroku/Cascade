@@ -173,9 +173,9 @@ namespace CascadeUnitTest
             ResetTestState();
             Console.WriteLine(MethodBase.GetCurrentMethod().Name);
             CEnumDictionaryTest v1 = new CEnumDictionaryTest();
-            v1.Params.Add(ETestEnum.TestEnumValue1, 1);
-            v1.Params.Add(ETestEnum.TestEnumValue2, 1);
-            v1.Params.Add(ETestEnum.TestEnumValue3, 1);
+            v1.Params.Add(ETestEnum.TestEnumValue1, 0.1);
+            v1.Params.Add(ETestEnum.TestEnumValue2, 0.2);
+            v1.Params.Add(ETestEnum.TestEnumValue3, 0.3);
 
             string text = _serializer.SerializeToCascade(v1, string.Empty, this);
             Console.WriteLine(text);

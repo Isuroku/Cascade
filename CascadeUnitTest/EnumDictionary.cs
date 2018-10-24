@@ -127,13 +127,13 @@ namespace CascadeUnitTest
             string key = Convert.ToString(inParamType);
             if (ContainsKey(key))
                 return false;
-            Add(key, Convert.ToString(inValue));
+            Add(key, Convert.ToString(inValue, Utils.GetCultureInfoFloatPoint()));
             return true;
         }
 
         public bool Add(T inParamType, float inValue)
         {
-            string key = Convert.ToString(inParamType);
+            string key = Convert.ToString(inParamType, Utils.GetCultureInfoFloatPoint());
             if (ContainsKey(key))
                 return false;
             Add(key, inValue.ToString());
@@ -150,9 +150,9 @@ namespace CascadeUnitTest
             string key = GetParamName(inParam);
 
             if (ContainsKey(key))
-                this[key] = inValue.ToString();
+                this[key] = inValue.ToString(Utils.GetCultureInfoFloatPoint());
             else
-                Add(key, inValue.ToString());
+                Add(key, inValue.ToString(Utils.GetCultureInfoFloatPoint()));
         }
 
         public bool Add(T inParamType, int inValue)

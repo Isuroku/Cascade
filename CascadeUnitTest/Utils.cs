@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 
 namespace CascadeUnitTest
 {
@@ -73,6 +75,17 @@ namespace CascadeUnitTest
                     return false;
             }
             return true;
+        }
+
+        static CultureInfo _custom_culture;
+        public static CultureInfo GetCultureInfoFloatPoint()
+        {
+            if (_custom_culture == null)
+            {
+                _custom_culture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+                _custom_culture.NumberFormat.NumberDecimalSeparator = ".";
+            }
+            return _custom_culture;
         }
     }
 }

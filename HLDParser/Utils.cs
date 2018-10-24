@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
+using System.Threading;
 
 namespace CascadeParser
 {
-    internal static class Utils
+    public static class Utils
     {
         internal static Tuple<int, int>[] GetStringPairs(string line, int line_number, ILogger inLoger)
         {
@@ -95,6 +97,46 @@ namespace CascadeParser
                     return true;
             }
             return false;
+        }
+
+        static CultureInfo _custom_culture;
+        public static CultureInfo GetCultureInfoFloatPoint()
+        {
+            if (_custom_culture == null)
+            {
+                _custom_culture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
+                _custom_culture.NumberFormat.NumberDecimalSeparator = ".";
+            }
+            return _custom_culture;
+        }
+
+        public static string GetStringForSave(string value)
+        {
+            value = value.Trim();
+            bool only_alfa_digit = true;
+            int space_count = 0;
+            int point_count = 0;
+            int minus_count = 0;
+            for (int i = 0; i < value.Length && only_alfa_digit; ++i)
+            {
+                only_alfa_digit = char.IsLetterOrDigit(value[i])
+                    || value[i] == '_'
+                    || value[i] == '.'
+                    || value[i] == '-' && i == 0;
+                if (value[i] == '_')
+                    space_count++;
+                if (value[i] == '.')
+                    point_count++;
+                if (value[i] == '-')
+                    minus_count++;
+            }
+
+            bool number = only_alfa_digit && point_count <= 1 && minus_count <= 1 && space_count == 0;
+            bool light_world = only_alfa_digit && point_count == 0 && minus_count == 0;
+
+            bool use_quota = !number && !light_world;
+
+            return use_quota ? string.Format("{0}{1}{2}", "\"", value, "\"") : value;
         }
     }
 }

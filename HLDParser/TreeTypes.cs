@@ -21,17 +21,6 @@ namespace CascadeParser
         private string _comments;
         public string Comments { get { return _comments; } }
 
-        static CultureInfo _custom_culture;
-        protected static CultureInfo GetCultureInfo()
-        {
-            if (_custom_culture == null)
-            {
-                _custom_culture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
-                _custom_culture.NumberFormat.NumberDecimalSeparator = ".";
-            }
-            return _custom_culture;
-        }
-
         public abstract EElementType GetElementType();
 
         public virtual bool IsKey() { return false; }
@@ -129,14 +118,7 @@ namespace CascadeParser
 
         public override string GetStringForSave()
         {
-            bool only_alfa_digit = true;
-            for (int i = 0; i < _value.Length && only_alfa_digit; ++i)
-                only_alfa_digit = char.IsLetterOrDigit(_value[i]) || _value[i] == '_';
-
-            if (only_alfa_digit)
-                return _value;
-
-            return string.Format("{0}{1}{2}", "\"", _value, "\"");
+            return Utils.GetStringForSave(_value);
         }
 
         public override float GetValueAsFloat()
@@ -256,7 +238,7 @@ namespace CascadeParser
 
         public override string GetStringForSave()
         {
-            return _value.ToString(GetCultureInfo());
+            return _value.ToString(Utils.GetCultureInfoFloatPoint());
         }
 
         public override float GetValueAsFloat() { return (float)_value; }

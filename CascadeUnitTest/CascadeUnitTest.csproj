@@ -55,6 +55,7 @@
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnitTestCollectionsInharitance.cs" />
+    <Compile Include="UnitTestSaveString.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <ItemGroup>
