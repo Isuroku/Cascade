@@ -166,5 +166,20 @@ namespace CascadeUnitTest
             CheckInternalErrors();
             Assert.AreEqual(v1, v2);
         }
+
+        [TestMethod]
+        public void TestEnumDictionary()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            CEnumDictionaryTest v1 = new CEnumDictionaryTest();
+            v1.Params.Add(ETestEnum.TestEnumValue1, 1);
+            v1.Params.Add(ETestEnum.TestEnumValue2, 1);
+            v1.Params.Add(ETestEnum.TestEnumValue3, 1);
+
+            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CEnumDictionaryTest>(text, this);
+        }
     }
 }

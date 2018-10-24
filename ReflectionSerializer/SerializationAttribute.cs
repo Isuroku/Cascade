@@ -25,8 +25,8 @@ namespace ReflectionSerializer
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
     public class CascadeIgnoreAttribute : Attribute { }
 
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
-    public class NonSerializedAttribute : Attribute { }
+    //[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
+    //public class NonSerializedAttribute : Attribute { }
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
     public class CascadePropertyAttribute : Attribute

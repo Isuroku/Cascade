@@ -108,7 +108,7 @@ namespace CascadeParser
         }
 
 
-        public IKey GetTree(string inFileName, object inContextData, ILogPrinter inLogger)
+        internal IKey GetTree(string inFileName, object inContextData, ILogPrinter inLogger)
         {
             CParsed parsed = _parsed.Find(p => string.Equals(p.FileName, inFileName, StringComparison.InvariantCultureIgnoreCase));
             if (parsed != null)
