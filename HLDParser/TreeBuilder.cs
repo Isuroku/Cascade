@@ -297,9 +297,7 @@ namespace CascadeParser
             CKey key = root;
             if (!string.IsNullOrEmpty(key_path))
             {
-                string[] path = key_path.Split(new char[] { '\\', '/' });
-
-                key = root.FindKey(path);
+                key = (CKey)root.FindKey(key_path);
                 if (key == null)
                 {
                     inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);

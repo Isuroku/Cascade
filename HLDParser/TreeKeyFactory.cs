@@ -32,7 +32,9 @@ namespace CascadeParser
         string GetValueAsString(int index);
 
         string SaveToString();
-        
+
+        IKey FindKey(string key_path);
+        IKey Parent { get; }
     }
 
     public interface IKeyValue

@@ -1,11 +1,9 @@
 ﻿using CascadeParser;
 using ReflectionSerializer;
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+#pragma warning disable 0649, 0659
 
 namespace CascadeUnitTest
 {

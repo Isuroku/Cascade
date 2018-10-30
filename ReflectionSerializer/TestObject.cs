@@ -1,6 +1,8 @@
 ﻿
 using System.Collections.Generic;
 
+#pragma warning disable 0169
+
 namespace ReflectionSerializer
 {
     public enum EntityKind { None, Fooish, Barish }

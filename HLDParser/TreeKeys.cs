@@ -22,6 +22,8 @@ namespace CascadeParser
             }
         }
 
+        IKey IKey.Parent { get { return base.Parent; } }
+
         protected List<CBaseValue> _values = new List<CBaseValue>();
         protected List<CKey> _keys = new List<CKey>();
 
@@ -249,6 +251,15 @@ namespace CascadeParser
                     return k;
             }
             return null;
+        }
+
+        public IKey FindKey(string key_path)
+        {
+            if (string.IsNullOrEmpty(key_path))
+                return null;
+
+            string[] path = key_path.Split(new char[] { '\\', '/' });
+            return FindKey(path);
         }
 
         public CKey FindKey(IList<string> path, int index = 0)
@@ -538,5 +549,7 @@ namespace CascadeParser
             for (int i = 0; i < _keys.Count; ++i)
                 _keys[i].ChangeValues(dictionary);
         }
+
+        
     }
 }

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 
+#pragma warning disable 0649, 0659
+
 namespace CascadeUnitTest
 {
     [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
