@@ -35,6 +35,8 @@ namespace CascadeParser
 
         IKey FindKey(string key_path);
         IKey Parent { get; }
+
+        string GetPath();
     }
 
     public interface IKeyValue

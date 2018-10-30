@@ -541,4 +541,39 @@ namespace CascadeUnitTest
             _int_data = v;
         }
     }
+
+    public class CShipUpgradeDescr2 : CCommonDescr<string>
+    {
+        public static string GetDataPath() { return "World/Ships/Upgrades/"; }
+        public static string GetFilePatternCSCD() { return "*.cscd"; }
+
+        public string RequireSlot { get; private set; }
+        public string[] AddSlots { get; private set; }
+
+        public CShipUpgradeDescr2()
+        {
+            AddSlots = new string[0];
+        }
+
+        public CShipUpgradeDescr2(params string[] inp): base(inp[0])
+        {
+            RequireSlot = inp[0];
+            AddSlots = inp;
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            if (obj.GetType() != GetType())
+                return false;
+
+            var v = obj as CShipUpgradeDescr2;
+
+            return Equals(RequireSlot, v.RequireSlot) &&
+                Equals(Name, v.Name) &&
+                Utils.IsArrayEquals(AddSlots, v.AddSlots);
+        }
+    }
 }

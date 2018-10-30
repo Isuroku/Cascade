@@ -94,7 +94,7 @@ namespace ReflectionSerializer
             if (memberInfo is PropertyInfo)
             {
                 var propertyInfo = memberInfo as PropertyInfo;
-                var key = propertyInfo.GetSetMethod().MethodHandle.Value;
+                var key = propertyInfo.GetSetMethod(true).MethodHandle.Value;
                 if (!setterCache.TryGetValue(key, out setter))
                     setterCache.Add(key, setter = EmitHelper.CreatePropertySetterHandler(propertyInfo));
             }

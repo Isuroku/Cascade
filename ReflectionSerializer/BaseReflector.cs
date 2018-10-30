@@ -23,7 +23,7 @@ namespace ReflectionSerializer
 
         MemberSerialization GetMemberSerialization(Type type)
         {
-            object[] attributes = type.GetCustomAttributes(true);
+            object[] attributes = type.GetCustomAttributes(false);
             for (int i = 0; i < attributes.Length; ++i)
             {
                 var dm = attributes[i] as CascadeObjectAttribute;
@@ -57,7 +57,7 @@ namespace ReflectionSerializer
                     MethodInfo get_info = p.GetGetMethod();
                     int get_params_count = get_info != null ? get_info.GetParameters().Length : 0;
 
-                    MethodInfo set_info = p.GetSetMethod();
+                    MethodInfo set_info = p.GetSetMethod(true);
 
                     if (get_info != null && set_info != null && get_params_count == 0)
                         outMembers.Add(p);

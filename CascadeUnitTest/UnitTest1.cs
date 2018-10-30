@@ -360,5 +360,18 @@ namespace CascadeUnitTest
             var v2 = _serializer.Deserialize<CClassWithoutDefCtor>(text, this);
         }
 
+        [TestMethod]
+        public void TestMethodShipUpgradeDescr2()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            CShipUpgradeDescr2 v1 = new CShipUpgradeDescr2("one", "two");
+
+            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CShipUpgradeDescr2>(text, this);
+            Assert.AreEqual(v1, v2);
+        }
+
     }
 }

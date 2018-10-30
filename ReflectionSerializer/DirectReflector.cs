@@ -25,7 +25,7 @@ namespace ReflectionSerializer
         public override void SetValue(MemberInfo member, object instance, object value)
         {
             if (member is PropertyInfo)
-                (member as PropertyInfo).GetSetMethod().Invoke(instance, new[] { value });
+                (member as PropertyInfo).GetSetMethod(true).Invoke(instance, new[] { value });
             else if (member is FieldInfo)
                 (member as FieldInfo).SetValue(instance, value);
             else throw new NotImplementedException();

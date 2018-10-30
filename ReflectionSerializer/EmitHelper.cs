@@ -80,7 +80,7 @@ namespace ReflectionSerializer
         {
             var dynam = new DynamicMethod(string.Empty, typeof(void), TwoObjects, Module, true);
             ILGenerator il = dynam.GetILGenerator();
-            MethodInfo methodInfo = propertyInfo.GetSetMethod();
+            MethodInfo methodInfo = propertyInfo.GetSetMethod(true);
 
             if (!methodInfo.IsStatic)
                 il.PushInstance(propertyInfo.DeclaringType);

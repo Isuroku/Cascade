@@ -253,6 +253,13 @@ namespace CascadeParser
             return null;
         }
 
+        public string GetPath()
+        {
+            if (_parent == null)
+                return Name;
+            return string.Format("{0}\\{1}", _parent.GetPath(), Name);
+        }
+
         public IKey FindKey(string key_path)
         {
             if (string.IsNullOrEmpty(key_path))
