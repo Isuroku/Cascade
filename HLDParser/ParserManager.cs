@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 
 namespace CascadeParser
 {
@@ -93,6 +94,9 @@ namespace CascadeParser
             }
 
             CKey root = CTreeBuilder.Build(lines, supporter);
+
+            if (string.IsNullOrEmpty(root.Name))
+                root.SetName(Path.GetFileNameWithoutExtension(inFileName));
 
             _parsed.Add(new CParsed(root, lines, inFileName));
 
