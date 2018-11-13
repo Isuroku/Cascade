@@ -98,7 +98,7 @@ public class CStaticDataManager : IParserOwner, ILogPrinter
 	//IParserOwner requests this method
 	public string GetTextFromFile(string inFileName, object inContextData)
 	{
-		string path = Path.Combine(Application.StartupPath, _path_to_data, inFileName);
+		string path = Path.Combine(Application.StartupPath, "Data", inFileName);
 		if (!File.Exists(path))
 			return string.Empty;
 		return File.ReadAllText(path);
