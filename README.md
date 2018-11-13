@@ -124,13 +124,13 @@ public class CStaticDataManager : IParserOwner, ILogPrinter
 {
 	//здесь все из предыдущего примера
 
-	List<SDescrNPC> _npc = new List<SDescrNPC>;
+	List<SDescrNPC> _npc_list = new List<SDescrNPC>;
 
 	void LoadNPC()
 	{
 		object context_data = null; //сейчас не надо
 		string text = GetTextFromFile("NPC.cscd", context_data);
-		_npc.AddRange(_serializer.Deserialize<SDescrNPC[]>(text, this));
+		_npc_list.AddRange(_serializer.Deserialize<SDescrNPC[]>(text, this));
 	}
 }
 ```
