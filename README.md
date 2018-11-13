@@ -79,6 +79,63 @@ struct SDescrNPC
 }
 ```
 
+Создаем свой менеджер загрузки, который включает в себя сериализатор Cascade:
+```c#
+using System;
+using CascadeParser;
+using ReflectionSerializer;
+using System.Collections.Generic;
+
+public class CStaticDataManager : IParserOwner, ILogPrinter
+{
+	protected CCascadeSerializer _serializer;
+
+	public CStaticDataManager()
+	{
+		_serializer = new CCascadeSerializer(this);
+	}
+
+	//IParserOwner requests this method
+	public string GetTextFromFile(string inFileName, object inContextData)
+	{
+		string path = Path.Combine(Application.StartupPath, _path_to_data, inFileName);
+		if (!File.Exists(path))
+			return string.Empty;
+		return File.ReadAllText(path);
+	}
+
+	#region ILogPrinter
+	public void LogError(string inText) { Console.WriteLine("Error: {0}", inText); }
+	public void LogWarning(string inText) { Console.WriteLine("Warning: {0}", inText); }
+	public void Trace(string inText) { Console.WriteLine(inText); }
+	#endregion ILogPrinter
+}
+```
+
+Пару слов про интерфейсы, которые он должен реализовать, что бы создать сериализатор Cascade.
+- ILogPrinter - сериализатор будет выдавать с помощью этого интерфейса ошибки при считывании и парсинге текста.
+- IParserOwner - в тексте описания НПС написано, что MovingParams мы хотим вычитать из файла MoverDescrs.cscdt и ключа StandartMan. Сам сериализатор не читает файлы, а просит это сделать хозяина с помощью метода: string GetTextFromFile(string inFileName, object inContextData). В нашем случае в агрументе метода inFileName будет стоять "MoverDescrs.cscdt". И мы должны считать содержимое этого файла как текст и вернуть его как результат метода. Например так как показано в примере. Про аргумент "inContextData" я напишу ниже.
+
+Теперь прочитаем данные (описания НПС) из файла.
+```c#
+//using из примера выше
+
+public class CStaticDataManager : IParserOwner, ILogPrinter
+{
+	//здесь все из предыдущего примера
+
+	List<SDescrNPC> _npc = new List<SDescrNPC>;
+
+	void LoadNPC()
+	{
+		object context_data = null; //сейчас не надо
+		string text = GetTextFromFile("NPC.cscd", context_data);
+		_npc.AddRange(_serializer.Deserialize<SDescrNPC[]>(text, this));
+	}
+}
+```
+Готово!
+
 ## Общее описание
 Представляет собой иерархическое дерево в форме: **ключ = список значений + список "дочерних" ключей**.
 ```sh
