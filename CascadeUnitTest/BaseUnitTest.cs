@@ -8,15 +8,13 @@ namespace CascadeUnitTest
 {
     public class BaseUnitTest : IParserOwner, ILogPrinter
     {
-        protected CParserManager _parser;
         protected CCascadeSerializer _serializer;
 
         protected int _error_count;
 
         public BaseUnitTest()
         {
-            _parser = new CParserManager(this);
-            _serializer = new CCascadeSerializer(_parser);
+            _serializer = new CCascadeSerializer(this);
         }
 
         public string GetTextFromFile(string inFileName, object inContextData)

@@ -11,23 +11,23 @@ Cascade Language of Descriptions (Cascade)
 ```c#
 Name: Swordman
 MovingParams:
- Walk: 10
- Run: 15
- AngleSpeed: 25
+	Walk: 10
+	Run: 15
+	AngleSpeed: 25
 Weapon: Sword
 --
 Name: Axeman
 MovingParams:
- Walk: 10
- Run: 15
- AngleSpeed: 25  
+	Walk: 10
+	Run: 15
+	AngleSpeed: 25  
 Weapon: Axe
 --
 Name: Spearman
 MovingParams:
-  Walk: 10
-  Run: 15
-  AngleSpeed: 25  
+	Walk: 10
+	Run: 15
+	AngleSpeed: 25  
 Weapon: Spear
 ```
 
@@ -37,26 +37,26 @@ Weapon: Spear
 Файл MoveDescr:
 ```c#
 Walkman:
-  Walk: 10
-  Run: 15
-  AngleSpeed: 25
+	Walk: 10
+	Run: 15
+	AngleSpeed: 25
 ```
 
 Файл NPCDescr:
 ```c#
 Name: Swordman
 MovingParams:
-  #insert file:MoverDescrs.cscdt key:StandartMan
+	#insert file:MoverDescrs.cscdt key:StandartMan
 Weapon: Sword
-  --
+--
 Name: Axeman
 MovingParams:
-  #insert file:MoverDescrs.cscdt key:StandartMan
+	#insert file:MoverDescrs.cscdt key:StandartMan
 Weapon: Axe
 --
 Name: Spearman
 MovingParams:
-  #insert file:MoverDescrs.cscdt key:StandartMan
+	#insert file:MoverDescrs.cscdt key:StandartMan
 Weapon: Spear
 ```
 

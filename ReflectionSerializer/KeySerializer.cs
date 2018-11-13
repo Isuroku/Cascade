@@ -13,6 +13,7 @@ namespace ReflectionSerializer
         readonly IReflectionProvider _reflectionProvider;
 
         CParserManager _parser;
+        public CParserManager Parser { get { return _parser; } }
 
         const string _array_prefix = "$a";
 
@@ -28,6 +29,11 @@ namespace ReflectionSerializer
         public CCascadeSerializer(CParserManager parser) : this(new CachedReflector(), parser)
         {
             
+        }
+
+        public CCascadeSerializer(IParserOwner owner) : this(new CachedReflector(), null)
+        {
+            _parser = new CParserManager(owner);
         }
 
         public CCascadeSerializer() : this(new CachedReflector(), null)
