@@ -2,6 +2,7 @@
 using ReflectionSerializer;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 #pragma warning disable 0649, 0659
 
@@ -85,6 +86,7 @@ namespace CascadeUnitTest
     public class CTestClass1 : CTestBase
     {
         [CascadeProperty(Default = 10)]
+        [DefaultValue(10)]
         private int _int;
 
         [CascadeIgnore]

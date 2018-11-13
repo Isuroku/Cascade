@@ -6,21 +6,21 @@ namespace ReflectionSerializer
     /// <summary>
     /// Qualifies the serialization of a public property or field.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
-    public class DataMemberAttribute : Attribute
-    {
-        /// <summary>
-        /// Override the serialized name of this value.
-        /// </summary>
-        public string Name { get; set; }
+    //[AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
+    //public class DataMemberAttribute : Attribute
+    //{
+    //    /// <summary>
+    //    /// Override the serialized name of this value.
+    //    /// </summary>
+    //    public string Name { get; set; }
 
-        /// <summary>
-        /// Ignore this value when serializing.
-        /// </summary>
-        public bool Ignore { get; set; }
+    //    /// <summary>
+    //    /// Ignore this value when serializing.
+    //    /// </summary>
+    //    public bool Ignore { get; set; }
 
-        //public bool Required { get; set; }
-    }
+    //    //public bool Required { get; set; }
+    //}
 
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = false, Inherited = false)]
     public class CascadeIgnoreAttribute : Attribute { }
@@ -34,6 +34,11 @@ namespace ReflectionSerializer
         public string Name { get; set; }
 
         public object Default { get; set; }
+
+        /// <summary>
+        /// Ignore this value when serializing.
+        /// </summary>
+        public bool Ignore { get; set; }
 
         public CascadePropertyAttribute() { }
         public CascadePropertyAttribute(string inName)

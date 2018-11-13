@@ -59,7 +59,7 @@ namespace ReflectionSerializer
         protected int ProtectedField;
         internal int InternalField;
 
-        [DataMember(Ignore = true)]
+        [CascadeProperty(Ignore = true)]
         public int Ignored { get; set; }
 
         public int NonWritableAuto { get; private set; }

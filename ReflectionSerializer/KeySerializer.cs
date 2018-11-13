@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 
@@ -580,11 +581,23 @@ namespace ReflectionSerializer
             object[] attributes = memberInfo.GetCustomAttributes(false);
             for (int i = 0; i < attributes.Length; ++i)
             {
-                if (string.IsNullOrEmpty(prms.Name))
+                //if (string.IsNullOrEmpty(prms.Name))
+                //{
+                //    DataMemberAttribute dm = attributes[i] as DataMemberAttribute;
+                //    if (dm != null && !string.IsNullOrEmpty(dm.Name))
+                //        prms.Name = dm.Name;
+                //}
+
                 {
-                    DataMemberAttribute dm = attributes[i] as DataMemberAttribute;
-                    if (dm != null && !string.IsNullOrEmpty(dm.Name))
-                        prms.Name = dm.Name;
+                    DefaultMemberAttribute dm = attributes[i] as DefaultMemberAttribute;
+                    if (dm != null && !string.IsNullOrEmpty(dm.MemberName))
+                        prms.Name = dm.MemberName;
+                }
+
+                {
+                    DefaultValueAttribute dm = attributes[i] as DefaultValueAttribute;
+                    if (prms.DefaultValue == null && dm != null)
+                        prms.DefaultValue = dm.Value;
                 }
 
                 CascadePropertyAttribute jp = attributes[i] as CascadePropertyAttribute;

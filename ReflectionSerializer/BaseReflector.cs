@@ -85,7 +85,7 @@ namespace ReflectionSerializer
             object[] attributes = memberInfo.GetCustomAttributes(false);
             for (int i = 0; i < attributes.Length; ++i)
             {
-                if (attributes[i] is DataMemberAttribute || attributes[i] is CascadePropertyAttribute)
+                if (attributes[i] is CascadePropertyAttribute)
                     return true;
             }
             return false;
@@ -105,7 +105,7 @@ namespace ReflectionSerializer
             {
                 if (attributes[i] is CascadeIgnoreAttribute || attributes[i] is NonSerializedAttribute)
                     return true;
-                DataMemberAttribute dm = attributes[i] as DataMemberAttribute;
+                CascadePropertyAttribute dm = attributes[i] as CascadePropertyAttribute;
                 if (dm != null && dm.Ignore)
                     return true;
             }
