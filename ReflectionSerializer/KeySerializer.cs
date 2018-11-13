@@ -84,6 +84,11 @@ namespace ReflectionSerializer
             return (T)DeserializeInternal(null, key, typeof(T), 0, inLogger);
         }
 
+        public void DeserializeToObject<T>(IKey key, T inInstance, ILogPrinter inLogger)
+        {
+            DeserializeInternal(inInstance, key, typeof(T), 0, inLogger);
+        }
+
         bool IsInheriteAccess(Type inDeclaredType)
         {
             return inDeclaredType != null && 
