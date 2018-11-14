@@ -10,6 +10,18 @@ namespace CascadeUnitTest
 {
     public enum ETestEnum { TestEnumValue1, TestEnumValue2, TestEnumValue3 }
 
+    [System.Flags]
+    public enum EEntityPlaces
+    {
+        Undefined = 0,
+        Left = 1,    // Left
+        Right = 2,    // Right
+        Up = 4,    // Up
+        Down = 8,    // Down
+        Front = 16,   // Front
+        Back = 32,   // Back
+    }
+
     [CascadeObject(MemberSerialization.All)]
     public class CTestBase
     {

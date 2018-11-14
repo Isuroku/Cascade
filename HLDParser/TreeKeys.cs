@@ -80,7 +80,7 @@ namespace CascadeParser
 
         private CKey(CKey parent, string inName, bool inArray, SPosition pos) : base(parent, pos)
         {
-            _name = inName;
+            SetName(inName);
             IsArray = inArray;
         }
 
@@ -119,7 +119,14 @@ namespace CascadeParser
             return Name;
         }
 
-        public void SetName(string name) { _name = name; }
+        public void SetName(string name)
+        {
+            _name = Utils.GetStringForSave(name);
+            //if (!string.IsNullOrEmpty(name) && Utils.GetTokenType(name) != ETokenType.Word)
+                
+            //else
+            //    _name = name;
+        }
 
         public void AddChild(CBaseElement inElement)
         {

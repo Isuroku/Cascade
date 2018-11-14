@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using CascadeParser;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -373,5 +374,28 @@ namespace CascadeUnitTest
             Assert.AreEqual(v1, v2);
         }
 
+        [TestMethod]
+        public void TestMethodEnumFlag()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            CShipUpgradeDescr2 v1 = new CShipUpgradeDescr2("one", "two");
+
+            EEntityPlaces pl = EEntityPlaces.Front | EEntityPlaces.Left;
+
+            string text = pl.ToString();
+            Console.WriteLine(text);
+
+            EEntityPlaces p2 = (EEntityPlaces)Enum.Parse(typeof(EEntityPlaces), text);
+            Console.WriteLine(p2);
+
+            Dictionary<EEntityPlaces, int> dic = new Dictionary<EEntityPlaces, int>();
+            dic.Add(pl, 9);
+
+            text = _serializer.SerializeToCascade(dic, string.Empty, this);
+            Console.WriteLine(text);
+            var dic2 = _serializer.Deserialize<Dictionary<EEntityPlaces, int>>(text, this);
+            Utils.IsCollectionEquals(dic, dic2);
+        }
     }
 }
