@@ -56,7 +56,7 @@
     <Compile Include="TestObject.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HLDParser\CascadeParser.csproj">
+    <ProjectReference Include="..\CascadeParser\CascadeParser.csproj">
       <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
       <Name>CascadeParser</Name>
     </ProjectReference>

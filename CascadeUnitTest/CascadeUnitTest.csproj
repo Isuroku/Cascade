@@ -62,8 +62,8 @@
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\HLDParser\CascadeParser.csproj">
-      <Project>{0BA9965A-8201-4766-8241-322FC380CA75}</Project>
+    <ProjectReference Include="..\CascadeParser\CascadeParser.csproj">
+      <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
       <Name>CascadeParser</Name>
     </ProjectReference>
     <ProjectReference Include="..\ReflectionSerializer\ReflectionSerializer.csproj">
