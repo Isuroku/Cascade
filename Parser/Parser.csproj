@@ -106,13 +106,13 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\CascadeParser\CascadeParser.csproj">
+      <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
+      <Name>CascadeParser</Name>
+    </ProjectReference>
     <ProjectReference Include="..\CascadeUnitTest\CascadeUnitTest.csproj">
       <Project>{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}</Project>
       <Name>CascadeUnitTest</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\HLDParser\CascadeParser.csproj">
-      <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
-      <Name>CascadeParser</Name>
     </ProjectReference>
     <ProjectReference Include="..\ReflectionSerializer\ReflectionSerializer.csproj">
       <Project>{6aa90dc2-4fb2-406f-a205-682478520f8e}</Project>
