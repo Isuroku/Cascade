@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     public struct PointerPair : IEquatable<PointerPair>
     {

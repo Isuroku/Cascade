@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using CascadeParser;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using ReflectionSerializer;
+using CascadeSerializer;
 
 namespace CascadeUnitTest
 {

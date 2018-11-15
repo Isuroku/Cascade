@@ -114,9 +114,9 @@
       <Project>{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}</Project>
       <Name>CascadeUnitTest</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ReflectionSerializer\ReflectionSerializer.csproj">
+    <ProjectReference Include="..\ReflectionSerializer\CascadeSerializer.csproj">
       <Project>{6aa90dc2-4fb2-406f-a205-682478520f8e}</Project>
-      <Name>ReflectionSerializer</Name>
+      <Name>CascadeSerializer</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

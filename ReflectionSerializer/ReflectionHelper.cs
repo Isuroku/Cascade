@@ -6,7 +6,7 @@ using System.Reflection;
 using System.ComponentModel;
 using CascadeParser;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     public static class ReflectionHelper
     {

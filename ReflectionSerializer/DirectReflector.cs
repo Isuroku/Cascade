@@ -2,7 +2,7 @@
 using System;
 using System.Reflection;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     class DirectReflector : BaseReflector
     {

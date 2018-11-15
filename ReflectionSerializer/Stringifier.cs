@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Text;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     public static class Stringifier
     {

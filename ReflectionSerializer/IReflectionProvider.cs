@@ -2,7 +2,7 @@
 using System.Reflection;
 using CascadeParser;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     public delegate object MethodHandler(object target, params object[] args);
 

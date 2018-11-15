@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Collections;
 using CascadeParser;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     //public class Serializer
     //{

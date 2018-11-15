@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     public abstract class BaseReflector : IReflectionProvider
     {

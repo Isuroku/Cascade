@@ -66,9 +66,9 @@
       <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
       <Name>CascadeParser</Name>
     </ProjectReference>
-    <ProjectReference Include="..\ReflectionSerializer\ReflectionSerializer.csproj">
+    <ProjectReference Include="..\ReflectionSerializer\CascadeSerializer.csproj">
       <Project>{6AA90DC2-4FB2-406F-A205-682478520F8E}</Project>
-      <Name>ReflectionSerializer</Name>
+      <Name>CascadeSerializer</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets" Condition="Exists('$(VSToolsPath)\TeamTest\Microsoft.TestTools.targets')" />

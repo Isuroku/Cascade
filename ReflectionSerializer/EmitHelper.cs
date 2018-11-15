@@ -3,7 +3,7 @@ using System;
 using System.Reflection;
 using System.Reflection.Emit;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     static class EmitHelper
     {
