@@ -133,7 +133,11 @@ public class CStaticDataManager : IParserOwner, ILogPrinter
 
 	void LoadNPC()
 	{
-		object context_data = null; //сейчас не надо
+		//здесь можно создать объект, который будет передаваться в метод
+		//string GetTextFromFile(string inFileName, object inContextData)
+		//как inContextData
+		object context_data = null; 
+		
 		string text = GetTextFromFile("NPC.cscd", context_data);
 		_npc_list.AddRange(_serializer.Deserialize<SDescrNPC[]>(text, this));
 	}
