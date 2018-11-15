@@ -6,7 +6,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Text;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     public class CCascadeSerializer
     {

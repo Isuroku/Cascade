@@ -1,4 +1,4 @@
-﻿using ReflectionSerializer;
+﻿using CascadeSerializer;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace CascadeUnitTest
 {
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public class CCharacterDescr : CCommonDescr<string>
     {
         private ECharacterType _character_type;
@@ -105,7 +105,7 @@ namespace CascadeUnitTest
         }
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public class CMoverDescr
     {
         [CascadeProperty(Name = "ExactlyForwardAngle", Default = 3f)]
@@ -158,7 +158,7 @@ namespace CascadeUnitTest
         Passenger
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public abstract class CCommonDescr<T>
     {
         protected T _name;
@@ -206,7 +206,7 @@ namespace CascadeUnitTest
         }
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public class CAIBrainDescr
     {
         private string[] _person_names;
@@ -324,7 +324,7 @@ namespace CascadeUnitTest
         }
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public class CConditionArrayTest
     {
         public CAIBehaviorConditionDescr[] Conditions;
@@ -364,7 +364,7 @@ namespace CascadeUnitTest
         SavedTimePeriod
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public class CAILocKeys
     {
         private string _source_target;
@@ -431,7 +431,7 @@ namespace CascadeUnitTest
         }
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public class CStringGroupDescr : CCommonDescr<string>
     {
         private string[] _strings;
@@ -485,7 +485,7 @@ namespace CascadeUnitTest
         IsIdle
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public class CAIBehaviorConditionDescr
     {
         private string _alias;
@@ -556,7 +556,7 @@ namespace CascadeUnitTest
         }
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public class CAIBehaviorReportDescr
     {
         private string _text;
@@ -626,7 +626,7 @@ namespace CascadeUnitTest
         PlayerCrashed
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
     public class CAIBehaviorDescr
     {
         private string _behavior_name;
@@ -785,7 +785,7 @@ namespace CascadeUnitTest
         }
     }
 
-    [CascadeObject(ReflectionSerializer.MemberSerialization.OptIn)]
+    [CascadeObject(CascadeSerializer.MemberSerialization.OptIn)]
     public class CAIBehaviorStateDescr
     {
         [CascadeProperty("StateName")]
@@ -804,7 +804,7 @@ namespace CascadeUnitTest
         private int _state_index;
         public int Index { get { return _state_index; } }
 
-        [CascadeObject(ReflectionSerializer.MemberSerialization.Fields)]
+        [CascadeObject(CascadeSerializer.MemberSerialization.Fields)]
         public class CNextStatesDescr
         {
             private string _state_name;

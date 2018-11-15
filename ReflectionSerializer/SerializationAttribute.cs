@@ -1,7 +1,7 @@
 ﻿using CascadeParser;
 using System;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     /// <summary>
     /// Qualifies the serialization of a public property or field.

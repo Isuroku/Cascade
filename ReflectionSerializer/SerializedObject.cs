@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Collections;
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     public abstract class SerializedObject
     {

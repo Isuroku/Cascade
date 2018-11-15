@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 #pragma warning disable 0169
 
-namespace ReflectionSerializer
+namespace CascadeSerializer
 {
     public enum EntityKind { None, Fooish, Barish }
     public struct SomeStruct { public int A, B; }
