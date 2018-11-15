@@ -88,7 +88,7 @@ struct SDescrNPC
 ```c#
 using System;
 using CascadeParser;
-using ReflectionSerializer;
+using CascadeSerializer;
 using System.Collections.Generic;
 
 public class CStaticDataManager : IParserOwner, ILogPrinter
