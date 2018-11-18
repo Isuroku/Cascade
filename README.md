@@ -1,18 +1,22 @@
 # Cascade
 Cascade Language of Descriptions (Cascade)
 
-.NET, Mono and Unity3d совместимая библиотека для чтения/записи конфигурационных данных, описаний объектов и настроек (в частности игровых: NPC, Quests, GUI, Options, Game and World Settings and etc.) из/в текстовых файлов, потоков и прочего.
+Cascade is compatible with .Net, Mono and Unity3d library for writing/reading to/from text files, streams and other configuration data, object descriptions and settings.
 
-Она позоляет конвертировать текстовое описание сразу в C# объект и наоборот (like a Newtonsoft JSON library). Также можно получить данные в формате иерархического дерева (Keys, Values).
+It allows to convert text description to C# object and vice versa (like a Newtonsoft JSON Library). Also, it is possible to get data in hierarchical tree format (Keys, Values).
 
-Текстовый формат легко понимается и читается человеком и имеет минимум синтаксического мусора.
+Text format is easy to read and understand and has minimum of syntactic garbage.
 
-## Текстовое описание объектов.
-  Сначала мы использовали JSON, который в целом удобен. Но с увеличением количества объектов, которых необходимо было описать, их объема появилась потребность в переиспользовании большого количества одинаковых или очень похожих описаний.
+## Text object description.
 
-  Например, есть описание в текстовом файле параметров поведения НПС, его действий, разговоров, стандартных целей. Это большой по объему и сложный по смыслу файл, который редактируется и правится не программистами, а геймдизайнерами. Есть определенное количество НПС, описание которых практически повторяет стандартное, но имеет ряд небольших отличий. Здесь и пригодится схема когда мы "наследуем" стандартное описание для каждого НПС, меняя в нем небольшое количество уникальных для НПС параметров.
+At the beginning JSON was used, which is convenient in general. However, with increasing number of objects and their complexity it was necessary to reuse a lot of the same or almost the same descriptions.
 
-Упрощенный пример: НПС, которые ходят одинаково.
+For instance, there is description in text file of NPC behaviour parameters like its actions, dialogues, default goals. This is large and complex file, which is edited and changed not by programmers, but by game designers.
+There is certain number of NPC with almost the same description as the default one, but with minor differences. In such cases default description "inheritance" for each NPC with unique parameters changes can be applicable.
+
+
+Simple example: NPCs with the movement behaviour.
+
 ```c#
 Name: Swordman
 MovingParams:
@@ -36,10 +40,12 @@ MovingParams:
 Weapon: Spear
 ```
 
-Очевидно, что копирование параметров приведет к классическим проблемам: много текста, сложно поменять значение параметра у всех.
-Можно выделить параметры движения в отдельное описание и вставить его в описание каждого НПС.
+This is obvious that copying of parameters will lead to well-known problems: a lot of text, difficult to change parameter value for each NPC.
 
-Файл MoveDescr:
+However, it is possible to highlight the movement parameters 
+in a separate description and insert it into the description of each NPC.
+
+File MoveDescr:
 ```c#
 Walkman:
 	Walk: 10
@@ -65,9 +71,9 @@ MovingParams:
 Weapon: Spear
 ```
 
-## Как прочитать это описание в коде (С#).
+## How to read this description in code(C#).
 
-Описываем структуру НПС и как он движется:
+Describe the structure of NPc and its movement:
 ```c#
 struct SDescrMove
 {
@@ -84,7 +90,7 @@ struct SDescrNPC
 }
 ```
 
-Создаем свой менеджер загрузки, который включает в себя сериализатор Cascade:
+Create our own upload manager, which includes the Cascade serializer:
 ```c#
 using System;
 using CascadeParser;
@@ -117,11 +123,16 @@ public class CStaticDataManager : IParserOwner, ILogPrinter
 }
 ```
 
-Пару слов про интерфейсы, которые он должен реализовать, что бы создать сериализатор Cascade.
-- ILogPrinter - сериализатор будет выдавать с помощью этого интерфейса ошибки при считывании и парсинге текста.
-- IParserOwner - в тексте описания НПС написано, что MovingParams мы хотим вычитать из файла MoverDescrs.cscdt и ключа StandartMan. Сам сериализатор не читает файлы, а просит это сделать хозяина с помощью метода: string GetTextFromFile(string inFileName, object inContextData). В нашем случае в агрументе метода inFileName будет стоять "MoverDescrs.cscdt". И мы должны считать содержимое этого файла как текст и вернуть его как результат метода. Например так как показано в примере. Про аргумент "inContextData" я напишу ниже.
+A few words about the interfaces that it needs to implement in order to create the Cascade serializer.
+- ILogPrinter - serializer will show errors using this interface when reading and parsing text.
+- IParserOwner - description of the NPC says that we want to read MovingParams from MoverDescrs.cscdt file and the StandartMan key.
 
-Теперь прочитаем данные (описания НПС) из файла.
+The serializer itself does not read the files, but asks the host to do this using the method: string GetTextFromFile (string inFileName, object inContextData).
+In our case, in the argument of the inFileName method will be "MoverDescrs.cscdt".
+And we must read the content of this file as text and return it as the result of a method. 
+As shown in the example below. About the argument "inContextData" I will write further
+
+Now read the data (description of the NPC) from the file.
 ```c#
 //using из примера выше
 
@@ -143,4 +154,4 @@ public class CStaticDataManager : IParserOwner, ILogPrinter
 	}
 }
 ```
-Готово!
+Done!
