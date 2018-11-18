@@ -53,7 +53,7 @@ Walkman:
 	AngleSpeed: 25
 ```
 
-Файл NPCDescr:
+File NPCDescr:
 ```c#
 Name: Swordman
 MovingParams:
