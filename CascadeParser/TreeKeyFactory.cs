@@ -44,6 +44,8 @@ namespace CascadeParser
         IKey Parent { get; }
         string Comments { get; }
 
+        EElementType ElementType { get; }
+
         string GetValueAsString();
 
         float GetValueAsFloat();

@@ -75,6 +75,8 @@ namespace CascadeParser
     {
         IKey IKeyValue.Parent { get { return Parent; } }
 
+        public EElementType ElementType { get { return GetElementType(); } }
+
         public CBaseValue() { }
         public CBaseValue(CKey parent, SPosition pos): base(parent, pos) { }
         public CBaseValue(CBaseElement other): base(other) { }
