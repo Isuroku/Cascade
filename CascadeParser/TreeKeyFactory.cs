@@ -49,6 +49,7 @@ namespace CascadeParser
         string GetValueAsString();
 
         float GetValueAsFloat();
+        double GetValueAsDouble();
         decimal GetValueAsDecimal();
         int GetValueAsInt();
         long GetValueAsLong();

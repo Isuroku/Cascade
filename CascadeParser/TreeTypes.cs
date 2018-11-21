@@ -9,6 +9,7 @@ namespace CascadeParser
         String,
         Float,
         Int,
+        UInt,
         //ArrayKey,
         Bool
     }
@@ -82,6 +83,7 @@ namespace CascadeParser
         public CBaseValue(CBaseElement other): base(other) { }
 
         public abstract float GetValueAsFloat();
+        public abstract double GetValueAsDouble();
         public abstract decimal GetValueAsDecimal();
         public abstract int GetValueAsInt();
         public abstract long GetValueAsLong();
@@ -127,6 +129,14 @@ namespace CascadeParser
         {
             float v;
             if (!float.TryParse(_value, out v))
+                return 0;
+            return v;
+        }
+
+        public override double GetValueAsDouble()
+        {
+            double v;
+            if (!double.TryParse(_value, out v))
                 return 0;
             return v;
         }
@@ -196,6 +206,7 @@ namespace CascadeParser
         }
 
         public override float GetValueAsFloat() { return _value; }
+        public override double GetValueAsDouble() { return _value; }
         public override decimal GetValueAsDecimal() { return _value; }
         public override int GetValueAsInt() { return (int)_value; }
         public override long GetValueAsLong() { return (long)_value; }
@@ -207,7 +218,7 @@ namespace CascadeParser
     internal class CUIntValue : CBaseValue
     {
         ulong _value;
-        public override EElementType GetElementType() { return EElementType.Int; }
+        public override EElementType GetElementType() { return EElementType.UInt; }
         public CUIntValue(CKey parent, SPosition pos, ulong value) : base(parent, pos) { _value = value; }
         public CUIntValue(CKey parent, ulong value) : base(parent, SPosition.zero) { _value = value; }
         public CUIntValue(CUIntValue other) : base(other) { _value = other._value; }
@@ -220,6 +231,7 @@ namespace CascadeParser
         }
 
         public override float GetValueAsFloat() { return _value; }
+        public override double GetValueAsDouble() { return _value; }
         public override decimal GetValueAsDecimal() { return _value; }
         public override int GetValueAsInt() { return (int)_value; }
         public override long GetValueAsLong() { return (long)_value; }
@@ -244,6 +256,7 @@ namespace CascadeParser
         }
 
         public override float GetValueAsFloat() { return (float)_value; }
+        public override double GetValueAsDouble() { return (double)_value; }
         public override decimal GetValueAsDecimal() { return _value; }
         public override int GetValueAsInt() { return (int)_value; }
         public override long GetValueAsLong() { return (long)_value; }
@@ -268,6 +281,7 @@ namespace CascadeParser
         }
 
         public override float GetValueAsFloat() { return _value ? 1 : 0; }
+        public override double GetValueAsDouble() { return _value ? 1 : 0; }
         public override decimal GetValueAsDecimal() { return _value ? 1 : 0; }
         public override int GetValueAsInt() { return _value ? 1 : 0; }
         public override long GetValueAsLong() { return _value ? 1 : 0; }
