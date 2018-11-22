@@ -66,16 +66,12 @@ namespace CascadeParser
                     else if (line.Rank > curr_rank)
                     {
                         if (current_state.last_record_key == null)
-                        {
-                            inSupport.GetLogger().LogError(EErrorCode.TooDeepRank, line);
-                        }
-                        else
-                        {
-                            SCollectResult collect_res = Collect(current_state.last_record_key, curr_rank, inLines, i, inSupport, inCommands);
-                            if(!collect_res.WasRecordDivider)
-                                current_state.last_record_key.CheckOnOneArray();
-                            i = collect_res.CurrentLineIndex;
-                        }
+                            current_state.last_record_key = CreateNewArrayKey(inParent, line, inCommands);
+
+                        SCollectResult collect_res = Collect(current_state.last_record_key, curr_rank, inLines, i, inSupport, inCommands);
+                        if(!collect_res.WasRecordDivider)
+                            current_state.last_record_key.CheckOnOneArray();
+                        i = collect_res.CurrentLineIndex;
                     }
                     else
                     {
