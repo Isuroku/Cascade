@@ -376,8 +376,14 @@ namespace CascadeSerializer
             Type declaredItemType = type.GetElementType();
 
             bool is_atomic_elems = declaredItemType.IsAtomic();
+            bool is_array_elems = declaredItemType.IsArray;
 
-            int[] dims = FindArrayDimension(inKey, is_atomic_elems);
+            int[] dims;
+            if(is_array_elems)
+                dims = new int[] { inKey.GetChildCount() };
+            else
+                dims = FindArrayDimension(inKey, is_atomic_elems);
+
             if (dims.Length == 0)
                 return null;
 
