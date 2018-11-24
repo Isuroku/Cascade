@@ -49,7 +49,10 @@ namespace CascadeUnitTest
 
             while (e1.MoveNext() && e2.MoveNext())
             {
-                if (!e1.Current.Equals(e2.Current))
+                if (e1.Current.GetType().IsArray)
+                    return IsArrayEquals(e1.Current as Array, e2.Current as Array);
+
+                else if (!e1.Current.Equals(e2.Current))
                     return false;
             }
             return true;

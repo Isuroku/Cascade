@@ -15,8 +15,6 @@ namespace CascadeSerializer
         CParserManager _parser;
         public CParserManager Parser { get { return _parser; } }
 
-        const string _array_prefix = "$a";
-
         string _debug_file_name;
         string _debug_text;
 
@@ -297,12 +295,7 @@ namespace CascadeSerializer
                 int index = indicies[i];
                 int length = lengthes[i];
                 while (index >= key.GetChildCount())
-                {
-                    if (i == keys_length - 1 && atomic_elems) //&& length > 1
-                        key.CreateArrayKey();
-                    else
-                        key.CreateChildKey(string.Format("{0}{1}", _array_prefix, index));
-                }
+                    key.CreateArrayKey();
 
                 key = key.GetChild(index);
             }
@@ -355,14 +348,6 @@ namespace CascadeSerializer
                 if (!inKey.GetChild(i).IsArrayKey())
                     all = false;
 
-            if (!all)
-            {
-                all = true;
-                for (int i = 0; i < inKey.GetChildCount() && all; ++i)
-                    if (!inKey.GetChild(i).GetName().StartsWith(_array_prefix))
-                        all = false;
-            }
-
             return all;
         }
 
@@ -391,8 +376,14 @@ namespace CascadeSerializer
             Type declaredItemType = type.GetElementType();
 
             bool is_atomic_elems = declaredItemType.IsAtomic();
+            bool is_array_elems = declaredItemType.IsArray;
 
-            int[] dims = FindArrayDimension(inKey, is_atomic_elems);
+            int[] dims;
+            if(is_array_elems)
+                dims = new int[] { inKey.GetChildCount() };
+            else
+                dims = FindArrayDimension(inKey, is_atomic_elems);
+
             if (dims.Length == 0)
                 return null;
 

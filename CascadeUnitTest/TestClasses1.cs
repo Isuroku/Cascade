@@ -231,6 +231,33 @@ namespace CascadeUnitTest
         }
     }
 
+    public class CTestClassArrayArraysAtom
+    {
+        public int[][] _multi_array;
+
+        public void Init1()
+        {
+            _multi_array = new int[3][];
+
+            _multi_array[0] = new int[] { 1 };
+            _multi_array[1] = new int[] { 2, 3 };
+            _multi_array[2] = new int[] { 4, 5, 6 };
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            if (obj.GetType() != GetType())
+                return false;
+
+            var v = obj as CTestClassArrayArraysAtom;
+
+            return Utils.IsArrayEquals(_multi_array, v._multi_array);
+        }
+    }
+
     public class CSimpleClass
     {
         public int _int_data = 9;
@@ -335,6 +362,35 @@ namespace CascadeUnitTest
 
             return Utils.IsArrayEquals(_multi_array_r3, v._multi_array_r3) &&
                 Utils.IsArrayEquals(_multi_array, v._multi_array);
+        }
+    }
+
+    public class CTestClassAAObject
+    {
+        public CSimpleClass[][] _multi_array;
+
+        public void Init1()
+        {
+            var to = new CSimpleClass();
+            to._int_data = 10;
+            Console.WriteLine("1, 2, 3");
+            _multi_array = new CSimpleClass[3][];
+            _multi_array[0] = new CSimpleClass[] { to };
+            _multi_array[1] = new CSimpleClass[] { to, to };
+            _multi_array[2] = new CSimpleClass[] { to, to, to };
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+                return false;
+
+            if (obj.GetType() != GetType())
+                return false;
+
+            var v = obj as CTestClassAAObject;
+
+            return Utils.IsArrayEquals(_multi_array, v._multi_array);
         }
     }
 

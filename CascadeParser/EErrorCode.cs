@@ -15,7 +15,6 @@ namespace CascadeParser
         UnknownCommand,
         UnknownCommandName,
         NotEvenQuoteCount,
-        TooDeepRank,
         RecordBeforeRecordDividerDoesntPresent,
         CantTransferName,
         PathEmpty,

@@ -446,7 +446,7 @@ namespace CascadeParser
                 return;
 
             bool was_writing = false;
-            int new_int = intent;
+            //int new_int = intent;
             if (!IsArray)
             {
                 if (!string.IsNullOrEmpty(Comments))
@@ -462,7 +462,7 @@ namespace CascadeParser
                     sb.AppendFormat("{0}: ", Name);
                     AddStringValuesForSave(sb);
                     was_writing = true;
-                    new_int = intent + 1;
+                    //new_int = intent + 1;
                 }
             }
             else
@@ -501,6 +501,7 @@ namespace CascadeParser
             if (was_writing)
                 sb.Append(Environment.NewLine);
 
+            int new_int = intent + 1;
             for (int i = 0; i < _keys.Count; ++i)
             {
                 if (_keys[i].IsArray && 
