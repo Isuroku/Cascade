@@ -49,7 +49,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseUnitTest.cs" />
+    <Compile Include="ConditionDescr.cs" />
     <Compile Include="EnumDictionary.cs" />
+    <Compile Include="MalfunctionDescr.cs" />
     <Compile Include="TestClasses1.cs" />
     <Compile Include="TestClasses2.cs" />
     <Compile Include="UnitTest1.cs" />

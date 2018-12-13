@@ -325,8 +325,8 @@ namespace CascadeSerializer
 
         void SerializeArray(object instance, Type type, IKey inKey, ILogPrinter inLogger)
         {
-            if (string.IsNullOrEmpty(inKey.GetName()))
-                inKey.SetName("Values");
+            //if (string.IsNullOrEmpty(inKey.GetName()))
+                //inKey.SetName("Values");
 
             Type declaredItemType = type.GetElementType();
             bool atomic_member = declaredItemType.IsAtomic();
@@ -383,8 +383,8 @@ namespace CascadeSerializer
                 return null;
 
             IKey key = inKey;
-            if (inStructDeep == 0)
-                key = inKey.GetChild("Values");
+            //if (inStructDeep == 0)
+              //  key = inKey.GetChild("Values");
 
             Array multi_dim_array = null;
             Type declaredItemType = type.GetElementType();
