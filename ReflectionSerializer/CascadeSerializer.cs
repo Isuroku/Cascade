@@ -46,9 +46,10 @@ namespace CascadeSerializer
             return root;
         }
 
-        public string SerializeToCascade(object instance, string inRootName, ILogPrinter inLogger)
+        //public string SerializeToCascade(object instance, string inRootName, ILogPrinter inLogger)
+        public string SerializeToCascade(object instance, ILogPrinter inLogger)
         {
-            IKey key = SerializeToKey(instance, inRootName, inLogger);
+            IKey key = SerializeToKey(instance, string.Empty, inLogger);
             string text = key.SaveToString();
             return text;
         }
@@ -86,12 +87,12 @@ namespace CascadeSerializer
 
         public T Deserialize<T>(IKey key, ILogPrinter inLogger)
         {
-            return (T)DeserializeInternal(null, key, typeof(T), 0, inLogger);
+            return (T)DeserializeInternal(null, key, typeof(T), 0, 0, inLogger);
         }
 
         public void DeserializeToObject<T>(IKey key, T inInstance, ILogPrinter inLogger)
         {
-            DeserializeInternal(inInstance, key, typeof(T), 0, inLogger);
+            DeserializeInternal(inInstance, key, typeof(T), 0, 0, inLogger);
         }
 
         bool IsInheriteAccess(Type inDeclaredType)
@@ -126,29 +127,29 @@ namespace CascadeSerializer
             //    inKey.AddValue("default");
         }
 
-        object DeserializeInternal(object inInstance, IKey inKey, Type inDeclaredType, int inInheriteDeep, ILogPrinter inLogger)
+        object DeserializeInternal(object inInstance, IKey inKey, Type inDeclaredType, int inInheriteDeep, int inStructDeep, ILogPrinter inLogger)
         {
             object instance;
 
             // Atomic or null values
             if (inDeclaredType.IsAtomic())
-                instance = DeserializeAtomic(inInstance, inKey, inDeclaredType, inLogger);
+                instance = DeserializeAtomic(inInstance, inKey, inDeclaredType, inStructDeep, inLogger);
             // Dictionaries
             else if (inDeclaredType.IsGenericDictionary())
-                instance = DeserializeDictionary(inInstance, inKey, inDeclaredType, inInheriteDeep, inLogger);
+                instance = DeserializeDictionary(inInstance, inKey, inDeclaredType, inInheriteDeep, inStructDeep, inLogger);
             // Arrays
             else if (inDeclaredType.IsArray)
-                instance = DeserializeArray(inKey, inDeclaredType, inLogger);
+                instance = DeserializeArray(inKey, inDeclaredType, inStructDeep, inLogger);
             // lists and sets (any collection excluding dictionaries)
             else if (inDeclaredType.IsGenericCollection())
-                instance = DeserializeGenericCollection(inInstance, inKey, inDeclaredType, inInheriteDeep, inLogger);
+                instance = DeserializeGenericCollection(inInstance, inKey, inDeclaredType, inInheriteDeep, inStructDeep, inLogger);
             // Everything else (serialized with recursive property reflection)
             else
-                instance = DeserializeClass(inInstance, inKey, inDeclaredType, inLogger);
+                instance = DeserializeClass(inInstance, inKey, inDeclaredType, inStructDeep, inLogger);
 
             Type base_type = inDeclaredType.BaseType;
             if (IsInheriteAccess(base_type))
-                DeserializeInternal(instance, inKey, base_type, inInheriteDeep + 1, inLogger);
+                DeserializeInternal(instance, inKey, base_type, inInheriteDeep + 1, inStructDeep, inLogger);
 
             return instance;
         }
@@ -156,6 +157,8 @@ namespace CascadeSerializer
         #region Atomic
         void SerializeAtomic(object instance, Type declaredType, IKey inKey, ILogPrinter inLogger)
         {
+            if (string.IsNullOrEmpty(inKey.GetName()))
+                inKey.SetName("Value");
             AddValueToKey(inKey, instance);
         }
 
@@ -172,34 +175,38 @@ namespace CascadeSerializer
             inLogger.LogError(string.Format("{2}: [File: {0}. Text: {1}]", _debug_file_name, _debug_text, inText));
         }
 
-        object DeserializeAtomic(object inInstance, IKey inKey, Type type, ILogPrinter inLogger)
+        object DeserializeAtomic(object inInstance, IKey inKey, Type type, int inStructDeep, ILogPrinter inLogger)
         {
             object instance;
-            if (inKey.GetValuesCount() == 0)
+            IKey key = inKey;
+            if (inStructDeep == 0)
+                key = inKey.GetChild("Value");
+
+            if (key.GetValuesCount() == 0)
             {
                 instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
             }
-            else if (inKey.GetValuesCount() > 1)
+            else if (key.GetValuesCount() > 1)
             {
                 var sb = new StringBuilder();
                 sb.Append("\"");
-                for (int i = 0; i < inKey.GetValuesCount(); ++i)
+                for (int i = 0; i < key.GetValuesCount(); ++i)
                 {
                     if(i > 0)
                         sb.Append(",");
-                    sb.Append(inKey.GetValueAsString(i));
+                    sb.Append(key.GetValueAsString(i));
                 }
                 sb.Append("\"");
 
-                LogError(inLogger, string.Format("Need one value for type {1}. Key: {0}; Values: {2} ", inKey, type.Name, sb));
+                LogError(inLogger, string.Format("Need one value for type {1}. Key: {0}; Values: {2} ", key, type.Name, sb));
                 instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
             }
             else
             {
-                string key_value = inKey.GetValueAsString(0);
+                string key_value = key.GetValueAsString(0);
                 if (!ReflectionHelper.StringToAtomicValue(key_value, type, out instance))
                 {
-                    LogError(inLogger, string.Format("Key {0} with value {1} can't convert value to type {2}", inKey, key_value, type.Name));
+                    LogError(inLogger, string.Format("Key {0} with value {1} can't convert value to type {2}", key, key_value, type.Name));
                     instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
                 }
             }
@@ -237,7 +244,7 @@ namespace CascadeSerializer
             }
         }
 
-        object DeserializeDictionary(object inInstance, IKey inKey, Type declaredType, int inInheriteDeep, ILogPrinter inLogger)
+        object DeserializeDictionary(object inInstance, IKey inKey, Type declaredType, int inInheriteDeep, int inStructDeep, ILogPrinter inLogger)
         {
             Type[] gen_args = declaredType.GetGenericArguments();
             if (gen_args.Length < 2)
@@ -272,7 +279,7 @@ namespace CascadeSerializer
                 }
                 else
                 {
-                    object dic_value = DeserializeInternal(null, sub_key, valueDeclaredType, 0, inLogger);
+                    object dic_value = DeserializeInternal(null, sub_key, valueDeclaredType, 0, inStructDeep + 1, inLogger);
 
                     if (dictionary.Contains(dic_key))
                         dictionary.Remove(dic_key);
@@ -318,6 +325,9 @@ namespace CascadeSerializer
 
         void SerializeArray(object instance, Type type, IKey inKey, ILogPrinter inLogger)
         {
+            if (string.IsNullOrEmpty(inKey.GetName()))
+                inKey.SetName("Values");
+
             Type declaredItemType = type.GetElementType();
             bool atomic_member = declaredItemType.IsAtomic();
 
@@ -367,10 +377,14 @@ namespace CascadeSerializer
             return lst.ToArray();
         }
 
-        object DeserializeArray(IKey inKey, Type type, ILogPrinter inLogger)
+        object DeserializeArray(IKey inKey, Type type, int inStructDeep, ILogPrinter inLogger)
         {
             if(inKey.IsEmpty)
                 return null;
+
+            IKey key = inKey;
+            if (inStructDeep == 0)
+                key = inKey.GetChild("Values");
 
             Array multi_dim_array = null;
             Type declaredItemType = type.GetElementType();
@@ -380,9 +394,9 @@ namespace CascadeSerializer
 
             int[] dims;
             if(is_array_elems)
-                dims = new int[] { inKey.GetChildCount() };
+                dims = new int[] { key.GetChildCount() };
             else
-                dims = FindArrayDimension(inKey, is_atomic_elems);
+                dims = FindArrayDimension(key, is_atomic_elems);
 
             if (dims.Length == 0)
                 return null;
@@ -395,7 +409,7 @@ namespace CascadeSerializer
 
             while (indexer.MoveNext())
             {
-                IKey dim_child = GetKeyByArrayIndex(inKey, indexer.Current);
+                IKey dim_child = GetKeyByArrayIndex(key, indexer.Current);
                 if (dim_child == null)
                     LogError(inLogger, string.Format("Cant get value for multi array index {0}", indexer));
                 else
@@ -412,13 +426,13 @@ namespace CascadeSerializer
                         if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
                         {
                             LogError(inLogger, string.Format("Key {0} for collection with element type {1} can't convert value {2}",
-                                inKey, declaredItemType.Name, str_value));
+                                key, declaredItemType.Name, str_value));
                         }
                     }
                     else
                     {
                         IKey child = dim_child.GetChild(last_index);
-                        obj_value = DeserializeInternal(null, child, declaredItemType, 0, inLogger);
+                        obj_value = DeserializeInternal(null, child, declaredItemType, 0, inStructDeep + 1, inLogger);
                     }
 
                     multi_dim_array.SetValue(obj_value, indexer.Current);
@@ -499,7 +513,7 @@ namespace CascadeSerializer
             }
         }
 
-        object DeserializeGenericCollection(object inInstance, IKey inKey, Type type, int inInheriteDeep, ILogPrinter inLogger)
+        object DeserializeGenericCollection(object inInstance, IKey inKey, Type type, int inInheriteDeep, int inStructDeep, ILogPrinter inLogger)
         {
             Type[] gen_args = type.GetGenericArguments();
             if (gen_args.Length == 0)
@@ -548,13 +562,13 @@ namespace CascadeSerializer
                     for (int i = 0; i < element_count; i++)
                     {
                         IKey sub_key = tree_key.GetChild(i);
-                        object obj_value = DeserializeInternal(null, sub_key, declaredItemType, 0, inLogger);
+                        object obj_value = DeserializeInternal(null, sub_key, declaredItemType, 0, inStructDeep + 1, inLogger);
                         collect.AddValue(obj_value);
                     }
                 }
                 else
                 {
-                    object obj_value = DeserializeInternal(null, tree_key, declaredItemType, 0, inLogger);
+                    object obj_value = DeserializeInternal(null, tree_key, declaredItemType, 0, inStructDeep + 1, inLogger);
                     collect.AddValue(obj_value);
                 }
             }
@@ -661,6 +675,16 @@ namespace CascadeSerializer
 
         void SerializeClass(object instance, Type type, IKey inKey, int inInheriteDeep, ILogPrinter inLogger)
         {
+            MethodInfo mi = type.GetMethod("SerializationToCscd", new Type[] { typeof(CascadeParser.IKey), typeof(CascadeParser.ILogPrinter) });
+            if(mi != null)
+            {
+                if (string.IsNullOrEmpty(inKey.GetName()))
+                    inKey.SetName("Value");
+
+                mi.Invoke(instance, new object[] { inKey, inLogger });
+                return;
+            }
+
             MemberInfo[] member_infos = _reflectionProvider.GetSerializableMembers(type);
             foreach (MemberInfo memberInfo in member_infos)
             {
@@ -707,7 +731,7 @@ namespace CascadeSerializer
             }
         }
 
-        object DeserializeClass(object inInstance, IKey inKey, Type type, ILogPrinter inLogger)
+        object DeserializeClass(object inInstance, IKey inKey, Type type, int inStructDeep, ILogPrinter inLogger)
         {
             IKey type_key = inKey.GetChild("RealObjectType");
             if (type_key != null)
@@ -734,36 +758,48 @@ namespace CascadeSerializer
 
             if (instance != null)
             {
-                MemberInfo[] member_infos = _reflectionProvider.GetSerializableMembers(type);
-                foreach (MemberInfo memberInfo in member_infos)
+                MethodInfo mi = type.GetMethod("DeserializationFromCscd", new Type[] { typeof(CascadeParser.IKey), typeof(CascadeParser.ILogPrinter) });
+                if (mi != null)
                 {
-                    SCustomMemberParams member_params = GetMemberParams(memberInfo);
-
-                    Type memberType = memberInfo.GetMemberType();
-
-                    IKey sub_key = inKey.GetChild(member_params.ChangedName);
-                    if (sub_key == null)
-                        sub_key = inKey.GetChild(member_params.Name);
-
-                    if (sub_key != null)
+                    IKey key = inKey;
+                    if (inStructDeep == 0)
+                        key = inKey.GetChild("Value");
+                    mi.Invoke(instance, new object[] { key, inLogger });
+                }
+                else
+                {
+                    MemberInfo[] member_infos = _reflectionProvider.GetSerializableMembers(type);
+                    foreach (MemberInfo memberInfo in member_infos)
                     {
-                        object readValue;
-                        if (member_params.Converter != null)
-                            readValue = member_params.Converter.ReadKey(sub_key, inLogger);
-                        else
-                            readValue = DeserializeInternal(null, sub_key, memberType, 0, inLogger);
+                        SCustomMemberParams member_params = GetMemberParams(memberInfo);
 
-                        // This dirty check is naive and doesn't provide performance benefits
-                        //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
-                        _reflectionProvider.SetValue(memberInfo, instance, readValue);
-                    }
-                    else if (member_params.DefaultValue != null)
-                        _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue);
-                    else if (memberType.IsClass)
-                    {
-                        object already_member = _reflectionProvider.GetValue(memberInfo, instance);
-                        if (already_member != null)
-                            DeserializeInternal(already_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inLogger);
+                        Type memberType = memberInfo.GetMemberType();
+
+                        IKey sub_key = inKey.GetChild(member_params.ChangedName);
+                        if (sub_key == null)
+                            sub_key = inKey.GetChild(member_params.Name);
+
+                        if (sub_key != null)
+                        {
+                            object readValue;
+                            if (member_params.Converter != null)
+                                readValue = member_params.Converter.ReadKey(sub_key, inLogger);
+                            else
+                                readValue = DeserializeInternal(null, sub_key, memberType, 0, inStructDeep + 1, inLogger);
+
+                            // This dirty check is naive and doesn't provide performance benefits
+                            //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
+                            _reflectionProvider.SetValue(memberInfo, instance, readValue);
+                        }
+                        else if (member_params.DefaultValue != null)
+                            _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue);
+                        else if (memberType.IsClass)
+                        {
+                            object already_exists_member = _reflectionProvider.GetValue(memberInfo, instance);
+                            if (already_exists_member != null)
+                                //for set default values inside this object
+                                DeserializeInternal(already_exists_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inStructDeep + 1, inLogger);
+                        }
                     }
                 }
             }

@@ -15,7 +15,7 @@ namespace CascadeUnitTest
             var v1 = new CTestClassMultiArrayAtom();
             v1.Init1();
 
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            string text = _serializer.SerializeToCascade(v1, this);
             Console.WriteLine(text);
             var v2 = _serializer.Deserialize<CTestClassMultiArrayAtom>(text, this);
 
@@ -31,7 +31,7 @@ namespace CascadeUnitTest
             var v1 = new CTestClassMultiArrayAtom();
             v1.Init2();
 
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            string text = _serializer.SerializeToCascade(v1, this);
             Console.WriteLine(text);
             var v2 = _serializer.Deserialize<CTestClassMultiArrayAtom>(text, this);
 
@@ -47,7 +47,7 @@ namespace CascadeUnitTest
             var v1 = new CTestClassMultiArrayAtom();
             v1.Init3();
 
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            string text = _serializer.SerializeToCascade(v1, this);
             Console.WriteLine(text);
             var v2 = _serializer.Deserialize<CTestClassMultiArrayAtom>(text, this);
 
@@ -63,7 +63,7 @@ namespace CascadeUnitTest
             var v1 = new CTestClassMAObject();
             v1.Init1();
 
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            string text = _serializer.SerializeToCascade(v1, this);
             Console.WriteLine(text);
             var v2 = _serializer.Deserialize<CTestClassMAObject>(text, this);
 
@@ -79,7 +79,7 @@ namespace CascadeUnitTest
             var v1 = new CTestClassMAObject();
             v1.Init2();
 
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            string text = _serializer.SerializeToCascade(v1, this);
             Console.WriteLine(text);
             var v2 = _serializer.Deserialize<CTestClassMAObject>(text, this);
 
@@ -95,7 +95,7 @@ namespace CascadeUnitTest
             var v1 = new CTestClassArrayArraysAtom();
             v1.Init1();
 
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            string text = _serializer.SerializeToCascade(v1, this);
             Console.WriteLine(text);
             var v2 = _serializer.Deserialize<CTestClassArrayArraysAtom>(text, this);
 
@@ -111,7 +111,7 @@ namespace CascadeUnitTest
             var v1 = new CTestClassAAObject();
             v1.Init1();
 
-            string text = _serializer.SerializeToCascade(v1, string.Empty, this);
+            string text = _serializer.SerializeToCascade(v1, this);
             Console.WriteLine(text);
             var v2 = _serializer.Deserialize<CTestClassAAObject>(text, this);
 
