@@ -41,7 +41,7 @@ namespace CascadeParser
         public void LogError(EErrorCode inErrorCode, CKey inKey)
         {
             _error_count++;
-            string text = string.Format("{0} [{2}]. {1}", inErrorCode, inKey, _parsing_file);
+            string text = string.Format("{0} [{1}].", inErrorCode, inKey.GetPath());
             _printer.LogError(text);
         }
 

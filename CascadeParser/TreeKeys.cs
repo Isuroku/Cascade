@@ -370,7 +370,12 @@ namespace CascadeParser
         public string SaveToString()
         {
             StringBuilder sb = new StringBuilder();
-            SaveToString(sb, 0, 0);
+
+            int intent = 0;
+            if(string.IsNullOrEmpty(Name) && _values.Count == 0)
+                intent = -1;
+
+            SaveToString(sb, intent);
             return sb.ToString();
         }
 
@@ -440,7 +445,7 @@ namespace CascadeParser
             return true;
         }
 
-        protected void SaveToString(StringBuilder sb, int intent, int parent_index)
+        protected void SaveToString(StringBuilder sb, int intent)
         {
             if (IsEmptyWithChild())
                 return;
@@ -513,7 +518,7 @@ namespace CascadeParser
                     sb.Append(rd_str);
                     sb.Append(Environment.NewLine);
                 }
-                _keys[i].SaveToString(sb, new_int, i);
+                _keys[i].SaveToString(sb, new_int);
             }
         }
 

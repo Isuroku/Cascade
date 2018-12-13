@@ -65,6 +65,20 @@ namespace CascadeUnitTest
         public float z;
 
         public Vector3(float in_x, float in_y, float in_z) { x = in_x; y = in_y; z = in_z; }
+
+        public void DeserializationFromCscd(IKey key, ILogPrinter inLogger)
+        {
+            x = key.GetValue(0).GetValueAsFloat();
+            y = key.GetValue(1).GetValueAsFloat();
+            z = key.GetValue(2).GetValueAsFloat();
+        }
+
+        public void SerializationToCscd(IKey key, ILogPrinter inLogger)
+        {
+            key.AddValue(x);
+            key.AddValue(y);
+            key.AddValue(z);
+        }
     }
 
     public class VectorConverter : CascadeConverter

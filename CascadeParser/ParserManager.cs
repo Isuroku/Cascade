@@ -93,10 +93,8 @@ namespace CascadeParser
                 lines.Add(tl);
             }
 
-            CKey root = CTreeBuilder.Build(lines, supporter);
-
-            if (string.IsNullOrEmpty(root.Name))
-                root.SetName(Path.GetFileNameWithoutExtension(inFileName));
+            string root_name = Path.GetFileNameWithoutExtension(inFileName);
+            CKey root = CTreeBuilder.Build(root_name, lines, supporter);
 
             _parsed.Add(new CParsed(root, lines, inFileName));
 

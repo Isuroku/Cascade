@@ -12,15 +12,22 @@ namespace CascadeParser
     {
         enum EMultiArrayType { NotMultiArray, List, MultiArray }
 
-        public static CKey Build(List<CTokenLine> inLines, ITreeBuildSupport inSupport)
+        public static CKey Build(string inRootName, List<CTokenLine> inLines, ITreeBuildSupport inSupport)
         {
-            var root = CKey.CreateRoot();
+            var root = CKey.CreateRoot(inRootName);
 
             CBuildCommands commands = new CBuildCommands(inSupport.GetLogger());
 
             SCollectResult collect_res = Collect(root, -1, inLines, 0, inSupport, commands);
             if(!collect_res.WasRecordDivider)
                 root.CheckOnOneArray();
+
+            //if(root.ValuesCount == 0 && root.KeyCount == 1 && string.IsNullOrEmpty(root.Name))
+            //{
+            //    CKey k = root.GetKey(0);
+            //    k.SetParent(null);
+            //    root = k;
+            //}
 
             return root;
         }
@@ -87,8 +94,9 @@ namespace CascadeParser
                     i++;
             }
 
-            //if(last_key != null)
-            //    last_key.CheckOnOneArray(inSupport);
+            //if (!rec_divider_was && current_state.current_array_key != null)
+            //    current_state.current_array_key.CheckOnOneArray();
+
             OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
 
             return new SCollectResult
