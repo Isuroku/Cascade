@@ -28,5 +28,7 @@ namespace CascadeParser
         NextArrayKeyNameAlreadySetted,
         NextArrayKeyNameMissParent,
         NextLineCommentMissParent,
+
+        LineMustHaveHead
     }
 }

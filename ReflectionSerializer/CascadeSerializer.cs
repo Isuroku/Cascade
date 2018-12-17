@@ -49,7 +49,9 @@ namespace CascadeSerializer
         //public string SerializeToCascade(object instance, string inRootName, ILogPrinter inLogger)
         public string SerializeToCascade(object instance, ILogPrinter inLogger)
         {
-            IKey key = SerializeToKey(instance, string.Empty, inLogger);
+            //IKey key = SerializeToKey(instance, string.Empty, inLogger);
+            IKey key = IKeyFactory.CreateArrayKey(null);
+            Serialize(instance, key, inLogger);
             string text = key.SaveToString();
             return text;
         }
@@ -157,8 +159,6 @@ namespace CascadeSerializer
         #region Atomic
         void SerializeAtomic(object instance, Type declaredType, IKey inKey, ILogPrinter inLogger)
         {
-            if (string.IsNullOrEmpty(inKey.GetName()))
-                inKey.SetName("Value");
             AddValueToKey(inKey, instance);
         }
 
@@ -179,8 +179,6 @@ namespace CascadeSerializer
         {
             object instance;
             IKey key = inKey;
-            if (inStructDeep == 0)
-                key = inKey.GetChild("Value");
 
             if (key.GetValuesCount() == 0)
             {
@@ -383,8 +381,6 @@ namespace CascadeSerializer
                 return null;
 
             IKey key = inKey;
-            //if (inStructDeep == 0)
-              //  key = inKey.GetChild("Values");
 
             Array multi_dim_array = null;
             Type declaredItemType = type.GetElementType();
@@ -459,19 +455,16 @@ namespace CascadeSerializer
             bool atomic_member = declaredItemType.IsAtomic();
 
             IKey tree_key = inKey;
+            if (tree_key.GetValuesCount() > 0 || tree_key.GetChildCount() > 0)
+                tree_key = inKey.CreateChildKey("BaseCollection");
 
             if (atomic_member)
             {
-                if (tree_key.GetValuesCount() > 0 ||
-                    !tree_key.IsArrayKey() && string.IsNullOrEmpty(tree_key.GetName()))
-                    tree_key = inKey.CreateChildKey("BaseCollection");
                 foreach (var item in collection)
                     AddValueToKey(tree_key, item);
             }
             else
             {
-                if (tree_key.GetChildCount() > 0)
-                    tree_key = inKey.CreateChildKey("BaseCollection");
                 foreach (var item in collection)
                 {
                     IKey child = tree_key.CreateArrayKey();
@@ -762,8 +755,6 @@ namespace CascadeSerializer
                 if (mi != null)
                 {
                     IKey key = inKey;
-                    if (inStructDeep == 0)
-                        key = inKey.GetChild("Value");
                     mi.Invoke(instance, new object[] { key, inLogger });
                 }
                 else

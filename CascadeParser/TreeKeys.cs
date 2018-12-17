@@ -87,7 +87,7 @@ namespace CascadeParser
         private CKey(CKey parent, CTokenLine line, ILogger inLoger) : base(parent, line.Head.Position)
         {
             _name = line.Head.Text;
-            AddTokenTail(line, false, inLoger);
+            AddTokenTail(line, inLoger);
         }
 
         private CKey(CKey other) : base(other)
@@ -144,9 +144,9 @@ namespace CascadeParser
                 _values.Remove(inElement as CBaseValue);
         }
 
-        internal void AddTokenTail(CTokenLine line, bool inCommentForValue, ILogger inLoger)
+        internal void AddTokenTail(CTokenLine line, ILogger inLoger)
         {
-            if (line.Comments != null && !inCommentForValue)
+            if (line.Comments != null)
                 AddComments(line.Comments.Text);
 
             if (line.IsTailEmpty)
@@ -157,9 +157,6 @@ namespace CascadeParser
                 CToken t = line.Tail[i];
 
                 CBaseElement be = CBaseValue.CreateBaseValue(this, t);
-
-                if (line.Comments != null && inCommentForValue && be != null)
-                    be.AddComments(line.Comments.Text);
 
                 if (be == null)
                     inLoger.LogError(EErrorCode.WrongTokenInTail, t);
@@ -445,13 +442,23 @@ namespace CascadeParser
             return true;
         }
 
+        public bool IsAllSubKeysArrays()
+        {
+            for (int i = 0; i < _keys.Count; ++i)
+            {
+                if (!_keys[i].IsArray)
+                    return false;
+            }
+            return true;
+        }
+
         protected void SaveToString(StringBuilder sb, int intent)
         {
             if (IsEmptyWithChild())
                 return;
 
             bool was_writing = false;
-            //int new_int = intent;
+            int new_int = intent;
             if (!IsArray)
             {
                 if (!string.IsNullOrEmpty(Comments))
@@ -467,8 +474,9 @@ namespace CascadeParser
                     sb.AppendFormat("{0}: ", Name);
                     AddStringValuesForSave(sb);
                     was_writing = true;
-                    //new_int = intent + 1;
                 }
+
+                new_int = intent + 1;
             }
             else
             {
@@ -501,12 +509,13 @@ namespace CascadeParser
 
                     was_writing = true;
                 }
+                else if(IsAllSubKeysArrays())
+                    new_int = intent + 1;
             }
 
             if (was_writing)
                 sb.Append(Environment.NewLine);
 
-            int new_int = intent + 1;
             for (int i = 0; i < _keys.Count; ++i)
             {
                 if (_keys[i].IsArray && 

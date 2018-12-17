@@ -47,12 +47,14 @@
     <Compile Include="ILogger.cs" />
     <Compile Include="Loger.cs" />
     <Compile Include="ParserManager.cs" />
+    <Compile Include="SCommandParams.cs" />
     <Compile Include="SentenseDivider.cs" />
     <Compile Include="SPosition.cs" />
     <Compile Include="Token.cs" />
     <Compile Include="TokenLine.cs" />
     <Compile Include="TokenTemplate.cs" />
     <Compile Include="TreeBuilder.cs" />
+    <Compile Include="TreeBuilder2.cs" />
     <Compile Include="TreeKeyFactory.cs" />
     <Compile Include="TreeKeys.cs" />
     <Compile Include="TreeTypes.cs" />
