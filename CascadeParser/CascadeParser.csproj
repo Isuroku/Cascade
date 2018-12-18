@@ -53,8 +53,8 @@
     <Compile Include="Token.cs" />
     <Compile Include="TokenLine.cs" />
     <Compile Include="TokenTemplate.cs" />
+    <Compile Include="TreeBuilderOld.cs" />
     <Compile Include="TreeBuilder.cs" />
-    <Compile Include="TreeBuilder2.cs" />
     <Compile Include="TreeKeyFactory.cs" />
     <Compile Include="TreeKeys.cs" />
     <Compile Include="TreeTypes.cs" />
