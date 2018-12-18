@@ -12,7 +12,7 @@ namespace CascadeParser
             if (inLines.Count == 0)
                 return root;
 
-            CollectByDivs(root, -1, 0, inLines.Count, inLines, inSupport);
+            CollectByDivs(root, -1, 0, inLines.Count, inLines, inSupport, root);
 
             if (root.KeyCount == 1 && root.GetKey(0).IsArrayKey() && root.GetKey(0).KeyCount == 0)
             {
@@ -23,7 +23,7 @@ namespace CascadeParser
             return root;
         }
 
-        static Tuple<CKey, int> CreateKey(int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport)
+        static Tuple<CKey, int> CreateKey(int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport, CKey inRoot)
         {
             CTokenLine line = inLines[inStartLine];
             int key_rank = line.Rank;
@@ -40,7 +40,7 @@ namespace CascadeParser
                 int last_line = FindNextSameRankLine(inStartLine, inEndLine, key_rank, inLines);
 
                 if (last_line > inStartLine + 1)
-                    CollectByDivs(key, key_rank, inStartLine + 1, last_line, inLines, inSupport);
+                    CollectByDivs(key, key_rank, inStartLine + 1, last_line, inLines, inSupport, inRoot);
 
                 if (key.KeyCount == 0 && key.ValuesCount == 0)
                     inSupport.GetLogger().LogError(EErrorCode.HeadWithoutValues, line);
@@ -53,14 +53,14 @@ namespace CascadeParser
         {
             for(int i = inStartLine + 1; i < inEndLine; ++i)
             {
-                if (inLines[i].Rank == inRank)
+                if (!inLines[i].IsEmpty() && inLines[i].Rank == inRank)
                     return i;
             }
             return inEndLine;
         }
 
         //inStartLine - next of parent line
-        static void CollectByDivs(CKey inParent, int inParentRank, int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport)
+        static void CollectByDivs(CKey inParent, int inParentRank, int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport, CKey inRoot)
         {
             int curr_rank = inParentRank + 1;
             List<Tuple<int, int>> recs_by_divs = new List<Tuple<int, int>>();
@@ -77,28 +77,28 @@ namespace CascadeParser
                         CKey arr_key = CKey.CreateArrayKey(inParent, inLines[first_line].Position);
 
                         if(IsLinePresent(curr_rank, first_line, exlude_last_line, inLines))
-                            Collect(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport);
+                            Collect(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport, inRoot);
                         else
-                            CollectByDivs(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport);
+                            CollectByDivs(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport, inRoot);
                     }
                 }
             }
             else
-                Collect(inParent, inParentRank, recs_by_divs[0].Item1, recs_by_divs[0].Item2, inLines, inSupport);
+                Collect(inParent, inParentRank, recs_by_divs[0].Item1, recs_by_divs[0].Item2, inLines, inSupport, inRoot);
         }
 
         static bool IsLinePresent(int inRank, int inStartLine, int inEndLine, List<CTokenLine> inLines)
         {
             for (int i = inStartLine; i < inEndLine; ++i)
             {
-                if (inLines[i].Rank == inRank)
+                if (!inLines[i].IsEmpty() && inLines[i].Rank == inRank)
                     return true;
             }
             return false;
         }
 
         //inStartLine - next of parent line
-        static void Collect(CKey inParent, int inParentRank, int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport)
+        static void Collect(CKey inParent, int inParentRank, int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport, CKey inRoot)
         {
             CBuildCommands command_for_next_string = null;
             int start = inStartLine;
@@ -126,7 +126,7 @@ namespace CascadeParser
                         }
                     }
                     else if (line.Command == ECommands.Insert)
-                        ExecuteCommand_Insert(inParent, line, inSupport);
+                        ExecuteCommand_Insert(inParent, line, inSupport, inRoot);
                     else if (line.Command == ECommands.Delete)
                         ExecuteCommand_Delete(inParent, line, inSupport);
                     else if (line.Command == ECommands.ChangeValue)
@@ -140,7 +140,7 @@ namespace CascadeParser
                 }
                 else if (!line.IsEmpty())
                 {
-                    Tuple<CKey, int> new_key_new_line = CreateKey(start, inEndLine, inLines, inSupport);
+                    Tuple<CKey, int> new_key_new_line = CreateKey(start, inEndLine, inLines, inSupport, inRoot);
 
                     CKey new_key = new_key_new_line.Item1;
 
@@ -208,7 +208,7 @@ namespace CascadeParser
             return inEndLine;
         }
 
-        static void ExecuteCommand_Delete(CKey inKey, CTokenLine line, ITreeBuildSupport inSupport)
+        static void ExecuteCommand_Delete(CKey inParent, CTokenLine line, ITreeBuildSupport inSupport)
         {
             if (line.CommandParams.Length == 0 || string.IsNullOrEmpty(line.CommandParams[0]))
             {
@@ -220,7 +220,7 @@ namespace CascadeParser
 
             string[] path = key_path.Split(new char[] { '\\', '/' });
 
-            if (!RemoveKeysByPath(inKey, path))
+            if (!RemoveKeysByPath(inParent, path))
                 inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
         }
 
@@ -241,7 +241,7 @@ namespace CascadeParser
             return true;
         }
 
-        static void ExecuteCommand_Insert(CKey inParent, CTokenLine line, ITreeBuildSupport inSupport)
+        static void ExecuteCommand_Insert(CKey inParent, CTokenLine line, ITreeBuildSupport inSupport, CKey inRoot)
         {
             string file_name = line.CommandParams["file"];
             string key_path = line.CommandParams["key"];
@@ -249,11 +249,11 @@ namespace CascadeParser
             if (string.IsNullOrEmpty(file_name) && string.IsNullOrEmpty(key_path))
                 inSupport.GetLogger().LogError(EErrorCode.PathEmpty, line);
 
-            CKey root = null;
+            CKey root = inRoot;
             if (!string.IsNullOrEmpty(file_name))
                 root = (CKey)inSupport.GetTree(file_name);
-            else
-                root = inParent.GetRoot();
+            //else
+              //  root = inParent.GetRoot();
 
             if (root == null)
             {
