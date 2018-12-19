@@ -37,12 +37,14 @@ namespace MathExpressionParser
 
     public static class CExpressionBuilder
     {
-        public static CExpression Build(CToken[] inTokens, ILogger inLogger)
+        public static CExpression Build(string inExpr, ILogger inLogger)
         {
+            CToken[] tokens = CTokenFinder.GetTokens(inExpr);
+
             var lst = new List<SBuildElem>();
 
-            for (int i = 0; i < inTokens.Length; ++i)
-                lst.Add(new SBuildElem(inTokens[i]));
+            for (int i = 0; i < tokens.Length; ++i)
+                lst.Add(new SBuildElem(tokens[i]));
 
             KeyValuePair<bool, CBinOp> res_op = BuildBinOp(lst, inLogger);
             if (res_op.Value == null)
@@ -132,21 +134,33 @@ namespace MathExpressionParser
                 return new KeyValuePair<bool, CBinOp>(true, new CBinOp(op_type, left_arg, right_arg));
             }
 
-            List<SBuildElem> lst = inList;
-            bool WasError;
-            KeyValuePair<int, int>? bracers = FindFirstBracers(inStartPos, inEndPos, lst, inLogger, out WasError);
-            if (WasError)
-                return new KeyValuePair<bool, CBinOp>(false, null);
-
-            while (bracers.HasValue)
+            List<SBuildElem> lst = new List<SBuildElem>();
+            for (int i = inStartPos; i <= inEndPos;)
             {
-                lst = ChangeOps(bracers.Value, lst, inLogger);
-                if(lst == null)
-                    return new KeyValuePair<bool, CBinOp>(false, null);
-                bracers = FindFirstBracers(lst, inLogger, out WasError);
-                if (WasError)
-                    return new KeyValuePair<bool, CBinOp>(false, null);
+                SBuildElem el = inList[i];
+                if (el.Token != null && el.Token.TokenType == ETokenType.OpenBrace)
+                {
+                    KeyValuePair<bool, int> res_pos = FindCloseBrace(i + 1, inList, inLogger);
+                    if (!res_pos.Key)
+                        return new KeyValuePair<bool, CBinOp>(false, null);
+
+                    KeyValuePair<bool, CBinOp> res_op = BuildBinOp(i + 1, res_pos.Value - 1, inList, inLogger);
+                    if (!res_op.Key)
+                        return new KeyValuePair<bool, CBinOp>(false, null);
+
+                    if (res_op.Value != null)
+                        lst.Add(new SBuildElem(res_op.Value));
+
+                    i = res_pos.Value + 1;
+                }
+                else
+                {
+                    lst.Add(inList[i]);
+                    i++;
+                }
             }
+
+            bool WasError;
                         
             for(int pr_i = 0; pr_i < _ops_by_priority.Length; ++pr_i)
             {
@@ -197,56 +211,33 @@ namespace MathExpressionParser
             return new KeyValuePair<int, int>(op_index - 1, op_index + 1);
         }
 
-        private static KeyValuePair<int, int>? FindFirstBracers(List<SBuildElem> lst, ILogger inLogger, out bool outWasError)
+        private static KeyValuePair<bool, int> FindCloseBrace(int inStartPos, List<SBuildElem> inList, ILogger inLogger)
         {
-            return FindFirstBracers(0, lst.Count - 1, lst, inLogger, out outWasError);
-        }
-
-        private static KeyValuePair<int, int>? FindFirstBracers(int inStartPos, int inEndPos, List<SBuildElem> lst, ILogger inLogger, out bool outWasError)
-        {
-            outWasError = false;
-            int bp = -1;
             int bdeep = 0;
-            for (int i = inStartPos; i <= inEndPos; i++)
+            for (int i = inStartPos; i < inList.Count; i++)
             {
-                SBuildElem el = lst[i];
+                SBuildElem el = inList[i];
                 if (el.Token != null && el.Token.TokenType == ETokenType.OpenBrace)
-                {
-                    if (bp == -1)
-                        bp = i;
-                    else
-                        bdeep++;
-                }
+                    bdeep++;
 
                 if (el.Token != null && el.Token.TokenType == ETokenType.CloseBrace)
                 {
-                    if (bp == -1)
-                    {
-                        outWasError = true;
-                        LogError(inLogger, EErrorCode.InvalidCloseBracer, el.Token);
-                    }
-                    else if (bdeep == 0)
-                        return new KeyValuePair<int, int>(bp, i - 1);
+                    if (bdeep == 0)
+                        return new KeyValuePair<bool, int>(true, i);
                     else
                         bdeep--;
                 }
             }
 
-            if (bp == -1)
-                return null;
-
-            return new KeyValuePair<int, int>(bp, -1);
+            SBuildElem fel = inList[inStartPos];
+            inLogger.LogError(string.Format("Can't find close bracer from {0} position!", fel.StartPos));
+            return new KeyValuePair<bool, int>(false, -1);
         }
 
         static List<SBuildElem> ChangeOps(KeyValuePair<int, int> inSubExpr, List<SBuildElem> inList, ILogger inLogger)
         {
-            return ChangeOps(0, inList.Count - 1, inSubExpr, inList, inLogger);
-        }
-
-        static List<SBuildElem> ChangeOps(int StartPos, int inEndPos, KeyValuePair<int, int> inSubExpr, List<SBuildElem> inList, ILogger inLogger)
-        {
             List<SBuildElem> new_list = new List<SBuildElem>();
-            for (int i = StartPos; i <= inEndPos;)
+            for (int i = 0; i < inList.Count;)
             {
                 if (i == inSubExpr.Key)
                 {

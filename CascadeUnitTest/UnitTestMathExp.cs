@@ -15,12 +15,10 @@ namespace CascadeUnitTest
             ResetTestState();
             Console.WriteLine(MethodBase.GetCurrentMethod().Name);
 
-            CToken[] tks = CTokenFinder.GetTokens("1.1 + 2 + var1");
-
             Dictionary<string, double> dic = new Dictionary<string, double>();
             dic.Add("var1", 3);
 
-            CExpression exp = CExpressionBuilder.Build(tks, this);
+            CExpression exp = CExpressionBuilder.Build("1.1 + 2 + var1", this);
 
             double res = exp.GetValue(dic.TryGetValue, this);
 
@@ -34,18 +32,30 @@ namespace CascadeUnitTest
             ResetTestState();
             Console.WriteLine(MethodBase.GetCurrentMethod().Name);
 
-            CToken[] tks = CTokenFinder.GetTokens("1 / 2 + var1 * var2 - 5.5 + 2^2");
-
             Dictionary<string, double> dic = new Dictionary<string, double>();
             dic.Add("var1", 3);
             dic.Add("var2", 4);
 
-            CExpression exp = CExpressionBuilder.Build(tks, this);
+            CExpression exp = CExpressionBuilder.Build("1 / 2 + var1 * var2 - 5.5 + 2^2", this);
 
             double res = exp.GetValue(dic.TryGetValue, this);
 
             CheckInternalErrors();
             Assert.AreEqual(res, 11);
+        }
+
+        [TestMethod]
+        public void TestMethodBracers()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+            CExpression exp = CExpressionBuilder.Build("(1 + 2) * ((3 + 4) - (5 + 1))", this);
+
+            double res = exp.GetValue(null, this);
+
+            CheckInternalErrors();
+            Assert.AreEqual(res, 3);
         }
     }
 }
