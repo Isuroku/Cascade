@@ -96,7 +96,24 @@ namespace MathExpressionParser
         {
             if (inEndPos - inStartPos == 0)
             {
-                return new KeyValuePair<bool, CBinOp>(true, null);
+                if(inList.Count == 1 && inList[0].Token != null)
+                {
+                    SBuildElem elem = inList[0];
+                    if (elem.Token.TokenType == ETokenType.Float ||
+                        elem.Token.TokenType == ETokenType.Int ||
+                        elem.Token.TokenType == ETokenType.UInt)
+                        return new KeyValuePair<bool, CBinOp>(true, new CBinOp(EBinOp.Sum, new CArg_Num(elem.Token.GetFloatValue(), elem.Token.StartPos, elem.Token.EndPos), new CArg_Num(0, -1, -1)));
+                    else if (elem.Token.TokenType == ETokenType.Word)
+                        return new KeyValuePair<bool, CBinOp>(true, new CBinOp(EBinOp.Sum, new CArg_Var(elem.Token.Text, elem.Token.StartPos, elem.Token.EndPos), new CArg_Num(0, -1, -1)));
+                    else
+                    {
+                        LogError(inLogger, EErrorCode.InvalidArgument, elem.Token);
+                        return new KeyValuePair<bool, CBinOp>(false, null);
+                    }
+                }
+
+                LogError(inLogger, EErrorCode.CallEmptyBuild, $"{inList[inStartPos].StartPos} - {inList[inEndPos].EndPos}");
+                return new KeyValuePair<bool, CBinOp>(false, null);
             }
 
             if (inEndPos - inStartPos == 1)

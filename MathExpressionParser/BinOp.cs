@@ -117,6 +117,12 @@ namespace MathExpressionParser
 
         public override double GetValue(CExpression.DTryGetValue inGetValue, ILogger inLogger)
         {
+            if (inGetValue == null)
+            {
+                inLogger.LogError(string.Format("Arg {0} needs TryGetValue!", _name));
+                return 0;
+            }
+
             double val;
             if(inGetValue(_name, out val))
                 return val;
