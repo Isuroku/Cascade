@@ -58,6 +58,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnitTestArrays.cs" />
     <Compile Include="UnitTestCollectionsInharitance.cs" />
+    <Compile Include="UnitTestMathExp.cs" />
     <Compile Include="UnitTestSaveString.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
@@ -68,6 +69,10 @@
     <ProjectReference Include="..\CascadeParser\CascadeParser.csproj">
       <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
       <Name>CascadeParser</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\MathExpressionParser\MathExpressionParser.csproj">
+      <Project>{b1dd39e9-a1b3-4eba-a5e0-b6a6feb8185d}</Project>
+      <Name>MathExpressionParser</Name>
     </ProjectReference>
     <ProjectReference Include="..\ReflectionSerializer\CascadeSerializer.csproj">
       <Project>{6AA90DC2-4FB2-406F-A205-682478520F8E}</Project>

@@ -3,10 +3,11 @@ using System.Reflection;
 using CascadeParser;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CascadeSerializer;
+using MathExpressionParser;
 
 namespace CascadeUnitTest
 {
-    public class BaseUnitTest : IParserOwner, ILogPrinter
+    public class BaseUnitTest : IParserOwner, ILogPrinter, ILogger
     {
         protected CCascadeSerializer _serializer;
 
