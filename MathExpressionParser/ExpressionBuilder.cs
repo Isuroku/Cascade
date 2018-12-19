@@ -138,7 +138,12 @@ namespace MathExpressionParser
             for (int i = inStartPos; i <= inEndPos;)
             {
                 SBuildElem el = inList[i];
-                if (el.Token != null && el.Token.TokenType == ETokenType.OpenBrace)
+                if (el.Token != null && el.Token.TokenType == ETokenType.CloseBrace)
+                {
+                    LogError(inLogger, EErrorCode.InvalidCloseBracer, el.Token);
+                    return new KeyValuePair<bool, CBinOp>(false, null);
+                }
+                else if (el.Token != null && el.Token.TokenType == ETokenType.OpenBrace)
                 {
                     KeyValuePair<bool, int> res_pos = FindCloseBrace(i + 1, inList, inLogger);
                     if (!res_pos.Key)

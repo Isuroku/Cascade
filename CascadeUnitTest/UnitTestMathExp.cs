@@ -36,12 +36,12 @@ namespace CascadeUnitTest
             dic.Add("var1", 3);
             dic.Add("var2", 4);
 
-            CExpression exp = CExpressionBuilder.Build("1 / 2 + var1 * var2 - 5.5 + 2^2", this);
+            CExpression exp = CExpressionBuilder.Build("1 / 2 + var1 * var2 - 5.5 + 4^(1/2)", this);
 
             double res = exp.GetValue(dic.TryGetValue, this);
 
             CheckInternalErrors();
-            Assert.AreEqual(res, 11);
+            Assert.AreEqual(res, 9);
         }
 
         [TestMethod]
