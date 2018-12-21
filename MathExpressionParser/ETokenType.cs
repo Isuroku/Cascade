@@ -11,6 +11,7 @@ namespace MathExpressionParser
         Int,
         UInt,
         Float,
+        Comma, // ,
         OpenBrace, //(
         CloseBrace, //)
         Sum, //+

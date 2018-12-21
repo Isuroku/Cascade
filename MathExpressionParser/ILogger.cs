@@ -15,7 +15,9 @@ namespace MathExpressionParser
         CantParse,
         InvalidCloseBracer,
         InvalidOperationPosition,
-        CallEmptyBuild
+        CallEmptyBuild,
+        CantParseFunc,
+        InvalidTripletPosition
     }
 
     public interface ILogger

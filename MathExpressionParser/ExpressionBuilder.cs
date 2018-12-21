@@ -8,10 +8,10 @@ namespace MathExpressionParser
     struct SBuildElem
     {
         public CToken Token { get; private set; }
-        public CBinOp Op { get; private set; }
+        public IMathFunc Op { get; private set; }
 
-        public int StartPos { get { return Token != null ? Token.StartPos : Op.StartPos; } }
-        public int EndPos { get { return Token != null ? Token.EndPos : Op.EndPos; } }
+        public int StartLineIndex { get { return Token != null ? Token.StartLineIndex : Op.StartLineIndex; } }
+        public int EndLineIndex { get { return Token != null ? Token.EndLineIndex : Op.EndLineIndex; } }
 
         public override string ToString()
         {
@@ -28,7 +28,7 @@ namespace MathExpressionParser
             Op = null;
         }
 
-        public SBuildElem(CBinOp op)
+        public SBuildElem(IMathFunc op)
         {
             Token = null;
             Op = op;
@@ -46,7 +46,7 @@ namespace MathExpressionParser
             for (int i = 0; i < tokens.Length; ++i)
                 lst.Add(new SBuildElem(tokens[i]));
 
-            KeyValuePair<bool, CBinOp> res_op = BuildBinOp(lst, inLogger);
+            KeyValuePair<bool, IMathFunc> res_op = CheckOneOrMany(0, lst.Count - 1, lst, inLogger);
             if (res_op.Value == null)
                 return null;
 
@@ -68,9 +68,9 @@ namespace MathExpressionParser
                 if (elem.Token.TokenType == ETokenType.Float ||
                     elem.Token.TokenType == ETokenType.Int ||
                     elem.Token.TokenType == ETokenType.UInt)
-                    left_arg = new CArg_Num(elem.Token.GetFloatValue(), elem.Token.StartPos, elem.Token.EndPos);
+                    left_arg = new CArg_Num(elem.Token.GetFloatValue(), elem.Token.StartLineIndex, elem.Token.EndLineIndex);
                 else if (elem.Token.TokenType == ETokenType.Word)
-                    left_arg = new CArg_Var(elem.Token.Text, elem.Token.StartPos, elem.Token.EndPos);
+                    left_arg = new CArg_Var(elem.Token.Text, elem.Token.StartLineIndex, elem.Token.EndLineIndex);
                 else
                 {
                     LogError(inLogger, EErrorCode.InvalidArgument, elem.Token);
@@ -78,7 +78,7 @@ namespace MathExpressionParser
                 }
             }
             else if (elem.Op != null)
-                left_arg = new CArg_BinOp(elem.Op, elem.Op.StartPos, elem.Op.EndPos);
+                left_arg = new CArg_BinOp(elem.Op);
             else
             {
                 LogError(inLogger, EErrorCode.InvalidArgument, "Empty SBuildElem");
@@ -87,93 +87,60 @@ namespace MathExpressionParser
             return left_arg;
         }
 
-        static KeyValuePair<bool, CBinOp> BuildBinOp(List<SBuildElem> inList, ILogger inLogger)
+        static KeyValuePair<bool, IMathFunc> CheckOneOrMany(int inStartPos, int inEndPos, List<SBuildElem> inList, ILogger inLogger)
         {
-            return BuildBinOp(0, inList.Count - 1, inList, inLogger);
+            if (inStartPos == inEndPos)
+            {
+                CArg arg = BuildElemToArg(inList[inStartPos], inLogger);
+                return new KeyValuePair<bool, IMathFunc>(true, arg);
+            }
+
+            List<SBuildElem> lst_wo_bracers = ChangeBracers(inStartPos, inEndPos, inList, inLogger);
+            if(lst_wo_bracers == null)
+                return new KeyValuePair<bool, IMathFunc>(false, null);
+
+            KeyValuePair<bool, IMathFunc>  res_op = BuildBinOp(lst_wo_bracers, inLogger);
+
+            return res_op;
         }
 
-        static KeyValuePair<bool, CBinOp> BuildBinOp(int inStartPos, int inEndPos, List<SBuildElem> inList, ILogger inLogger)
+        #region ChangeBracers
+        static List<SBuildElem> ChangeBracers(int inStartPos, int inEndPos, List<SBuildElem> inList, ILogger inLogger)
         {
-            if (inEndPos - inStartPos == 0)
-            {
-                if(inList.Count == 1 && inList[0].Token != null)
-                {
-                    SBuildElem elem = inList[0];
-                    if (elem.Token.TokenType == ETokenType.Float ||
-                        elem.Token.TokenType == ETokenType.Int ||
-                        elem.Token.TokenType == ETokenType.UInt)
-                        return new KeyValuePair<bool, CBinOp>(true, new CBinOp(EBinOp.Sum, new CArg_Num(elem.Token.GetFloatValue(), elem.Token.StartPos, elem.Token.EndPos), new CArg_Num(0, -1, -1)));
-                    else if (elem.Token.TokenType == ETokenType.Word)
-                        return new KeyValuePair<bool, CBinOp>(true, new CBinOp(EBinOp.Sum, new CArg_Var(elem.Token.Text, elem.Token.StartPos, elem.Token.EndPos), new CArg_Num(0, -1, -1)));
-                    else
-                    {
-                        LogError(inLogger, EErrorCode.InvalidArgument, elem.Token);
-                        return new KeyValuePair<bool, CBinOp>(false, null);
-                    }
-                }
-
-                LogError(inLogger, EErrorCode.CallEmptyBuild, $"{inList[inStartPos].StartPos} - {inList[inEndPos].EndPos}");
-                return new KeyValuePair<bool, CBinOp>(false, null);
-            }
-
-            if (inEndPos - inStartPos == 1)
-            {
-                LogError(inLogger, EErrorCode.TooLowOperands, $"{inList[inStartPos].StartPos} - {inList[inEndPos].EndPos}");
-                return new KeyValuePair<bool, CBinOp>(false, null);
-            }
-
-            if (inEndPos - inStartPos == 2)
-            {
-                EBinOp op_type = EBinOp.Undefined;
-                SBuildElem el = inList[inStartPos + 1];
-                if (el.Token != null)
-                    op_type = el.Token.GetBinOp();
-
-                if(op_type == EBinOp.Undefined)
-                {
-                    if(el.Token != null)
-                        LogError(inLogger, EErrorCode.BinOperationUndefined, el.Token);
-                    else
-                        LogError(inLogger, EErrorCode.BinOperationUndefined, string.Format("el.Op {0}", el.Op));
-                    return new KeyValuePair<bool, CBinOp>(false, null);
-                }
-
-                //left
-                el = inList[inStartPos];
-                CArg left_arg = BuildElemToArg(el, inLogger);
-                //right
-                el = inList[inStartPos + 2];
-                CArg right_arg = BuildElemToArg(el, inLogger);
-
-                if (left_arg == null || right_arg == null)
-                    return new KeyValuePair<bool, CBinOp>(false, null);
-
-                return new KeyValuePair<bool, CBinOp>(true, new CBinOp(op_type, left_arg, right_arg));
-            }
-
             List<SBuildElem> lst = new List<SBuildElem>();
+
             for (int i = inStartPos; i <= inEndPos;)
             {
                 SBuildElem el = inList[i];
                 if (el.Token != null && el.Token.TokenType == ETokenType.CloseBrace)
                 {
                     LogError(inLogger, EErrorCode.InvalidCloseBracer, el.Token);
-                    return new KeyValuePair<bool, CBinOp>(false, null);
+                    return null;
                 }
                 else if (el.Token != null && el.Token.TokenType == ETokenType.OpenBrace)
                 {
-                    KeyValuePair<bool, int> res_pos = FindCloseBrace(i + 1, inList, inLogger);
-                    if (!res_pos.Key)
-                        return new KeyValuePair<bool, CBinOp>(false, null);
+                    KeyValuePair<bool, int> res_close_brace_pos = FindCloseBrace(i + 1, inList, inLogger);
+                    if (!res_close_brace_pos.Key)
+                        return null;
 
-                    KeyValuePair<bool, CBinOp> res_op = BuildBinOp(i + 1, res_pos.Value - 1, inList, inLogger);
+                    KeyValuePair<bool, IMathFunc> res_op;
+                    if (i > inStartPos && inList[i - 1].Token != null && inList[i - 1].Token.TokenType == ETokenType.Word)
+                    {//func
+                        lst.RemoveAt(lst.Count - 1); //func name
+                        res_op = BuildFunc(inList[i - 1].Token.Text, inList[i - 1].Token.StartLineIndex, i + 1, res_close_brace_pos.Value - 1, inList, inLogger);
+                    }
+                    else
+                    {//simple ( )
+                        res_op = CheckOneOrMany(i + 1, res_close_brace_pos.Value - 1, inList, inLogger);
+                    }
+
                     if (!res_op.Key)
-                        return new KeyValuePair<bool, CBinOp>(false, null);
+                        return null;
 
                     if (res_op.Value != null)
                         lst.Add(new SBuildElem(res_op.Value));
 
-                    i = res_pos.Value + 1;
+                    i = res_close_brace_pos.Value + 1;
                 }
                 else
                 {
@@ -182,55 +149,7 @@ namespace MathExpressionParser
                 }
             }
 
-            bool WasError;
-                        
-            for(int pr_i = 0; pr_i < _ops_by_priority.Length; ++pr_i)
-            {
-                ETokenType[] ops = _ops_by_priority[pr_i];
-
-                KeyValuePair<int, int>? op = FindFirstOp(lst, ops, inLogger, out WasError);
-                if (WasError)
-                    return new KeyValuePair<bool, CBinOp>(false, null);
-
-                while (op.HasValue)
-                {
-                    lst = ChangeOps(op.Value, lst, inLogger);
-                    if (lst == null)
-                        return new KeyValuePair<bool, CBinOp>(false, null);
-                    op = FindFirstOp(lst, ops, inLogger, out WasError);
-                    if (WasError)
-                        return new KeyValuePair<bool, CBinOp>(false, null);
-                }
-            }
-
-            if(lst.Count == 1 && lst[0].Op != null)
-                return new KeyValuePair<bool, CBinOp>(true, lst[0].Op);
-
-            LogError(inLogger, EErrorCode.CantParse, $"{lst[0].StartPos} - {lst[lst.Count - 1].EndPos}");
-            return new KeyValuePair<bool, CBinOp>(false, null);
-        }
-
-        private static KeyValuePair<int, int>? FindFirstOp(List<SBuildElem> lst, ETokenType[] ops, ILogger inLogger, out bool outWasError)
-        {
-            return FindFirstOp(0, lst.Count - 1, lst, ops, inLogger, out outWasError);
-        }
-
-        private static KeyValuePair<int, int>? FindFirstOp(int inStartPos, int inEndPos, List<SBuildElem> lst, ETokenType[] ops, ILogger inLogger, out bool outWasError)
-        {
-            outWasError = false;
-
-            int op_index = lst.FindIndex(el => el.Token != null && Array.Exists(ops, tt => tt == el.Token.TokenType));
-            if (op_index == -1)
-                return null;
-
-            if (op_index <= inStartPos || op_index >= inEndPos)
-            {
-                outWasError = true;
-                LogError(inLogger, EErrorCode.InvalidOperationPosition, $"{lst[inStartPos].StartPos} - {lst[inEndPos].EndPos}; op_index {op_index}");
-                return null;
-            }
-
-            return new KeyValuePair<int, int>(op_index - 1, op_index + 1);
+            return lst;
         }
 
         private static KeyValuePair<bool, int> FindCloseBrace(int inStartPos, List<SBuildElem> inList, ILogger inLogger)
@@ -252,25 +171,114 @@ namespace MathExpressionParser
             }
 
             SBuildElem fel = inList[inStartPos];
-            inLogger.LogError(string.Format("Can't find close bracer from {0} position!", fel.StartPos));
+            inLogger.LogError(string.Format("Can't find close bracer from {0} position!", fel.StartLineIndex));
             return new KeyValuePair<bool, int>(false, -1);
         }
 
-        static List<SBuildElem> ChangeOps(KeyValuePair<int, int> inSubExpr, List<SBuildElem> inList, ILogger inLogger)
+        private static int FindComma(int inStartPos, int inEndPos, List<SBuildElem> inList, ILogger inLogger)
+        {
+            for (int i = inStartPos; i <= inEndPos; i++)
+            {
+                SBuildElem el = inList[i];
+                if (el.Token != null && el.Token.TokenType == ETokenType.Comma)
+                    return i;
+            }
+
+            return -1;
+        }
+
+        static KeyValuePair<bool, IMathFunc> BuildFunc(string inFuncName, int inStartLineIndex, int inStartPos, int inEndPos, List<SBuildElem> inList, ILogger inLogger)
+        {
+            int start = inStartPos;
+            var args = new List<IMathFunc>();
+
+            while (start <= inEndPos)
+            {
+                int cp = FindComma(start, inEndPos, inList, inLogger);
+                int last = cp == -1 ? inEndPos : cp - 1;
+                KeyValuePair<bool, IMathFunc> res_op = CheckOneOrMany(start, last, inList, inLogger);
+                if (!res_op.Key)
+                    return new KeyValuePair<bool, IMathFunc>(false, null);
+
+                args.Add(res_op.Value);
+                start = cp == -1 ? inEndPos + 1 : cp + 1;
+            }
+
+            CInternalFunc func = CInternalFunc.Create(inFuncName, args, inStartLineIndex, inList[inEndPos].EndLineIndex);
+            return new KeyValuePair<bool, IMathFunc>(true, func);
+        }
+        #endregion ChangeBracers
+
+        #region BuildBinOp
+        static KeyValuePair<bool, IMathFunc> BuildBinOp(List<SBuildElem> inList, ILogger inLogger)
+        {
+            return BuildBinOp(0, inList.Count - 1, inList, inLogger);
+        }
+
+        static KeyValuePair<bool, IMathFunc> BuildBinOp(int inStartPos, int inEndPos, List<SBuildElem> inList, ILogger inLogger)
+        {
+            bool WasError;
+            //binary operations            
+            List<SBuildElem> list = inList;
+            for (int pr_i = 0; pr_i < _ops_by_priority.Length; ++pr_i)
+            {
+                ETokenType[] ops = _ops_by_priority[pr_i];
+
+                int op_index = FindFirstOp(list, ops, inLogger, out WasError);
+                if (WasError)
+                    return new KeyValuePair<bool, IMathFunc>(false, null);
+
+                while (op_index != -1)
+                {
+                    list = ChangeBinOps(op_index, list, inLogger);
+                    if (list == null)
+                        return new KeyValuePair<bool, IMathFunc>(false, null);
+                    op_index = FindFirstOp(list, ops, inLogger, out WasError);
+                    if (WasError)
+                        return new KeyValuePair<bool, IMathFunc>(false, null);
+                }
+            }
+
+            if(list.Count == 1 && list[0].Op != null)
+                return new KeyValuePair<bool, IMathFunc>(true, list[0].Op);
+
+            LogError(inLogger, EErrorCode.CantParse, $"{list[0].StartLineIndex} - {list[list.Count - 1].EndLineIndex}");
+            return new KeyValuePair<bool, IMathFunc>(false, null);
+        }
+
+        private static int FindFirstOp(List<SBuildElem> inList, ETokenType[] ops, ILogger inLogger, out bool outWasError)
+        {
+            outWasError = false;
+
+            int op_index = inList.FindIndex(el => el.Token != null && Array.Exists(ops, tt => tt == el.Token.TokenType));
+            if (op_index == -1)
+                return -1;
+
+            if (op_index <= 0 || op_index >= inList.Count - 1)
+            {
+                outWasError = true;
+                LogError(inLogger, EErrorCode.InvalidOperationPosition, $"{inList[0].StartLineIndex} - {inList[inList.Count - 1].EndLineIndex}; op_index {op_index}");
+                return -1;
+            }
+
+            return op_index;
+        }
+
+        static List<SBuildElem> ChangeBinOps(int inOpIndex, List<SBuildElem> inList, ILogger inLogger)
         {
             List<SBuildElem> new_list = new List<SBuildElem>();
             for (int i = 0; i < inList.Count;)
             {
-                if (i == inSubExpr.Key)
+                if (i == inOpIndex - 1)
                 {
-                    KeyValuePair<bool, CBinOp> res_op = BuildBinOp(inSubExpr.Key, inSubExpr.Value, inList, inLogger);
+                    KeyValuePair<bool, IMathFunc> res_op = BuildTriplet(inOpIndex, inList, inLogger);
                     if (!res_op.Key)
                         return null;
 
                     if (res_op.Value != null)
                         new_list.Add(new SBuildElem(res_op.Value));
 
-                    i = inSubExpr.Value + 1;
+                    i = inOpIndex + 2;
                 }
                 else
                 {
@@ -282,15 +290,53 @@ namespace MathExpressionParser
             return new_list;
         }
 
+        static KeyValuePair<bool, IMathFunc> BuildTriplet(int inPos, List<SBuildElem> inList, ILogger inLogger)
+        {
+            if(inPos <= 0 || inPos >= inList.Count - 1)
+            {
+                LogError(inLogger, EErrorCode.InvalidTripletPosition, $"{inList[inPos].StartLineIndex}");
+                return new KeyValuePair<bool, IMathFunc>(false, null);
+            }
+
+            EBinOp op_type = EBinOp.Undefined;
+            SBuildElem el = inList[inPos];
+            if (el.Token != null)
+                op_type = el.Token.GetBinOp();
+
+            if (op_type == EBinOp.Undefined)
+            {
+                if (el.Token != null)
+                    LogError(inLogger, EErrorCode.BinOperationUndefined, el.Token);
+                else
+                    LogError(inLogger, EErrorCode.BinOperationUndefined, string.Format("el.Op {0}", el.Op));
+                return new KeyValuePair<bool, IMathFunc>(false, null);
+            }
+
+            //left
+            el = inList[inPos - 1];
+            CArg left_arg = BuildElemToArg(el, inLogger);
+            //right
+            el = inList[inPos + 1];
+            CArg right_arg = BuildElemToArg(el, inLogger);
+
+            if (left_arg == null || right_arg == null)
+                return new KeyValuePair<bool, IMathFunc>(false, null);
+
+            return new KeyValuePair<bool, IMathFunc>(true, new CBinOp(op_type, left_arg, right_arg));
+        }
+        #endregion BuildBinOp
+
+        
+
         static void LogWarning(ILogger inLogger, EErrorCode inErrorCode, CToken inToken)
         {
-            string s = string.Format("{0}: {1} [{2}-{3}]", inErrorCode, inToken, inToken.StartPos, inToken.EndPos);
+            string s = string.Format("{0}: {1} [{2}-{3}]", inErrorCode, inToken, inToken.StartLineIndex, inToken.EndLineIndex);
             inLogger.LogWarning(s);
         }
 
         static void LogError(ILogger inLogger, EErrorCode inErrorCode, CToken inToken)
         {
-            string s = string.Format("{0}: {1} [{2}-{3}]", inErrorCode, inToken, inToken.StartPos, inToken.EndPos);
+            string s = string.Format("{0}: {1} [{2}-{3}]", inErrorCode, inToken, inToken.StartLineIndex, inToken.EndLineIndex);
             inLogger.LogError(s);
         }
 

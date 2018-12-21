@@ -88,5 +88,42 @@ namespace CascadeUnitTest
             CheckInternalErrors();
             Assert.AreEqual(res, 3);
         }
+
+        [TestMethod]
+        public void TestMethodOneInternalFunc1()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+            CExpression exp = CExpressionBuilder.Build("Round(3.1)", this);
+
+            double res = exp.GetValue(null, this);
+
+            CheckInternalErrors();
+            Assert.AreEqual(res, 3);
+        }
+
+        [TestMethod]
+        public void TestMethodOneInternalFunc2()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+            CExpression exp = CExpressionBuilder.Build("Min(3, 2) * (Neg(var1) + 4)", this);
+
+            Dictionary<string, double> dic = new Dictionary<string, double>();
+            dic.Add("var1", 3);
+
+            double res = exp.GetValue(dic.TryGetValue, this);
+
+            CheckInternalErrors();
+            Assert.AreEqual(res, 2);
+
+            dic["var1"] = -3;
+            res = exp.GetValue(dic.TryGetValue, this);
+
+            CheckInternalErrors();
+            Assert.AreEqual(res, 14);
+        }
     }
 }

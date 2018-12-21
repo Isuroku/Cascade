@@ -11,8 +11,8 @@ namespace MathExpressionParser
         public ETokenType TokenType { get; private set; }
         int _position;
         public string Text { get; private set; }
-        public int StartPos { get { return _position; } }
-        public int EndPos { get { return _position + Text.Length; } }
+        public int StartLineIndex { get { return _position; } }
+        public int EndLineIndex { get { return _position + Text.Length; } }
 
         public CToken(ETokenType token_type, string inText, int inPos)
         {
@@ -44,9 +44,7 @@ namespace MathExpressionParser
             if (TokenType != ETokenType.Float && TokenType != ETokenType.Int && TokenType != ETokenType.UInt)
                 return 0;
 
-            CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-            ci.NumberFormat.CurrencyDecimalSeparator = ".";
-            return double.Parse(Text, NumberStyles.Any, ci);
+            return double.Parse(Text, NumberStyles.Any, Utils.GetCultureInfoFloatPoint());
         }
     }
 }
