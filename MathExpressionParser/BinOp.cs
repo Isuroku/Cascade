@@ -210,13 +210,16 @@ namespace MathExpressionParser
         Asin,
         Acos,
         Atan,
-        Atan2
+        Atan2,
+        Rand
     }
 
     public sealed class CInternalFunc : IMathFunc
     {
         EInternalFunc _type;
         CArgArray _args;
+
+        static Random rnd = new Random();
 
         public int StartLineIndex { get; private set; }
         public int EndLineIndex { get; private set; }
@@ -233,7 +236,8 @@ namespace MathExpressionParser
             if(args.Count == 2 && 
                 t != EInternalFunc.Max 
                 && t != EInternalFunc.Min
-                && t != EInternalFunc.Atan2)
+                && t != EInternalFunc.Atan2
+                && t != EInternalFunc.Rand)
                 return null;
 
             return new CInternalFunc(t, args.ToArray(), inStartPos, inEndPos);
@@ -272,6 +276,7 @@ namespace MathExpressionParser
                 case EInternalFunc.Acos: return Math.Acos(_args[0]);
                 case EInternalFunc.Atan: return Math.Atan(_args[0]);
                 case EInternalFunc.Atan2: return Math.Atan2(_args[0], _args[1]);
+                case EInternalFunc.Rand: return _args[0] + (_args[1] - _args[0]) * rnd.NextDouble();
             }
 
             inLogger.LogError(string.Format("Invalid func: {0}", _type));
