@@ -257,7 +257,7 @@ namespace Parser
             AddToTree(_test_serialize);
 
             var serializer = new CCascadeSerializer(_parser);
-            CCharacterDescr saved_obj = serializer.Deserialize<CCharacterDescr>(_test_serialize, this);
+            var saved_obj = serializer.Deserialize<CShipMalfunctionsDescr[]>(_test_serialize, this);
             //CTestBase saved_obj = serializer.Deserialize<CTestBase>(Path.GetFileName(_selected_file), tbSourceText.Text, this, null);
         }
 

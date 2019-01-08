@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascadeSerializer", "Reflec
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CascadeUnitTest", "CascadeUnitTest\CascadeUnitTest.csproj", "{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MathExpressionParser", "MathExpressionParser\MathExpressionParser.csproj", "{B1DD39E9-A1B3-4EBA-A5E0-B6A6FEB8185D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0AE75420-0434-4BDA-B4BF-BFEE9923F66A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1DD39E9-A1B3-4EBA-A5E0-B6A6FEB8185D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1DD39E9-A1B3-4EBA-A5E0-B6A6FEB8185D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1DD39E9-A1B3-4EBA-A5E0-B6A6FEB8185D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1DD39E9-A1B3-4EBA-A5E0-B6A6FEB8185D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

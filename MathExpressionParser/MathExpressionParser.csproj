@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{0BA9965A-8201-4766-8241-322FC380CA75}</ProjectGuid>
+    <ProjectGuid>{B1DD39E9-A1B3-4EBA-A5E0-B6A6FEB8185D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>CascadeParser</RootNamespace>
-    <AssemblyName>CascadeParser</AssemblyName>
+    <RootNamespace>MathExpressionParser</RootNamespace>
+    <AssemblyName>MathExpressionParser</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -38,28 +38,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BuildCommands.cs" />
-    <Compile Include="CommandParams.cs" />
-    <Compile Include="ECommands.cs" />
-    <Compile Include="EErrorCode.cs" />
-    <Compile Include="EKeyAdditionMode.cs" />
-    <Compile Include="ETokenType.cs" />
+    <Compile Include="BinOp.cs" />
+    <Compile Include="ExpressionBuilder.cs" />
     <Compile Include="ILogger.cs" />
-    <Compile Include="Loger.cs" />
-    <Compile Include="ParserManager.cs" />
-    <Compile Include="SCommandParams.cs" />
-    <Compile Include="SentenseDivider.cs" />
-    <Compile Include="SPosition.cs" />
-    <Compile Include="Token.cs" />
-    <Compile Include="TokenLine.cs" />
-    <Compile Include="TokenTemplate.cs" />
-    <Compile Include="TreeBuilderOld.cs" />
-    <Compile Include="TreeBuilder.cs" />
-    <Compile Include="TreeKeyFactory.cs" />
-    <Compile Include="TreeKeys.cs" />
-    <Compile Include="TreeTypes.cs" />
-    <Compile Include="Tuple.cs" />
+    <Compile Include="TokenFinder.cs" />
+    <Compile Include="ETokenType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Token.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

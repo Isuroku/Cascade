@@ -64,5 +64,10 @@ namespace CascadeParser
         {
             return CKey.CreateRoot(inName);
         }
+
+        public static IKey CreateArrayKey(IKey inParent)
+        {
+            return CKey.CreateArrayKey(inParent as CKey);
+        }
     }
 }
