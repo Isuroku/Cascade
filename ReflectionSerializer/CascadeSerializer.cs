@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace CascadeSerializer
@@ -751,7 +752,8 @@ namespace CascadeSerializer
 
             if (instance != null)
             {
-                MethodInfo mi = type.GetMethod("DeserializationFromCscd", new Type[] { typeof(CascadeParser.IKey), typeof(CascadeParser.ILogPrinter) });
+                //MethodInfo mi = type.GetMethod("DeserializationFromCscd", new Type[] { typeof(CascadeParser.IKey), typeof(CascadeParser.ILogPrinter) });
+                MethodInfo mi = type.GetMethod("DeserializationFromCscd", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (mi != null)
                 {
                     IKey key = inKey;
@@ -792,6 +794,13 @@ namespace CascadeSerializer
                                 DeserializeInternal(already_exists_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inStructDeep + 1, inLogger);
                         }
                     }
+                }
+
+                mi = type.GetMethod("OnDeserializedMethod", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (mi != null)
+                {
+                    var context = new StreamingContext(StreamingContextStates.Other);
+                    mi.Invoke(instance, new object[] { context });
                 }
             }
 

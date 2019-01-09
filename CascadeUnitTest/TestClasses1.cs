@@ -3,6 +3,7 @@ using CascadeSerializer;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 #pragma warning disable 0649, 0659
 
@@ -55,6 +56,11 @@ namespace CascadeUnitTest
                 _base_string == v._base_string &&
                 BaseInt == v.BaseInt &&
                 BaseNullable == v.BaseNullable;
+        }
+
+        private void OnDeserializedMethod(StreamingContext context)
+        {
+            Console.WriteLine("OnDeserializedMethod called!");
         }
     }
 
