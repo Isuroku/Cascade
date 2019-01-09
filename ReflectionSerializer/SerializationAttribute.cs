@@ -49,7 +49,7 @@ namespace CascadeSerializer
 
     public enum MemberSerialization { OptOut, OptIn, Fields, All }
 
-    [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
+    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
     public class CascadeObjectAttribute : Attribute
     {
         public MemberSerialization MemberSerialization { get; set; }
