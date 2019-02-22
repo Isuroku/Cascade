@@ -782,10 +782,10 @@ namespace CascadeSerializer
 
                             // This dirty check is naive and doesn't provide performance benefits
                             //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
-                            _reflectionProvider.SetValue(memberInfo, instance, readValue);
+                            _reflectionProvider.SetValue(memberInfo, instance, readValue, inLogger);
                         }
                         else if (member_params.DefaultValue != null)
-                            _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue);
+                            _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue, inLogger);
                         else if (memberType.IsClass)
                         {
                             object already_exists_member = _reflectionProvider.GetValue(memberInfo, instance);

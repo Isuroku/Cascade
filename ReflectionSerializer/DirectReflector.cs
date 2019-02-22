@@ -22,7 +22,7 @@ namespace CascadeSerializer
             throw new NotImplementedException();
         }
 
-        public override void SetValue(MemberInfo member, object instance, object value)
+        public override void SetValue(MemberInfo member, object instance, object value, ILogPrinter inLogger)
         {
             if (member is PropertyInfo)
                 (member as PropertyInfo).GetSetMethod(true).Invoke(instance, new[] { value });

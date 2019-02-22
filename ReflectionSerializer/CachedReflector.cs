@@ -88,7 +88,7 @@ namespace CascadeSerializer
             return getter(instance);
         }
 
-        public override void SetValue(MemberInfo memberInfo, object instance, object value)
+        public override void SetValue(MemberInfo memberInfo, object instance, object value, ILogPrinter inLogger)
         {
             Action<object, object> setter;
             if (memberInfo is PropertyInfo)
@@ -107,7 +107,14 @@ namespace CascadeSerializer
             else
                 throw new NotImplementedException();
 
-            setter(instance, value);
+            try
+            {
+                setter(instance, value);
+            }
+            catch(Exception ex)
+            {
+                inLogger.LogError($"Exception for {memberInfo.Name}: {ex.Message}");
+            }
         }
 
         public override MethodHandler GetDelegate(MethodBase method)
