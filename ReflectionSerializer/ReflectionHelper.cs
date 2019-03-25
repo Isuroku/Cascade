@@ -147,16 +147,31 @@ namespace CascadeSerializer
             return null;
         }
 
-        public static bool StringToAtomicValue(string inText, Type inType, out object outValue)
+        public static bool StringToAtomicValue(string inText, Type inType, out object outValue, IReflectionProvider provider, ILogPrinter inLogger)
         {
             if (inType == typeof(string))
             {
                 outValue = inText;
                 return true;
             }
+
             if (inType.IsEnum)
             {
-                outValue = Enum.Parse(inType, inText);
+                if (string.IsNullOrEmpty(inText) || !Enum.IsDefined(inType, inText))
+                {
+                    outValue = GetDefaultValue(inType, provider, inLogger);
+                    return false;
+                }
+
+                try
+                {
+                    outValue = Enum.Parse(inType, inText);
+                }
+                catch (NotSupportedException)
+                {
+                    outValue = GetDefaultValue(inType, provider, inLogger);
+                    return false;
+                }
                 return true;
             }
 

@@ -203,7 +203,7 @@ namespace CascadeSerializer
             else
             {
                 string key_value = key.GetValueAsString(0);
-                if (!ReflectionHelper.StringToAtomicValue(key_value, type, out instance))
+                if (!ReflectionHelper.StringToAtomicValue(key_value, type, out instance, _reflectionProvider, inLogger))
                 {
                     LogError(inLogger, string.Format("Key {0} with value {1} can't convert value to type {2}", key, key_value, type.Name));
                     instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
@@ -271,7 +271,7 @@ namespace CascadeSerializer
                 IKey sub_key = tree_key.GetChild(i);
 
                 object dic_key;
-                if (!ReflectionHelper.StringToAtomicValue(sub_key.GetName(), keyDeclaredType, out dic_key))
+                if (!ReflectionHelper.StringToAtomicValue(sub_key.GetName(), keyDeclaredType, out dic_key, _reflectionProvider, inLogger))
                 {
                     LogError(inLogger, string.Format("SubKey {0} for dictionary with key type {1} can't convert value {2}",
                         tree_key, keyDeclaredType.Name, sub_key.GetName()));
@@ -420,7 +420,7 @@ namespace CascadeSerializer
                             str_value = string.Empty;
                         else
                             str_value = dim_child.GetValueAsString(last_index);
-                        if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
+                        if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value, _reflectionProvider, inLogger))
                         {
                             LogError(inLogger, string.Format("Key {0} for collection with element type {1} can't convert value {2}",
                                 key, declaredItemType.Name, str_value));
@@ -538,7 +538,7 @@ namespace CascadeSerializer
                 {
                     object obj_value;
                     string str_value = tree_key.GetValueAsString(i);
-                    if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
+                    if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value, _reflectionProvider, inLogger))
                     {
                         LogError(inLogger, string.Format("Key {0} for collection with element type {1} can't convert value {2}",
                             tree_key, declaredItemType.Name, str_value));

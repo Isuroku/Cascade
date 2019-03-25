@@ -46,6 +46,25 @@ namespace CascadeUnitTest
         }
 
         [TestMethod]
+        public void TestMethodBaseIncorrectEnumName()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            var v1 = new CTestBase();
+            v1.Init1();
+
+            string text = _serializer.SerializeToCascade(v1, this);
+
+            text = text.Replace("TestEnumValue", "TIIIUU");
+
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CTestBase>(text, this);
+
+            //CheckInternalErrors();
+            //Assert.AreEqual(v1, v2);
+        }
+
+        [TestMethod]
         public void TestMethod_DefaultValue_SimpleInherite_Convert_Ignore()
         {
             ResetTestState();
