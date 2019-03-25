@@ -756,7 +756,7 @@ namespace CascadeSerializer
                 MethodInfo mi = type.GetMethod("DeserializationFromCscd", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (mi != null)
                 {
-                    if (inKey != null)
+                    if (inKey != null && !inKey.IsEmpty)
                     {
                         IKey key = inKey;
                         mi.Invoke(instance, new object[] { key, inLogger });
