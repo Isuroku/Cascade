@@ -392,5 +392,17 @@ namespace CascadeUnitTest
 
             CheckInternalErrors();
         }
+
+        [TestMethod]
+        public void TestMethod_StructDefault()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+            var v = _serializer.Deserialize<CDoFBox>(string.Empty, this);
+            Assert.AreEqual(v.DOF, DoFSettings.defaultSettings);
+
+            CheckInternalErrors();
+        }
     }
 }

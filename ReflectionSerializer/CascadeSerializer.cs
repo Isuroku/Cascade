@@ -756,8 +756,11 @@ namespace CascadeSerializer
                 MethodInfo mi = type.GetMethod("DeserializationFromCscd", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (mi != null)
                 {
-                    IKey key = inKey;
-                    mi.Invoke(instance, new object[] { key, inLogger });
+                    if (inKey != null)
+                    {
+                        IKey key = inKey;
+                        mi.Invoke(instance, new object[] { key, inLogger });
+                    }
                 }
                 else
                 {
@@ -786,12 +789,16 @@ namespace CascadeSerializer
                         }
                         else if (member_params.DefaultValue != null)
                             _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue, inLogger);
-                        else if (memberType.IsClass)
+                        else if (memberType.IsClass || memberType.IsStruct())
                         {
                             object already_exists_member = _reflectionProvider.GetValue(memberInfo, instance);
                             if (already_exists_member != null)
+                            {
                                 //for set default values inside this object
-                                DeserializeInternal(already_exists_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inStructDeep + 1, inLogger);
+                                already_exists_member = DeserializeInternal(already_exists_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inStructDeep + 1, inLogger);
+                                if(already_exists_member != null)
+                                    _reflectionProvider.SetValue(memberInfo, instance, already_exists_member, inLogger);
+                            }
                         }
                     }
                 }

@@ -60,6 +60,11 @@ namespace CascadeSerializer
             return type.IsPrimitive || type.IsEnum || type == typeof(string) || type.IsNullable();
         }
 
+        public static bool IsStruct(this Type type)
+        {
+            return type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsNullable();
+        }
+
         public static bool IsINT(object value)
         {
             return value is sbyte || value is short || value is int || value is long;

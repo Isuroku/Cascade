@@ -1,4 +1,5 @@
 ﻿using CascadeSerializer;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -886,5 +887,50 @@ namespace CascadeUnitTest
         }
     }
 
+    public enum KernelSize
+    {
+        Small,
+        Medium,
+        Large,
+        VeryLarge
+    }
 
+    [Serializable]
+    public struct DoFSettings
+    {
+        //[Min(0.1f), Tooltip("Distance to the point of focus.")]
+        [CascadeSerializer.CascadeProperty(Default = 100f)]
+        public float focusDistance;
+
+        //[Range(0.05f, 32f), Tooltip("Ratio of aperture (known as f-stop or f-number). The smaller the value is, the shallower the depth of field is.")]
+        [CascadeSerializer.CascadeProperty(Default = 0.8f)]
+        public float aperture;
+
+        //[Range(1f, 300f), Tooltip("Distance between the lens and the film. The larger the value is, the shallower the depth of field is.")]
+        [CascadeSerializer.CascadeProperty(Default = 85f)]
+        public float focalLength;
+
+        //[Tooltip("Calculate the focal length automatically from the field-of-view value set on the camera. Using this setting isn't recommended.")]
+        [CascadeSerializer.CascadeProperty(Default = false)]
+        public bool useCameraFov;
+
+        //[Tooltip("Convolution kernel size of the bokeh filter, which determines the maximum radius of bokeh. It also affects the performance (the larger the kernel is, the longer the GPU time is required).")]
+        [CascadeSerializer.CascadeProperty(Default = KernelSize.VeryLarge)]
+        public KernelSize kernelSize;
+
+        public static DoFSettings defaultSettings =
+            new DoFSettings
+            {
+                focusDistance = 100f,
+                aperture = 0.8f,
+                focalLength = 85f,
+                useCameraFov = false,
+                kernelSize = KernelSize.VeryLarge
+            };
+    }
+
+    public class CDoFBox
+    {
+        public DoFSettings DOF { get; private set; }
+    }
 }

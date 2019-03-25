@@ -74,6 +74,9 @@ namespace CascadeUnitTest
 
         public void DeserializationFromCscd(IKey key, ILogPrinter inLogger)
         {
+            if (key.GetValuesCount() != 3)
+                return;
+
             x = key.GetValue(0).GetValueAsFloat();
             y = key.GetValue(1).GetValueAsFloat();
             z = key.GetValue(2).GetValueAsFloat();
