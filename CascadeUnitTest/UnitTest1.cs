@@ -316,7 +316,6 @@ namespace CascadeUnitTest
         {
             ResetTestState();
             Console.WriteLine(MethodBase.GetCurrentMethod().Name);
-            CShipUpgradeDescr2 v1 = new CShipUpgradeDescr2("one", "two");
 
             EEntityPlaces pl = EEntityPlaces.Front | EEntityPlaces.Left;
 
@@ -333,6 +332,8 @@ namespace CascadeUnitTest
             Console.WriteLine(text);
             var dic2 = _serializer.Deserialize<Dictionary<EEntityPlaces, int>>(text, this);
             Utils.IsCollectionEquals(dic, dic2);
+
+            CheckInternalErrors();
         }
 
         [TestMethod]

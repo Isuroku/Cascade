@@ -157,7 +157,7 @@ namespace CascadeSerializer
 
             if (inType.IsEnum)
             {
-                if (string.IsNullOrEmpty(inText) || !Enum.IsDefined(inType, inText))
+                if (string.IsNullOrEmpty(inText))
                 {
                     outValue = GetDefaultValue(inType, provider, inLogger);
                     return false;
@@ -165,9 +165,9 @@ namespace CascadeSerializer
 
                 try
                 {
-                    outValue = Enum.Parse(inType, inText);
+                    outValue = Enum.Parse(inType, inText, true);
                 }
-                catch (NotSupportedException)
+                catch (ArgumentException)
                 {
                     outValue = GetDefaultValue(inType, provider, inLogger);
                     return false;
