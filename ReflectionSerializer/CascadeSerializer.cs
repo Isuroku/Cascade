@@ -4,6 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Text;
 
 namespace CascadeSerializer
@@ -202,7 +203,7 @@ namespace CascadeSerializer
             else
             {
                 string key_value = key.GetValueAsString(0);
-                if (!ReflectionHelper.StringToAtomicValue(key_value, type, out instance))
+                if (!ReflectionHelper.StringToAtomicValue(key_value, type, out instance, _reflectionProvider, inLogger))
                 {
                     LogError(inLogger, string.Format("Key {0} with value {1} can't convert value to type {2}", key, key_value, type.Name));
                     instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
@@ -270,7 +271,7 @@ namespace CascadeSerializer
                 IKey sub_key = tree_key.GetChild(i);
 
                 object dic_key;
-                if (!ReflectionHelper.StringToAtomicValue(sub_key.GetName(), keyDeclaredType, out dic_key))
+                if (!ReflectionHelper.StringToAtomicValue(sub_key.GetName(), keyDeclaredType, out dic_key, _reflectionProvider, inLogger))
                 {
                     LogError(inLogger, string.Format("SubKey {0} for dictionary with key type {1} can't convert value {2}",
                         tree_key, keyDeclaredType.Name, sub_key.GetName()));
@@ -419,7 +420,7 @@ namespace CascadeSerializer
                             str_value = string.Empty;
                         else
                             str_value = dim_child.GetValueAsString(last_index);
-                        if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
+                        if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value, _reflectionProvider, inLogger))
                         {
                             LogError(inLogger, string.Format("Key {0} for collection with element type {1} can't convert value {2}",
                                 key, declaredItemType.Name, str_value));
@@ -537,7 +538,7 @@ namespace CascadeSerializer
                 {
                     object obj_value;
                     string str_value = tree_key.GetValueAsString(i);
-                    if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value))
+                    if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value, _reflectionProvider, inLogger))
                     {
                         LogError(inLogger, string.Format("Key {0} for collection with element type {1} can't convert value {2}",
                             tree_key, declaredItemType.Name, str_value));
@@ -751,11 +752,15 @@ namespace CascadeSerializer
 
             if (instance != null)
             {
-                MethodInfo mi = type.GetMethod("DeserializationFromCscd", new Type[] { typeof(CascadeParser.IKey), typeof(CascadeParser.ILogPrinter) });
+                //MethodInfo mi = type.GetMethod("DeserializationFromCscd", new Type[] { typeof(CascadeParser.IKey), typeof(CascadeParser.ILogPrinter) });
+                MethodInfo mi = type.GetMethod("DeserializationFromCscd", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (mi != null)
                 {
-                    IKey key = inKey;
-                    mi.Invoke(instance, new object[] { key, inLogger });
+                    if (inKey != null && !inKey.IsEmpty)
+                    {
+                        IKey key = inKey;
+                        mi.Invoke(instance, new object[] { key, inLogger });
+                    }
                 }
                 else
                 {
@@ -780,18 +785,29 @@ namespace CascadeSerializer
 
                             // This dirty check is naive and doesn't provide performance benefits
                             //if (memberType.IsClass && readValue != currentValue && (readValue == null || !readValue.Equals(currentValue)))
-                            _reflectionProvider.SetValue(memberInfo, instance, readValue);
+                            _reflectionProvider.SetValue(memberInfo, instance, readValue, inLogger);
                         }
                         else if (member_params.DefaultValue != null)
-                            _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue);
-                        else if (memberType.IsClass)
+                            _reflectionProvider.SetValue(memberInfo, instance, member_params.DefaultValue, inLogger);
+                        else if (memberType.IsClass || memberType.IsStruct())
                         {
                             object already_exists_member = _reflectionProvider.GetValue(memberInfo, instance);
                             if (already_exists_member != null)
+                            {
                                 //for set default values inside this object
-                                DeserializeInternal(already_exists_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inStructDeep + 1, inLogger);
+                                already_exists_member = DeserializeInternal(already_exists_member, IKeyFactory.CreateKey(string.Empty), memberType, 0, inStructDeep + 1, inLogger);
+                                if(already_exists_member != null)
+                                    _reflectionProvider.SetValue(memberInfo, instance, already_exists_member, inLogger);
+                            }
                         }
                     }
+                }
+
+                mi = type.GetMethod("OnDeserializedMethod", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                if (mi != null)
+                {
+                    var context = new StreamingContext(StreamingContextStates.Other);
+                    mi.Invoke(instance, new object[] { context });
                 }
             }
 

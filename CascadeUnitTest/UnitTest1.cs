@@ -46,6 +46,25 @@ namespace CascadeUnitTest
         }
 
         [TestMethod]
+        public void TestMethodBaseIncorrectEnumName()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            var v1 = new CTestBase();
+            v1.Init1();
+
+            string text = _serializer.SerializeToCascade(v1, this);
+
+            text = text.Replace("TestEnumValue", "TIIIUU");
+
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CTestBase>(text, this);
+
+            //CheckInternalErrors();
+            //Assert.AreEqual(v1, v2);
+        }
+
+        [TestMethod]
         public void TestMethod_DefaultValue_SimpleInherite_Convert_Ignore()
         {
             ResetTestState();
@@ -297,7 +316,6 @@ namespace CascadeUnitTest
         {
             ResetTestState();
             Console.WriteLine(MethodBase.GetCurrentMethod().Name);
-            CShipUpgradeDescr2 v1 = new CShipUpgradeDescr2("one", "two");
 
             EEntityPlaces pl = EEntityPlaces.Front | EEntityPlaces.Left;
 
@@ -314,6 +332,8 @@ namespace CascadeUnitTest
             Console.WriteLine(text);
             var dic2 = _serializer.Deserialize<Dictionary<EEntityPlaces, int>>(text, this);
             Utils.IsCollectionEquals(dic, dic2);
+
+            CheckInternalErrors();
         }
 
         [TestMethod]
@@ -389,6 +409,18 @@ namespace CascadeUnitTest
             Console.WriteLine(text);
             var v2 = _serializer.Deserialize<Vector3>(text, this);
             Assert.AreEqual(v1, v2);
+
+            CheckInternalErrors();
+        }
+
+        [TestMethod]
+        public void TestMethod_StructDefault()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+            var v = _serializer.Deserialize<CDoFBox>(string.Empty, this);
+            Assert.AreEqual(v.DOF, DoFSettings.defaultSettings);
 
             CheckInternalErrors();
         }

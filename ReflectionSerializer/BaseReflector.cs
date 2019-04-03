@@ -114,7 +114,7 @@ namespace CascadeSerializer
 
         public abstract object Instantiate(Type type, ILogPrinter inLogger);
         public abstract object GetValue(MemberInfo member, object instance);
-        public abstract void SetValue(MemberInfo member, object instance, object value);
+        public abstract void SetValue(MemberInfo member, object instance, object value, ILogPrinter inLogger);
         public abstract MethodHandler GetDelegate(MethodBase method);
     }
 }

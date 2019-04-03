@@ -3,6 +3,7 @@ using CascadeSerializer;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 
 #pragma warning disable 0649, 0659
 
@@ -56,6 +57,11 @@ namespace CascadeUnitTest
                 BaseInt == v.BaseInt &&
                 BaseNullable == v.BaseNullable;
         }
+
+        private void OnDeserializedMethod(StreamingContext context)
+        {
+            Console.WriteLine("OnDeserializedMethod called!");
+        }
     }
 
     struct Vector3
@@ -68,6 +74,9 @@ namespace CascadeUnitTest
 
         public void DeserializationFromCscd(IKey key, ILogPrinter inLogger)
         {
+            if (key.GetValuesCount() != 3)
+                return;
+
             x = key.GetValue(0).GetValueAsFloat();
             y = key.GetValue(1).GetValueAsFloat();
             z = key.GetValue(2).GetValueAsFloat();

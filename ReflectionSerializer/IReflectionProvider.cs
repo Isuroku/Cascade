@@ -12,7 +12,7 @@ namespace CascadeSerializer
         MemberInfo[] GetSerializableMembers(Type type);
         object Instantiate(Type type, ILogPrinter inLogger);
         object GetValue(MemberInfo member, object instance);
-        void SetValue(MemberInfo member, object instance, object value);
+        void SetValue(MemberInfo member, object instance, object value, ILogPrinter inLogger);
         MethodHandler GetDelegate(MethodBase method);
     }
 }
