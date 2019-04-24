@@ -197,7 +197,7 @@ namespace CascadeSerializer
                 }
                 sb.Append("\"");
 
-                LogError(inLogger, string.Format("Need one value for type {1}. Key: {0}; Values: {2} ", key, type.Name, sb));
+                LogError(inLogger, string.Format("Need one value for type {1}. Key: {0} [{3}]; Values: {2} ", key, type.Name, sb, key.GetPath()));
                 instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
             }
             else
@@ -205,7 +205,7 @@ namespace CascadeSerializer
                 string key_value = key.GetValueAsString(0);
                 if (!ReflectionHelper.StringToAtomicValue(key_value, type, out instance, _reflectionProvider, inLogger))
                 {
-                    LogError(inLogger, string.Format("Key {0} with value {1} can't convert value to type {2}", key, key_value, type.Name));
+                    LogError(inLogger, string.Format("Key {0} [{3}] with value {1} can't convert value to type {2}", key, key_value, type.Name, key.GetPath()));
                     instance = ReflectionHelper.GetDefaultValue(type, _reflectionProvider, inLogger);
                 }
             }
@@ -273,8 +273,8 @@ namespace CascadeSerializer
                 object dic_key;
                 if (!ReflectionHelper.StringToAtomicValue(sub_key.GetName(), keyDeclaredType, out dic_key, _reflectionProvider, inLogger))
                 {
-                    LogError(inLogger, string.Format("SubKey {0} for dictionary with key type {1} can't convert value {2}",
-                        tree_key, keyDeclaredType.Name, sub_key.GetName()));
+                    LogError(inLogger, string.Format("SubKey {0} [{3}] for dictionary with key type {1} can't convert value {2}",
+                        tree_key, keyDeclaredType.Name, sub_key.GetName(), tree_key.GetPath()));
                 }
                 else
                 {
@@ -422,8 +422,8 @@ namespace CascadeSerializer
                             str_value = dim_child.GetValueAsString(last_index);
                         if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value, _reflectionProvider, inLogger))
                         {
-                            LogError(inLogger, string.Format("Key {0} for collection with element type {1} can't convert value {2}",
-                                key, declaredItemType.Name, str_value));
+                            LogError(inLogger, string.Format("Key {0} [{3}] for collection with element type {1} can't convert value {2}",
+                                key, declaredItemType.Name, str_value, key.GetPath()));
                         }
                     }
                     else
@@ -540,8 +540,8 @@ namespace CascadeSerializer
                     string str_value = tree_key.GetValueAsString(i);
                     if (!ReflectionHelper.StringToAtomicValue(str_value, declaredItemType, out obj_value, _reflectionProvider, inLogger))
                     {
-                        LogError(inLogger, string.Format("Key {0} for collection with element type {1} can't convert value {2}",
-                            tree_key, declaredItemType.Name, str_value));
+                        LogError(inLogger, string.Format("Key {0} [{3}] for collection with element type {1} can't convert value {2}",
+                            tree_key, declaredItemType.Name, str_value, tree_key.GetPath()));
                     }
 
                     collect.AddValue(obj_value);
