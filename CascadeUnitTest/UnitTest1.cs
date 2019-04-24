@@ -424,5 +424,22 @@ namespace CascadeUnitTest
 
             CheckInternalErrors();
         }
+
+        [TestMethod]
+        public void TestMethod_NamedIdArray()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+            var v1 = new CNamedIdArray();
+            v1.Init();
+
+            string text = _serializer.SerializeToCascade(v1, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<CNamedIdArray>(text, this);
+            Assert.AreEqual(v1, v2);
+
+            CheckInternalErrors();
+        }
     }
 }
