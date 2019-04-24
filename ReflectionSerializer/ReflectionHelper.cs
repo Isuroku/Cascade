@@ -181,8 +181,9 @@ namespace CascadeSerializer
             {
                 outValue = converter.ConvertFromString(inText);
             }
-            catch(NotSupportedException)
+            catch (Exception ex)
             {
+                inLogger.LogError(ex.Message);
                 return false;
             }
             return true;
