@@ -183,7 +183,7 @@ namespace CascadeSerializer
             }
             catch (Exception ex)
             {
-                inLogger.LogError(ex.Message);
+                //inLogger.LogError(ex.Message);
                 return false;
             }
             return true;
