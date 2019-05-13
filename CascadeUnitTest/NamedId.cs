@@ -1,4 +1,6 @@
 ﻿using CascadeParser;
+using CascadeSerializer;
+using System;
 using System.Collections.Generic;
 
 namespace CascadeUnitTest
@@ -106,6 +108,7 @@ namespace CascadeUnitTest
 
     public class CNamedIdArray
     {
+        [CascadeConverter(typeof(NamedIdArrayCscdConverter))]
         public NamedId[] Names;
 
         public void Init()
@@ -132,6 +135,30 @@ namespace CascadeUnitTest
         public override int GetHashCode()
         {
             return 1635486599 + EqualityComparer<NamedId[]>.Default.GetHashCode(Names);
+        }
+    }
+
+    public class NamedIdArrayCscdConverter : CascadeConverter
+    {
+        public bool CanConvert(Type objectType)
+        {
+            return objectType == typeof(NamedId[]);
+        }
+
+        public object ReadKey(IKey key, ILogPrinter inLogger)
+        {
+            int count = key.GetValuesCount();
+            var arr = new NamedId[count];
+            for(int i = 0; i < count; i++)
+                arr[i] = NamedId.GetNamedId(key.GetValueAsString(i));
+            return arr;
+        }
+
+        public void WriteKey(IKey key, object instance, ILogPrinter inLogger)
+        {
+            NamedId[] arr = (NamedId[])instance;
+            for (int i = 0; i < arr.Length; i++)
+                key.AddValue(arr[i].name);
         }
     }
 }
