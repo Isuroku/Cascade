@@ -55,6 +55,7 @@
     <Compile Include="NamedId.cs" />
     <Compile Include="TestClasses1.cs" />
     <Compile Include="TestClasses2.cs" />
+    <Compile Include="TwitchCommand.cs" />
     <Compile Include="UnitTest1.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UnitTestArrays.cs" />

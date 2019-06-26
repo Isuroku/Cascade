@@ -13,24 +13,39 @@ namespace CascadeParser
     {
         string _template;
         ETokenType _token_type;
+        bool _only_pure_world;
 
         public ETokenType GetTokenType() { return _token_type; }
         public string GetText() { return _template; }
 
-        public CTokenTemplate(ETokenType token_type, string template)
+        public CTokenTemplate(ETokenType token_type, string template, bool only_pure_world)
         {
             _token_type = token_type;
             _template = template;
+            _only_pure_world = only_pure_world;
+        }
+
+        public CTokenTemplate(ETokenType token_type, string template)
+            :this(token_type, template, false)
+        {
+
         }
 
         public bool CheckPassed(string inLine, int inCharIndex)
         {
-            if (_template.Length > inLine.Length - inCharIndex)
+            int rest_len = inLine.Length - inCharIndex;
+            if (_template.Length > rest_len)
                 return false;
 
             bool diff = false;
             for(int i = 0; i < _template.Length && !diff; ++i)
                 diff = _template[i] != inLine[inCharIndex + i];
+
+            if(!diff && _only_pure_world && _template.Length < rest_len)
+            {
+                char char_after_world = inLine[inCharIndex + _template.Length];
+                diff = char.IsLetterOrDigit(char_after_world);
+            }
 
             return !diff;
         }
@@ -62,10 +77,10 @@ namespace CascadeParser
             _templates.Add(new CTokenTemplate(ETokenType.Colon, ":"));
             _templates.Add(new CTokenTemplate(ETokenType.RecordDivider, "--"));
             _templates.Add(new CTokenTemplate(ETokenType.Sharp, "#"));
-            _templates.Add(new CTokenTemplate(ETokenType.True, "true"));
-            _templates.Add(new CTokenTemplate(ETokenType.True, "True"));
-            _templates.Add(new CTokenTemplate(ETokenType.False, "false"));
-            _templates.Add(new CTokenTemplate(ETokenType.False, "False"));
+            _templates.Add(new CTokenTemplate(ETokenType.True, "true", true));
+            _templates.Add(new CTokenTemplate(ETokenType.True, "True", true));
+            _templates.Add(new CTokenTemplate(ETokenType.False, "false", true));
+            _templates.Add(new CTokenTemplate(ETokenType.False, "False", true));
             _templates.Add(new CTokenTemplate(ETokenType.AddKey, "+"));
             _templates.Add(new CTokenTemplate(ETokenType.OverrideKey, "^"));
             //_templates.Add(new CTokenTemplate(ETokenType.OpenBrace, "{"));

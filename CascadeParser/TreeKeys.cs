@@ -369,7 +369,8 @@ namespace CascadeParser
             StringBuilder sb = new StringBuilder();
 
             int intent = 0;
-            if(string.IsNullOrEmpty(Name) && _values.Count == 0)
+            //if(_parent == null && string.IsNullOrEmpty(_name) && _values.Count == 0 && IsAllSubKeysArrays())
+            if (_parent == null && string.IsNullOrEmpty(_name) && IsAllSubKeysArrays())
                 intent = -1;
 
             SaveToString(sb, intent);
