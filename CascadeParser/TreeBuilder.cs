@@ -80,6 +80,9 @@ namespace CascadeParser
                             Collect(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport, inRoot);
                         else
                             CollectByDivs(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport, inRoot);
+
+                        if (arr_key.IsEmpty)
+                            arr_key.SetParent(null);
                     }
                 }
             }
@@ -275,13 +278,23 @@ namespace CascadeParser
                 }
             }
 
-            bool insert_parent = line.CommandParams.ContainsKey("parent");
+            CKey destination_key = inParent;
+            bool insert_in_parent = line.CommandParams.ContainsKey("insert_in_parent");
+            if (insert_in_parent)
+            {
+                if(inParent.Parent != null)
+                    destination_key = inParent.Parent;
+                else
+                    inSupport.GetLogger().LogError(EErrorCode.KeyMustHaveParent, line);
+            }
+
+            bool add_key = line.CommandParams.ContainsKey("add_key");
             CKey copy_key = key.GetCopy() as CKey;
-            if (insert_parent)
-                copy_key.SetParent(inParent);
+            if (add_key)
+                copy_key.SetParent(destination_key);
             else
-                inParent.TakeAllElements(copy_key, false);
-            inParent.CheckOnOneArray();
+                destination_key.TakeAllElements(copy_key, false);
+            destination_key.CheckOnOneArray();
         }
     }
 }

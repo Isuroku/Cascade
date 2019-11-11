@@ -7,10 +7,13 @@ namespace CascadeParser
         Dictionary<string, string> _dic = new Dictionary<string, string>();
         List<KeyValuePair<string, string>> _list = new List<KeyValuePair<string, string>>();
 
-        internal void Add(string text1, string text2)
+        internal bool Add(string text1, string text2)
         {
+            if(_dic.ContainsKey(text1))
+                return false;
             _dic.Add(text1, text2);
             _list.Add(new KeyValuePair<string, string>(text1, text2));
+            return true;
         }
 
         public int Length { get { return _list.Count; } }
