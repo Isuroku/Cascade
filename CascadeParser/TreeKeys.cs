@@ -163,6 +163,18 @@ namespace CascadeParser
             }
         }
 
+        public void ClearAllArrayKeys()
+        {
+            for (int i = _keys.Count - 1; i >= 0; i--)
+                if (_keys[i].IsArray)
+                    _keys.RemoveAt(i);
+        }
+
+        public void ClearValues()
+        {
+            _values.Clear();
+        }
+
         public int GetIndex()
         {
             if (_parent == null)
