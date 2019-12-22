@@ -36,8 +36,6 @@ namespace CascadeParser
 
         public bool IsEmpty { get { return _keys.Count == 0 && _values.Count == 0; } }
 
-        public override EElementType GetElementType() { return EElementType.Key; }
-
         public static CKey Create(CKey parent, SPosition pos)
         {
             return new CKey(parent, string.Empty, false, pos);
@@ -201,14 +199,17 @@ namespace CascadeParser
             return child;
         }
 
-        public void AddValue(long v) { new CIntValue(this, SPosition.zero, v); }
-        public void AddValue(int v) { new CIntValue(this, SPosition.zero, v); }
-        public void AddValue(ulong v) { new CUIntValue(this, SPosition.zero, v); }
-        public void AddValue(uint v) { new CUIntValue(this, SPosition.zero, v); }
-        public void AddValue(decimal v) { new CFloatValue(this, SPosition.zero, v); }
-        public void AddValue(float v) { new CFloatValue(this, SPosition.zero, (decimal)v); }
-        public void AddValue(bool v) { new CBoolValue(this, SPosition.zero, v); }
-        public void AddValue(string v) { new CStringValue(this, SPosition.zero, v); }
+        public void AddValue(bool v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(byte v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(short v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(ushort v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(int v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(uint v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(long v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(ulong v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(float v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(double v) { new CBaseValue(this, new Variant(v)); }
+        public void AddValue(string v) { new CBaseValue(this, new Variant(v)); }
 
         public string GetName() { return Name; }
         public bool IsArrayKey() { return IsArray; }
@@ -222,10 +223,10 @@ namespace CascadeParser
         public IKeyValue GetValue(int index) { return _values[index]; }
 
         public string GetValueAsString(int index) { return _values[index].ToString(); }
-        public float GetValueAsFloat(int index) { return _values[index].GetValueAsFloat(); }
-        public int GetValueAsInt(int index) { return _values[index].GetValueAsInt(); }
-        public uint GetValueAsUInt(int index) { return _values[index].GetValueAsUInt(); }
-        public bool GetValueAsBool(int index) { return _values[index].GetValueAsBool(); }
+        //public float GetValueAsFloat(int index) { return _values[index].GetValueAsFloat(); }
+        //public int GetValueAsInt(int index) { return _values[index].GetValueAsInt(); }
+        //public uint GetValueAsUInt(int index) { return _values[index].GetValueAsUInt(); }
+        //public bool GetValueAsBool(int index) { return _values[index].GetValueAsBool(); }
         #endregion IKey
 
         internal void MergeKey(CKey inKey)
@@ -573,7 +574,7 @@ namespace CascadeParser
             for (int i = 0; i < _values.Count; ++i)
             {
                 CBaseValue old_val = _values[i];
-                string val = old_val.GetValueAsString();
+                string val = old_val.ToString();
                 string new_val;
                 if (dictionary.TryGetValue(val, out new_val))
                 {

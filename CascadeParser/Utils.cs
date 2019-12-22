@@ -99,17 +99,6 @@ namespace CascadeParser
             return false;
         }
 
-        static CultureInfo _custom_culture;
-        public static CultureInfo GetCultureInfoFloatPoint()
-        {
-            if (_custom_culture == null)
-            {
-                _custom_culture = (CultureInfo)Thread.CurrentThread.CurrentCulture.Clone();
-                _custom_culture.NumberFormat.NumberDecimalSeparator = ".";
-            }
-            return _custom_culture;
-        }
-
         public static string GetStringForSave(string value)
         {
             value = value.Trim();

@@ -57,7 +57,7 @@ namespace CascadeUnitTest
                 inLogger.LogError(string.Format("NamedId.CscdConverter: Key {0} hasnt value!", key.GetPath()));
                 return;
             }
-            string n = key.GetValue(0).GetValueAsString();
+            string n = key.GetValue(0).ToString();
             NamedId nid = GetNamedId(n);
             id = nid.id;
             name = nid.name;

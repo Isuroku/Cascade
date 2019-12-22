@@ -61,6 +61,7 @@
     <Compile Include="UnitTestArrays.cs" />
     <Compile Include="UnitTestCollectionsInharitance.cs" />
     <Compile Include="UnitTestMathExp.cs" />
+    <Compile Include="UnitTestSaveKeyToBinary.cs" />
     <Compile Include="UnitTestSaveString.cs" />
     <Compile Include="Utils.cs" />
   </ItemGroup>

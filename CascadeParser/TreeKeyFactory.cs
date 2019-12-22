@@ -8,13 +8,16 @@ namespace CascadeParser
 
         void SetName(string name);
 
-        void AddValue(long v);
-        void AddValue(int v);
-        void AddValue(ulong v);
-        void AddValue(uint v);
-        void AddValue(decimal v);
-        void AddValue(float v);
         void AddValue(bool v);
+        void AddValue(byte v);
+        void AddValue(short v);
+        void AddValue(ushort v);
+        void AddValue(int v);
+        void AddValue(uint v);
+        void AddValue(long v);
+        void AddValue(ulong v);
+        void AddValue(float v);
+        void AddValue(double v);
         void AddValue(string v);
 
         string GetName();
@@ -44,18 +47,19 @@ namespace CascadeParser
         IKey Parent { get; }
         string Comments { get; }
 
-        EElementType ElementType { get; }
+        EValueType ValueType { get; }
 
-        string GetValueAsString();
-
-        float GetValueAsFloat();
-        double GetValueAsDouble();
-        decimal GetValueAsDecimal();
-        int GetValueAsInt();
-        long GetValueAsLong();
-        uint GetValueAsUInt();
-        ulong GetValueAsULong();
-        bool GetValueAsBool();
+        string ToString();
+        bool ToBool();
+        byte ToByte();
+        short ToShort();
+        ushort ToUShort();
+        int ToInt();
+        uint ToUInt();
+        long ToLong();
+        ulong ToULong();
+        float ToFloat();
+        double ToDouble();
     }
 
     public static class IKeyFactory

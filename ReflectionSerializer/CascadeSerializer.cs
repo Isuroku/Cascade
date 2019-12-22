@@ -819,11 +819,28 @@ namespace CascadeSerializer
         {
             if (instance == null)
                 key.AddValue(0);
-            else if (ReflectionHelper.IsFLOAT(instance))
-                key.AddValue(Convert.ToDecimal(instance));
-            else if (ReflectionHelper.IsINT(instance))
+
+            else if (instance is bool)
+                key.AddValue(Convert.ToBoolean(instance));
+
+            else if (instance is float)
+                key.AddValue(Convert.ToSingle(instance));
+            else if (instance is double)
+                key.AddValue(Convert.ToDouble(instance));
+
+            else if (instance is byte)
+                key.AddValue(Convert.ToByte(instance));
+            else if (instance is short)
+                key.AddValue(Convert.ToInt16(instance));
+            else if (instance is ushort)
+                key.AddValue(Convert.ToUInt16(instance));
+            else if (instance is int)
+                key.AddValue(Convert.ToInt32(instance));
+            else if (instance is uint)
+                key.AddValue(Convert.ToUInt32(instance));
+            else if (instance is long)
                 key.AddValue(Convert.ToInt64(instance));
-            else if (ReflectionHelper.IsUINT(instance))
+            else if (instance is ulong)
                 key.AddValue(Convert.ToUInt64(instance));
             else
                 key.AddValue(instance.ToString());

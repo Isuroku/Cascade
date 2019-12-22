@@ -30,7 +30,7 @@ namespace CascadeUnitTest
         private string _base_string;
         private ETestEnum _base_enum;
 
-        public float BaseInt { get; set; }
+        public int BaseInt { get; set; }
         public double? BaseNullable { get; set; }
 
         public virtual void Init1()
@@ -77,9 +77,9 @@ namespace CascadeUnitTest
             if (key.GetValuesCount() != 3)
                 return;
 
-            x = key.GetValue(0).GetValueAsFloat();
-            y = key.GetValue(1).GetValueAsFloat();
-            z = key.GetValue(2).GetValueAsFloat();
+            x = key.GetValue(0).ToFloat();
+            y = key.GetValue(1).ToFloat();
+            z = key.GetValue(2).ToFloat();
         }
 
         public void SerializationToCscd(IKey key, ILogPrinter inLogger)
@@ -101,9 +101,9 @@ namespace CascadeUnitTest
         {
             Vector3 v = new Vector3();
 
-            v.x = key.GetValue(0).GetValueAsFloat();
-            v.y = key.GetValue(1).GetValueAsFloat();
-            v.z = key.GetValue(2).GetValueAsFloat();
+            v.x = key.GetValue(0).ToFloat();
+            v.y = key.GetValue(1).ToFloat();
+            v.z = key.GetValue(2).ToFloat();
 
             return v;
         }

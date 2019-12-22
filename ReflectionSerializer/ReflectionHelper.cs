@@ -5,6 +5,7 @@ using System.Linq;
 using System.Reflection;
 using System.ComponentModel;
 using CascadeParser;
+using System.Globalization;
 
 namespace CascadeSerializer
 {
@@ -63,21 +64,6 @@ namespace CascadeSerializer
         public static bool IsStruct(this Type type)
         {
             return type.IsValueType && !type.IsEnum && !type.IsPrimitive && !type.IsNullable();
-        }
-
-        public static bool IsINT(object value)
-        {
-            return value is sbyte || value is short || value is int || value is long;
-        }
-
-        public static bool IsUINT(object value)
-        {
-            return value is byte || value is ushort || value is uint || value is ulong;
-        }
-
-        public static bool IsFLOAT(object value)
-        {
-            return value is float || value is double || value is decimal;
         }
 
         public static bool IsDefault(object value, IReflectionProvider provider, ILogPrinter inLogger)
@@ -179,7 +165,7 @@ namespace CascadeSerializer
             TypeConverter converter = TypeDescriptor.GetConverter(inType);
             try
             {
-                outValue = converter.ConvertFromString(inText);
+                outValue = converter.ConvertFromString(null, CultureInfo.InvariantCulture, inText);
             }
             catch (Exception ex)
             {
