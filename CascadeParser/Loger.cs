@@ -52,6 +52,13 @@ namespace CascadeParser
             _printer.LogError(text);
         }
 
+        public void LogError(EErrorCode inErrorCode, CTokenLine inLine, string inText)
+        {
+            _error_count++;
+            string text = string.Format("{0} [{2}]. Line {1}. {3}", inErrorCode, inLine, _parsing_file, inText);
+            _printer.LogError(text);
+        }
+
         public void LogError(EErrorCode inErrorCode, CTokenLine inLine)
         {
             _error_count++;
