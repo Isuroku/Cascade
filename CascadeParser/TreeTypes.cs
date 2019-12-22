@@ -70,6 +70,11 @@ namespace CascadeParser
             else
                 _comments += string.Format(" {0}", text);
         }
+
+        public void ClearComments()
+        {
+            _comments = string.Empty;
+        }
     }
 
     internal abstract class CBaseValue : CBaseElement, IKeyValue
