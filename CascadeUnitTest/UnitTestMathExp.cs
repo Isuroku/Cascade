@@ -125,5 +125,20 @@ namespace CascadeUnitTest
             CheckInternalErrors();
             Assert.AreEqual(res, 14);
         }
+
+        [TestMethod]
+        public void TestMethodOneInternalFunc3()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+            CExpression exp = CExpressionBuilder.Build("Rand(1,100)", this);
+
+            double res = exp.GetValue(null, this);
+
+            CheckInternalErrors();
+
+            Assert.IsTrue(res>= 1 && res <= 100);
+        }
     }
 }
