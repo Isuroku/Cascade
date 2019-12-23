@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinarySerializeUtils.cs" />
     <Compile Include="BuildCommands.cs" />
     <Compile Include="CommandParams.cs" />
     <Compile Include="ECommands.cs" />

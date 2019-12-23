@@ -77,6 +77,11 @@ namespace CascadeParser
             _value = inValue;
         }
 
+        public CBaseValue(CKey parent, byte[] ioBuffer, ref int ioOffset) : base(parent, SPosition.zero)
+        {
+            ioOffset = Variant.BinaryDeserialize(ioBuffer, ioOffset, out _value);
+        }
+
         public static CBaseValue CreateBaseValue(CKey parent, CToken token)
         {
             return new CBaseValue(parent, token);
@@ -114,6 +119,16 @@ namespace CascadeParser
             if(_value.VariantType == EValueType.String)
                 s = Utils.GetStringForSave(s);
             return s;
+        }
+
+        public int GetMemorySize()
+        {
+            return _value.GetMemorySize();
+        }
+
+        public int BinarySerialize(byte[] ioBuffer, int inOffset)
+        {
+            return _value.BinarySerialize(ioBuffer, inOffset);
         }
     }
 

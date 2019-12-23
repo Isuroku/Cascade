@@ -40,6 +40,10 @@ namespace CascadeParser
         IKey Parent { get; }
 
         string GetPath();
+
+        int GetMemorySize();
+        int BinarySerialize(byte[] ioBuffer, int inOffset);
+        int AddValue(byte[] ioBuffer, int inOffset);
     }
 
     public interface IKeyValue
@@ -60,6 +64,9 @@ namespace CascadeParser
         ulong ToULong();
         float ToFloat();
         double ToDouble();
+
+        int GetMemorySize();
+        int BinarySerialize(byte[] ioBuffer, int inOffset);
     }
 
     public static class IKeyFactory
@@ -72,6 +79,13 @@ namespace CascadeParser
         public static IKey CreateArrayKey(IKey inParent)
         {
             return CKey.CreateArrayKey(inParent as CKey);
+        }
+
+        public static IKey CreateKey(byte[] ioBuffer, int inOffset)
+        {
+            var key = CKey.CreateRoot(string.Empty);
+            key.BinaryDeserialize(ioBuffer, inOffset);
+            return key;
         }
     }
 }

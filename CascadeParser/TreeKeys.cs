@@ -223,10 +223,100 @@ namespace CascadeParser
         public IKeyValue GetValue(int index) { return _values[index]; }
 
         public string GetValueAsString(int index) { return _values[index].ToString(); }
-        //public float GetValueAsFloat(int index) { return _values[index].GetValueAsFloat(); }
-        //public int GetValueAsInt(int index) { return _values[index].GetValueAsInt(); }
-        //public uint GetValueAsUInt(int index) { return _values[index].GetValueAsUInt(); }
-        //public bool GetValueAsBool(int index) { return _values[index].GetValueAsBool(); }
+
+        public int GetMemorySize()
+        {
+            int res = BinarySerializeUtils.GetStringMemorySize(Name);
+
+            res += 1; //IsArray
+
+            //2 байта - количество значений
+            res += 2;
+            //значения: 
+            for (int i = 0; i < _values.Count; i++)
+            {
+                IKeyValue val = _values[i];
+                res += val.GetMemorySize();
+            }
+
+            //2 байта - количество подключей
+            res += 2;
+            //значения: 
+            for (int i = 0; i < _keys.Count; i++)
+            {
+                res += _keys[i].GetMemorySize();
+            }
+
+            return res;
+        }
+
+        public int AddValue(byte[] ioBuffer, int inOffset) 
+        { 
+            new CBaseValue(this, ioBuffer, ref inOffset);
+            return inOffset;
+        }
+
+        public int BinaryDeserialize(byte[] ioBuffer, int inOffset)
+        {
+            int offset = inOffset;
+
+            offset = BinarySerializeUtils.Deserialize(ioBuffer, offset, out _name);
+
+            offset = BinarySerializeUtils.Deserialize(ioBuffer, offset, out bool is_array);
+            IsArray = is_array;
+
+            offset = BinarySerializeUtils.Deserialize(ioBuffer, offset, out short size);
+
+            _values.Clear();
+            for (int i = 0; i < size; i++)
+                offset = AddValue(ioBuffer, offset);
+
+            offset = BinarySerializeUtils.Deserialize(ioBuffer, offset, out size);
+            _keys.Clear();
+
+            for (int i = 0; i < size; i++)
+            {
+                CKey child = CreateChild(this, string.Empty);
+                offset = child.BinaryDeserialize(ioBuffer, offset);
+            }
+
+            return offset;
+        }
+
+        public int BinarySerialize(byte[] ioBuffer, int inOffset)
+        {
+            int offset = inOffset;
+
+            offset = BinarySerializeUtils.Serialize(_name, ioBuffer, offset);
+
+            offset = BinarySerializeUtils.Serialize(IsArray, ioBuffer, offset);
+
+            if (_values.Count > ushort.MaxValue)
+                throw new ArgumentException($"Key {GetPath()} has too many values (>{ushort.MaxValue})!");
+
+            offset = BinarySerializeUtils.Serialize((ushort)_values.Count, ioBuffer, offset);
+
+            for (int i = 0; i < _values.Count; i++)
+            {
+                IKeyValue val = _values[i];
+                offset = val.BinarySerialize(ioBuffer, offset);
+            }
+
+            if (_keys.Count > ushort.MaxValue)
+                throw new ArgumentException($"Key {GetPath()} has too many child keys (>{ushort.MaxValue})!");
+
+            offset = BinarySerializeUtils.Serialize((ushort)_keys.Count, ioBuffer, offset);
+
+            //значения: 
+            for (int i = 0; i < _keys.Count; i++)
+            {
+                IKey key = _keys[i];
+                offset = key.BinarySerialize(ioBuffer, offset);
+            }
+
+            return offset;
+        }
+
         #endregion IKey
 
         internal void MergeKey(CKey inKey)
