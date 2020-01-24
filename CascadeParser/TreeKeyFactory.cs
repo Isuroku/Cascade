@@ -1,10 +1,13 @@
 ﻿
 namespace CascadeParser
 {
+    public enum EKeyOpResult { OK, AlreadyPresent, DublicateName, UnnativeKey }
     public interface IKey
     {
         IKey CreateChildKey(string name);
         IKey CreateArrayKey();
+
+        EKeyOpResult AddChild(IKey inNewChild);
 
         void SetName(string name);
 

@@ -120,10 +120,6 @@ namespace CascadeParser
         public void SetName(string name)
         {
             _name = Utils.GetStringForSave(name);
-            //if (!string.IsNullOrEmpty(name) && Utils.GetTokenType(name) != ETokenType.Word)
-                
-            //else
-            //    _name = name;
         }
 
         public void AddChild(CBaseElement inElement)
@@ -187,8 +183,16 @@ namespace CascadeParser
 
         #region IKey
 
-        public IKey CreateChildKey(string name)
+        public IKey CreateChildKey(string inName)
         {
+            string name = Utils.GetStringForSave(inName);
+            for (int i = 0; i < _keys.Count; i++)
+            {
+                IKey k = _keys[i];
+                if (string.Equals(k.GetName(), name, StringComparison.InvariantCulture))
+                    return null;
+            }
+
             CKey child = CreateChild(this, name);
             return child;
         }
@@ -197,6 +201,35 @@ namespace CascadeParser
         {
             CKey child = CreateArrayKey(this);
             return child;
+        }
+
+        EKeyOpResult IsKeyAddable(IKey inNewChild)
+        {
+            for (int i = 0; i < _keys.Count; i++)
+            {
+                IKey k = _keys[i];
+                if (k == inNewChild)
+                    return EKeyOpResult.AlreadyPresent;
+
+                if (string.Equals(k.GetName(), inNewChild.GetName(), StringComparison.InvariantCulture))
+                    return EKeyOpResult.DublicateName;
+            }
+
+            return EKeyOpResult.OK;
+        }
+
+        public EKeyOpResult AddChild(IKey inNewChild)
+        {
+            EKeyOpResult res = IsKeyAddable(inNewChild);
+            if (res != EKeyOpResult.OK)
+                return res;
+
+            CKey k = inNewChild as CKey;
+            if(k == null)
+                return EKeyOpResult.UnnativeKey;
+
+            _keys.Add(k);
+            return res;
         }
 
         public void AddValue(bool v) { new CBaseValue(this, new Variant(v)); }
