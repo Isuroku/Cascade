@@ -228,8 +228,141 @@ namespace CascadeParser
             if(k == null)
                 return EKeyOpResult.UnnativeKey;
 
-            _keys.Add(k);
+            k.SetParent(this);
             return res;
+        }
+
+        public EKeyOpResult RemoveChild(IKey inChild)
+        {
+            CKey k = inChild as CKey;
+            if (k == null)
+                return EKeyOpResult.UnnativeKey;
+
+            if (!_keys.Contains(k))
+                return EKeyOpResult.NotFound;
+
+            k.SetParent(null);
+            return EKeyOpResult.OK;
+        }
+
+        public EKeyOpResult InsertChild(int inIndexPos, IKey inChild)
+        {
+            CKey k = inChild as CKey;
+            if (k == null)
+                return EKeyOpResult.UnnativeKey;
+
+            int ind = _keys.IndexOf(k);
+            if (ind < 0)
+            {
+                EKeyOpResult res = AddChild(inChild);
+                if (res != EKeyOpResult.OK)
+                    return res;
+
+                ind = _keys.Count - 1;
+            }
+
+            _keys.RemoveAt(ind);
+            _keys.Insert(inIndexPos, k);
+
+            return EKeyOpResult.OK;
+        }
+
+        #region quicksort
+        static void Swap(List<CKey> keys, int left, int right)
+        {
+            if (left != right)
+            {
+                CKey temp = keys[left];
+                keys[left] = keys[right];
+                keys[right] = temp;
+            }
+        }
+
+        static private int partition(List<CKey> keys, int left, int right, int pivotIndex, Comparison<IKey> comparison)
+        {
+            CKey pivotValue = keys[pivotIndex];
+
+            Swap(keys, pivotIndex, right);
+
+            int storeIndex = left;
+
+            for (int i = left; i < right; i++)
+            {
+                if (comparison(keys[i], pivotValue) < 0)
+                {
+                    Swap(keys, i, storeIndex);
+                    storeIndex += 1;
+                }
+            }
+
+            Swap(keys, storeIndex, right);
+            return storeIndex;
+        }
+
+        static Random _pivotRng = new Random();
+        static private void quicksort(List<CKey> keys, int left, int right, Comparison<IKey> comparison)
+        {
+            if (left < right)
+            {
+                int pivotIndex = _pivotRng.Next(left, right);
+
+                int newPivot = partition(keys, left, right, pivotIndex, comparison);
+                quicksort(keys, left, newPivot - 1, comparison);
+                quicksort(keys, newPivot + 1, right, comparison);
+            }
+        }
+        #endregion quicksort
+
+        public void SortKeys(Comparison<IKey> comparison)
+        {
+            quicksort(_keys, 0, _keys.Count - 1, comparison);
+        }
+
+        public bool UpInParent()
+        {
+            if (Parent == null)
+                return false;
+
+            int ind = Parent._keys.IndexOf(this);
+            if (ind == -1)
+                return false;
+
+            if (ind == 0)
+                return false;
+
+            Swap(Parent._keys, ind - 1, ind);
+            return true;
+        }
+
+        public bool DownInParent()
+        {
+            if (Parent == null)
+                return false;
+
+            int ind = Parent._keys.IndexOf(this);
+            if (ind == -1)
+                return false;
+
+            if (ind == Parent._keys.Count - 1)
+                return false;
+
+            Swap(Parent._keys, ind, ind + 1);
+            return true;
+        }
+
+        public EKeyOpResult SwapChild(IKey inChild1, IKey inChild2)
+        {
+            int ind1 = _keys.IndexOf(inChild1 as CKey);
+            if (ind1 == -1)
+                return EKeyOpResult.NotFound;
+
+            int ind2 = _keys.IndexOf(inChild2 as CKey);
+            if (ind2 == -1)
+                return EKeyOpResult.NotFound;
+
+            Swap(_keys, ind1, ind2);
+
+            return EKeyOpResult.OK;
         }
 
         public void AddValue(bool v) { new CBaseValue(this, new Variant(v)); }

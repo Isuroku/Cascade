@@ -1,13 +1,24 @@
 ﻿
+using System;
+
 namespace CascadeParser
 {
-    public enum EKeyOpResult { OK, AlreadyPresent, DublicateName, UnnativeKey }
+    public enum EKeyOpResult { OK, AlreadyPresent, DublicateName, UnnativeKey, NotFound }
     public interface IKey
     {
         IKey CreateChildKey(string name);
         IKey CreateArrayKey();
 
         EKeyOpResult AddChild(IKey inNewChild);
+        EKeyOpResult RemoveChild(IKey inChild);
+        EKeyOpResult InsertChild(int inIndexPos, IKey inChild);
+
+        void SortKeys(Comparison<IKey> comparison);
+
+        bool UpInParent();
+        bool DownInParent();
+
+        EKeyOpResult SwapChild(IKey inChild1, IKey inChild2);
 
         void SetName(string name);
 
