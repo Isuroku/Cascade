@@ -51,6 +51,7 @@ namespace CascadeParser
         string GetValueAsString(int index);
 
         string SaveToString();
+        string SaveChildsToString();
 
         IKey FindKey(string key_path);
         IKey Parent { get; }

@@ -668,11 +668,17 @@ namespace CascadeParser
             StringBuilder sb = new StringBuilder();
 
             int intent = 0;
-            //if(_parent == null && string.IsNullOrEmpty(_name) && _values.Count == 0 && IsAllSubKeysArrays())
             if (_parent == null && string.IsNullOrEmpty(_name) && IsAllSubKeysArrays())
                 intent = -1;
 
             SaveToString(sb, intent);
+            return sb.ToString();
+        }
+
+        public string SaveChildsToString()
+        {
+            StringBuilder sb = new StringBuilder();
+            SaveChildToString(sb, 0);
             return sb.ToString();
         }
 
@@ -752,6 +758,23 @@ namespace CascadeParser
             return true;
         }
 
+        protected void SaveChildToString(StringBuilder sb, int intent)
+        {
+            for (int i = 0; i < _keys.Count; ++i)
+            {
+                if (_keys[i].IsArray &&
+                    (i > 0 || _keys.Count == 1) &&
+                    _keys[i].KeyCount > 0)
+                {
+                    AppendIntent(sb, intent);
+                    string rd_str = CTokenFinder.Instance.GetTokenString(ETokenType.RecordDivider);
+                    sb.Append(rd_str);
+                    sb.Append(Environment.NewLine);
+                }
+                _keys[i].SaveToString(sb, intent);
+            }
+        }
+
         protected void SaveToString(StringBuilder sb, int intent)
         {
             if (IsEmptyWithChild())
@@ -816,19 +839,7 @@ namespace CascadeParser
             if (was_writing)
                 sb.Append(Environment.NewLine);
 
-            for (int i = 0; i < _keys.Count; ++i)
-            {
-                if (_keys[i].IsArray && 
-                    (i > 0 || _keys.Count == 1) && 
-                    _keys[i].KeyCount > 0)
-                {
-                    AppendIntent(sb, new_int);
-                    string rd_str = CTokenFinder.Instance.GetTokenString(ETokenType.RecordDivider);
-                    sb.Append(rd_str);
-                    sb.Append(Environment.NewLine);
-                }
-                _keys[i].SaveToString(sb, new_int);
-            }
+            SaveChildToString(sb, new_int);
         }
 
         internal void GetTerminalPathes(List<List<string>> outPathes, List<string> ioPath)
