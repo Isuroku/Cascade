@@ -29,7 +29,7 @@ namespace CascadeParser
         System.Object _objref;
 
         [FieldOffset(8)]
-        ulong _long_value1;
+        ulong _ulong_value1;
         [FieldOffset(8)]
         double _double_value1;
         [FieldOffset(8)]
@@ -57,7 +57,7 @@ namespace CascadeParser
         {
             return
                 _flags == other._flags
-                && _long_value1 == other._long_value1
+                && _ulong_value1 == other._ulong_value1
                 && _objref == other._objref;
         }
 
@@ -82,7 +82,7 @@ namespace CascadeParser
             unchecked
             {
                 int r = _objref == null ? 0 : _objref.GetHashCode();
-                r = r * 397 + _long_value1.GetHashCode();
+                r = r * 397 + _ulong_value1.GetHashCode();
                 r = r * 397 + _flags;
                 return r;
             }
@@ -98,11 +98,11 @@ namespace CascadeParser
         public Variant(byte value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
-            _long_value1 = (ulong)value;
+            _ulong_value1 = (ulong)value;
 
             _flags = (byte)EValueType.Byte;
         }
@@ -123,17 +123,17 @@ namespace CascadeParser
             if (CheckType(EValueType.Float) || CheckType(EValueType.Double))
                 return (byte)_double_value1;
 
-            return (byte)_long_value1;
+            return (byte)_ulong_value1;
         }
 
         public Variant(short value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
-            _long_value1 = (ulong)value;
+            _ulong_value1 = (ulong)value;
 
             _flags = (byte)EValueType.Short;
         }
@@ -154,17 +154,17 @@ namespace CascadeParser
             if (CheckType(EValueType.Float) || CheckType(EValueType.Double))
                 return (short)_double_value1;
 
-            return (short)_long_value1;
+            return (short)_ulong_value1;
         }
 
         public Variant(ushort value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
-            _long_value1 = (ulong)value;
+            _ulong_value1 = (ulong)value;
 
             _flags = (byte)EValueType.UShort;
         }
@@ -185,17 +185,17 @@ namespace CascadeParser
             if (CheckType(EValueType.Float) || CheckType(EValueType.Double))
                 return (ushort)_double_value1;
 
-            return (ushort)_long_value1;
+            return (ushort)_ulong_value1;
         }
 
         public Variant(int value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
-            _long_value1 = (ulong)value;
+            _ulong_value1 = (ulong)value;
 
             _flags = (byte)EValueType.Int;
         }
@@ -216,17 +216,17 @@ namespace CascadeParser
             if (CheckType(EValueType.Float) || CheckType(EValueType.Double))
                 return (int)_double_value1;
 
-            return (int)_long_value1;
+            return (int)_ulong_value1;
         }
 
         public Variant(uint value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
-            _long_value1 = (ulong)value;
+            _ulong_value1 = (ulong)value;
 
             _flags = (byte)EValueType.UInt;
         }
@@ -247,17 +247,17 @@ namespace CascadeParser
             if (CheckType(EValueType.Float) || CheckType(EValueType.Double))
                 return (uint)_double_value1;
 
-            return (uint)_long_value1;
+            return (uint)_ulong_value1;
         }
 
         public Variant(long value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
-            _long_value1 = (ulong)value;
+            _ulong_value1 = (ulong)value;
 
             _flags = (byte)EValueType.Long;
         }
@@ -277,17 +277,17 @@ namespace CascadeParser
             if (CheckType(EValueType.Float) || CheckType(EValueType.Double))
                 return (long)_double_value1;
 
-            return (long)_long_value1;
+            return (long)_ulong_value1;
         }
 
         public Variant(ulong value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
-            _long_value1 = value;
+            _ulong_value1 = value;
 
             _flags = (byte)EValueType.UInt;
         }
@@ -308,17 +308,17 @@ namespace CascadeParser
             if (CheckType(EValueType.Float) || CheckType(EValueType.Double))
                 return (ulong)_double_value1;
 
-            return (ulong)_long_value1;
+            return (ulong)_ulong_value1;
         }
 
         public Variant(bool value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
-            _long_value1 = value ? 1u : 0;
+            _ulong_value1 = value ? 1u : 0;
 
             _flags = (byte)EValueType.Bool;
         }
@@ -339,14 +339,14 @@ namespace CascadeParser
             if (CheckType(EValueType.Float) || CheckType(EValueType.Double))
                 return _double_value1 > 0;
 
-            return _long_value1 > 0;
+            return _ulong_value1 > 0;
         }
 
 
         public Variant(float value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
@@ -373,13 +373,13 @@ namespace CascadeParser
             if (CheckType(EValueType.Double))
                 return (float)_double_value1;
 
-            return (float)_long_value1;
+            return (float)_ulong_value1;
         }
 
         public Variant(double value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
@@ -406,13 +406,13 @@ namespace CascadeParser
             if (CheckType(EValueType.Double))
                 return (double)_double_value1;
 
-            return (double)_long_value1;
+            return (double)_ulong_value1;
         }
 
         public Variant(string value)
         {
             _objref = null;
-            _long_value1 = 0;
+            _ulong_value1 = 0;
             _double_value1 = 0;
             _float_value1 = 0;
 
@@ -430,7 +430,7 @@ namespace CascadeParser
                 return (string)_objref;
 
             if (CheckType(EValueType.Bool))
-                return (_long_value1 > 0).ToString();
+                return (_ulong_value1 > 0).ToString();
 
             if (CheckType(EValueType.Float))
                 return _float_value1.ToString(CultureInfo.InvariantCulture);
@@ -438,7 +438,10 @@ namespace CascadeParser
             if (CheckType(EValueType.Double))
                 return _double_value1.ToString(CultureInfo.InvariantCulture);
 
-            return _long_value1.ToString();
+            if (CheckType(EValueType.Short) || CheckType(EValueType.Int) || CheckType(EValueType.Long))
+                return ((long)_ulong_value1).ToString();
+
+            return _ulong_value1.ToString();
         }
 
         public int GetMemorySize()
@@ -472,21 +475,21 @@ namespace CascadeParser
             {
                 case EValueType.Bool: 
                 case EValueType.Byte: 
-                    offset = BinarySerializeUtils.Serialize((byte)_long_value1, ioBuffer, offset); break;
+                    offset = BinarySerializeUtils.Serialize((byte)_ulong_value1, ioBuffer, offset); break;
 
                 case EValueType.Short: 
                 case EValueType.UShort: 
-                    offset = BinarySerializeUtils.Serialize((ushort)_long_value1, ioBuffer, offset); break;
+                    offset = BinarySerializeUtils.Serialize((ushort)_ulong_value1, ioBuffer, offset); break;
 
                 case EValueType.Int: 
                 case EValueType.UInt: 
                 case EValueType.Float: 
-                    offset = BinarySerializeUtils.Serialize((uint)_long_value1, ioBuffer, offset); break;
+                    offset = BinarySerializeUtils.Serialize((uint)_ulong_value1, ioBuffer, offset); break;
 
                 case EValueType.Long: 
                 case EValueType.ULong: 
                 case EValueType.Double: 
-                    offset = BinarySerializeUtils.Serialize(_long_value1, ioBuffer, offset); break;
+                    offset = BinarySerializeUtils.Serialize(_ulong_value1, ioBuffer, offset); break;
 
                 case EValueType.String: 
                     offset = BinarySerializeUtils.Serialize(ToString(), ioBuffer, offset); break;
@@ -535,7 +538,7 @@ namespace CascadeParser
 
             outValue = new Variant();
             outValue._flags = (byte)valueType;
-            outValue._long_value1 = ulong_value;
+            outValue._ulong_value1 = ulong_value;
             outValue._objref = str;
 
             return offset;
