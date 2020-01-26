@@ -20,7 +20,7 @@ namespace CascadeParser
 
         EKeyOpResult SwapChild(IKey inChild1, IKey inChild2);
 
-        void SetName(string name);
+        bool SetName(string name);
 
         void AddValue(bool v);
         void AddValue(byte v);

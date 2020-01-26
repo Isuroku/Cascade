@@ -149,7 +149,10 @@ namespace CascadeParser
                         else
                         {
                             if (inParent.IsArray && line.Rank == inParentRank)
-                                inParent.SetName(line.CommandParams[0]);
+                            {
+                                if(!inParent.SetName(line.CommandParams[0]))
+                                    inSupport.GetLogger().LogError(EErrorCode.DublicateKeyName, line);
+                            }
                             else
                             {
                                 //inSupport.GetLogger().LogError(EErrorCode.NextArrayKeyNameMissParent, line);
@@ -183,7 +186,10 @@ namespace CascadeParser
                     CKey new_key = new_key_new_line.Item1;
 
                     if (command_for_next_string != null && command_for_next_string.IsNextArrayKeyNamePresent)
-                        new_key.SetName(command_for_next_string.PopNextArrayKeyName(inParent));
+                    { 
+                        if(!new_key.SetName(command_for_next_string.PopNextArrayKeyName(inParent)))
+                            inSupport.GetLogger().LogError(EErrorCode.DublicateKeyName, line);
+                    }
 
                     if (command_for_next_string != null && command_for_next_string.IsNextLineCommentPresent)
                         new_key.AddComments(command_for_next_string.PopNextLineComments(inParent));

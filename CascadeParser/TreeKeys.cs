@@ -73,6 +73,8 @@ namespace CascadeParser
 
         public static CKey CreateChild(CKey parent, string inName)
         {
+            if (!parent.CheckNameForChild(inName))
+                return null;
             return new CKey(parent, inName, false, SPosition.zero);
         }
 
@@ -117,9 +119,14 @@ namespace CascadeParser
             return Name;
         }
 
-        public void SetName(string name)
+        public bool SetName(string name)
         {
-            _name = Utils.GetStringForSave(name);
+            var nname = Utils.GetStringForSave(name);
+            if (!CheckNameByParent(nname))
+                return false;
+
+            _name = nname;
+            return true;
         }
 
         public void AddChild(CBaseElement inElement)
@@ -183,15 +190,36 @@ namespace CascadeParser
 
         #region IKey
 
-        public IKey CreateChildKey(string inName)
+        bool CheckNameByParent(string inName)
         {
-            string name = Utils.GetStringForSave(inName);
+            if (Parent == null)
+                return true;
+
+            for (int i = 0; i < Parent._keys.Count; i++)
+            {
+                IKey k = Parent._keys[i];
+                if (string.Equals(k.GetName(), inName, StringComparison.InvariantCulture))
+                    return false;
+            }
+            return true;
+        }
+
+        bool CheckNameForChild(string inName)
+        {
             for (int i = 0; i < _keys.Count; i++)
             {
                 IKey k = _keys[i];
-                if (string.Equals(k.GetName(), name, StringComparison.InvariantCulture))
-                    return null;
+                if (string.Equals(k.GetName(), inName, StringComparison.InvariantCulture))
+                    return false;
             }
+            return true;
+        }
+
+        public IKey CreateChildKey(string inName)
+        {
+            string name = Utils.GetStringForSave(inName);
+            if (!CheckNameForChild(name))
+                return null;
 
             CKey child = CreateChild(this, name);
             return child;
