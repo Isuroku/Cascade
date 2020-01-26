@@ -205,6 +205,9 @@ namespace CascadeParser
 
         EKeyOpResult IsKeyAddable(IKey inNewChild)
         {
+            if (!(inNewChild is CKey))
+                return EKeyOpResult.UnnativeKey;
+
             for (int i = 0; i < _keys.Count; i++)
             {
                 IKey k = _keys[i];
@@ -225,9 +228,6 @@ namespace CascadeParser
                 return res;
 
             CKey k = inNewChild as CKey;
-            if(k == null)
-                return EKeyOpResult.UnnativeKey;
-
             k.SetParent(this);
             return res;
         }
@@ -247,21 +247,14 @@ namespace CascadeParser
 
         public EKeyOpResult InsertChild(int inIndexPos, IKey inChild)
         {
+            EKeyOpResult res = IsKeyAddable(inChild);
+            if (res != EKeyOpResult.OK)
+                return res;
+
             CKey k = inChild as CKey;
-            if (k == null)
-                return EKeyOpResult.UnnativeKey;
+            k.SetParent(this);
 
-            int ind = _keys.IndexOf(k);
-            if (ind < 0)
-            {
-                EKeyOpResult res = AddChild(inChild);
-                if (res != EKeyOpResult.OK)
-                    return res;
-
-                ind = _keys.Count - 1;
-            }
-
-            _keys.RemoveAt(ind);
+            _keys.RemoveAt(_keys.Count - 1);
             _keys.Insert(inIndexPos, k);
 
             return EKeyOpResult.OK;
@@ -363,6 +356,15 @@ namespace CascadeParser
             Swap(_keys, ind1, ind2);
 
             return EKeyOpResult.OK;
+        }
+
+        public int GetIndexInParent()
+        {
+            if (Parent == null)
+                return -1;
+
+            int ind = Parent._keys.IndexOf(this);
+            return ind;
         }
 
         public void AddValue(bool v) { new CBaseValue(this, new Variant(v)); }

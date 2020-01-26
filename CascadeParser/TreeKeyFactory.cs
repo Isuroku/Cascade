@@ -40,6 +40,8 @@ namespace CascadeParser
 
         bool IsEmpty { get; }
 
+        int GetIndexInParent();
+
         int GetChildCount();
         IKey GetChild(int index);
         IKey GetChild(string name);
