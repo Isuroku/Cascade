@@ -395,17 +395,23 @@ namespace CascadeParser
             return ind;
         }
 
-        public void AddValue(bool v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(byte v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(short v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(ushort v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(int v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(uint v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(long v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(ulong v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(float v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(double v) { new CBaseValue(this, new Variant(v)); }
-        public void AddValue(string v) { new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(bool v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(byte v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(short v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(ushort v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(int v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(uint v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(long v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(ulong v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(float v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(double v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(string v) { return new CBaseValue(this, new Variant(v)); }
+        public IKeyValue AddValue(Variant v) { return new CBaseValue(this, v); }
+
+        public void RemoveValueAt(int index)
+        {
+            _values.RemoveAt(index);
+        }
 
         public string GetName() { return Name; }
         public bool IsArrayKey() { return IsArray; }

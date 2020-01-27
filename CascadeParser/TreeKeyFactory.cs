@@ -22,18 +22,6 @@ namespace CascadeParser
 
         bool SetName(string name);
 
-        void AddValue(bool v);
-        void AddValue(byte v);
-        void AddValue(short v);
-        void AddValue(ushort v);
-        void AddValue(int v);
-        void AddValue(uint v);
-        void AddValue(long v);
-        void AddValue(ulong v);
-        void AddValue(float v);
-        void AddValue(double v);
-        void AddValue(string v);
-
         string GetName();
         bool IsArrayKey();
         string Comments { get; }
@@ -49,6 +37,21 @@ namespace CascadeParser
         int GetValuesCount();
         IKeyValue GetValue(int index);
         string GetValueAsString(int index);
+
+        IKeyValue AddValue(bool v);
+        IKeyValue AddValue(byte v);
+        IKeyValue AddValue(short v);
+        IKeyValue AddValue(ushort v);
+        IKeyValue AddValue(int v);
+        IKeyValue AddValue(uint v);
+        IKeyValue AddValue(long v);
+        IKeyValue AddValue(ulong v);
+        IKeyValue AddValue(float v);
+        IKeyValue AddValue(double v);
+        IKeyValue AddValue(string v);
+        IKeyValue AddValue(Variant v);
+
+        void RemoveValueAt(int index);
 
         string SaveToString();
         string SaveChildsToString();
