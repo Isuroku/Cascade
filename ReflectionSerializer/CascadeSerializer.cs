@@ -9,6 +9,12 @@ using System.Text;
 
 namespace CascadeSerializer
 {
+    public enum EReflectorType
+    {
+        Cached = 0,
+        Direct
+    }
+
     public class CCascadeSerializer
     {
         readonly IReflectionProvider _reflectionProvider;
@@ -19,23 +25,29 @@ namespace CascadeSerializer
         string _debug_file_name;
         string _debug_text;
 
-        public CCascadeSerializer(IReflectionProvider reflectionProvider, CParserManager parser)
+        public CCascadeSerializer(EReflectorType inReflectorType, CParserManager parser)
         {
-            _reflectionProvider = reflectionProvider;
+            switch (inReflectorType)
+            {
+                case EReflectorType.Cached:  _reflectionProvider = new CachedReflector(); break;
+                case EReflectorType.Direct: _reflectionProvider = new DirectReflector(); break;
+            }
             _parser = parser;
         }
 
-        public CCascadeSerializer(CParserManager parser) : this(new CachedReflector(), parser)
+        public CCascadeSerializer(CParserManager parser, EReflectorType inReflectorType = EReflectorType.Cached) 
+            : this(inReflectorType, parser)
         {
             
         }
 
-        public CCascadeSerializer(IParserOwner owner) : this(new CachedReflector(), null)
+        public CCascadeSerializer(IParserOwner owner, EReflectorType inReflectorType = EReflectorType.Cached) 
+            : this(inReflectorType, null)
         {
             _parser = new CParserManager(owner);
         }
 
-        public CCascadeSerializer() : this(new CachedReflector(), null)
+        public CCascadeSerializer(EReflectorType inReflectorType = EReflectorType.Cached) : this(inReflectorType, null)
         {
 
         }
