@@ -1,27 +1,34 @@
 ﻿
+using System;
+
 namespace CascadeParser
 {
+    public enum EKeyOpResult { OK, AlreadyPresent, DublicateName, UnnativeKey, NotFound }
     public interface IKey
     {
         IKey CreateChildKey(string name);
         IKey CreateArrayKey();
 
-        void SetName(string name);
+        EKeyOpResult AddChild(IKey inNewChild);
+        EKeyOpResult RemoveChild(IKey inChild);
+        EKeyOpResult InsertChild(int inIndexPos, IKey inChild);
 
-        void AddValue(long v);
-        void AddValue(int v);
-        void AddValue(ulong v);
-        void AddValue(uint v);
-        void AddValue(decimal v);
-        void AddValue(float v);
-        void AddValue(bool v);
-        void AddValue(string v);
+        void SortKeys(Comparison<IKey> comparison);
+
+        bool UpInParent();
+        bool DownInParent();
+
+        EKeyOpResult SwapChild(IKey inChild1, IKey inChild2);
+
+        bool SetName(string name);
 
         string GetName();
         bool IsArrayKey();
         string Comments { get; }
 
         bool IsEmpty { get; }
+
+        int GetIndexInParent();
 
         int GetChildCount();
         IKey GetChild(int index);
@@ -31,12 +38,32 @@ namespace CascadeParser
         IKeyValue GetValue(int index);
         string GetValueAsString(int index);
 
+        IKeyValue AddValue(bool v);
+        IKeyValue AddValue(byte v);
+        IKeyValue AddValue(short v);
+        IKeyValue AddValue(ushort v);
+        IKeyValue AddValue(int v);
+        IKeyValue AddValue(uint v);
+        IKeyValue AddValue(long v);
+        IKeyValue AddValue(ulong v);
+        IKeyValue AddValue(float v);
+        IKeyValue AddValue(double v);
+        IKeyValue AddValue(string v);
+        IKeyValue AddValue(Variant v);
+
+        void RemoveValueAt(int index);
+
         string SaveToString();
+        string SaveChildsToString();
 
         IKey FindKey(string key_path);
         IKey Parent { get; }
 
         string GetPath();
+
+        int GetMemorySize();
+        int BinarySerialize(byte[] ioBuffer, int inOffset);
+        int AddValue(byte[] ioBuffer, int inOffset);
     }
 
     public interface IKeyValue
@@ -44,18 +71,22 @@ namespace CascadeParser
         IKey Parent { get; }
         string Comments { get; }
 
-        EElementType ElementType { get; }
+        EValueType ValueType { get; }
 
-        string GetValueAsString();
+        string ToString();
+        bool ToBool();
+        byte ToByte();
+        short ToShort();
+        ushort ToUShort();
+        int ToInt();
+        uint ToUInt();
+        long ToLong();
+        ulong ToULong();
+        float ToFloat();
+        double ToDouble();
 
-        float GetValueAsFloat();
-        double GetValueAsDouble();
-        decimal GetValueAsDecimal();
-        int GetValueAsInt();
-        long GetValueAsLong();
-        uint GetValueAsUInt();
-        ulong GetValueAsULong();
-        bool GetValueAsBool();
+        int GetMemorySize();
+        int BinarySerialize(byte[] ioBuffer, int inOffset);
     }
 
     public static class IKeyFactory
@@ -68,6 +99,13 @@ namespace CascadeParser
         public static IKey CreateArrayKey(IKey inParent)
         {
             return CKey.CreateArrayKey(inParent as CKey);
+        }
+
+        public static IKey CreateKey(byte[] ioBuffer, int inOffset)
+        {
+            var key = CKey.CreateRoot(string.Empty);
+            key.BinaryDeserialize(ioBuffer, inOffset);
+            return key;
         }
     }
 }

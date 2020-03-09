@@ -178,15 +178,25 @@ namespace CascadeParser
                     triplet = _tokens[colon_index].TokenType == ETokenType.Colon;
                     if(triplet)
                     {
-                        _command_params.Add(_tokens[curr_index].Text, _tokens[curr_index + 2].Text);
-                        curr_index += 3;
+                        if (_command_params.Add(_tokens[curr_index].Text, _tokens[curr_index + 2].Text))
+                            curr_index += 3;
+                        else
+                        {
+                            inLoger.LogError(EErrorCode.DublicateCommandParam, this);
+                            return;
+                        }
                     }
                 }
 
                 if(!triplet)
                 {
-                    _command_params.Add(_tokens[curr_index].Text, string.Empty);
-                    curr_index += 1;
+                    if(_command_params.Add(_tokens[curr_index].Text, string.Empty))
+                        curr_index += 1;
+                    else
+                    {
+                        inLoger.LogError(EErrorCode.DublicateCommandParam, this);
+                        return;
+                    }
                 }
             }
         }

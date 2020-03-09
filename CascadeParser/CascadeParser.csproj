@@ -38,6 +38,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BinarySerializeUtils.cs" />
     <Compile Include="BuildCommands.cs" />
     <Compile Include="CommandParams.cs" />
     <Compile Include="ECommands.cs" />
@@ -61,6 +62,7 @@
     <Compile Include="Tuple.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils.cs" />
+    <Compile Include="Variant.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

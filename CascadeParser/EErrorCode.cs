@@ -14,6 +14,8 @@ namespace CascadeParser
         EmptyCommand,
         UnknownCommand,
         UnknownCommandName,
+        DublicateCommandParam,
+        DublicateKeyName,
         NotEvenQuoteCount,
         RecordBeforeRecordDividerDoesntPresent,
         CantTransferName,

@@ -51,14 +51,12 @@ namespace CascadeParser
             return ulong.Parse(_text);
         }
 
-        public decimal GetFloatValue()
+        public double GetFloatValue()
         {
             if (_token_type != ETokenType.Float)
                 return 0;
 
-            CultureInfo ci = (CultureInfo)CultureInfo.CurrentCulture.Clone();
-            ci.NumberFormat.CurrencyDecimalSeparator = ".";
-            return decimal.Parse(_text, NumberStyles.Any, ci);
+            return double.Parse(_text, NumberStyles.Float, CultureInfo.InvariantCulture);
         }
 
         internal void CheckInLine(CToken[] inTokensInLine, int inMyIndex, ILogger inLoger)

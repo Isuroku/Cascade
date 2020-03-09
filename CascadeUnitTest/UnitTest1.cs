@@ -287,6 +287,21 @@ namespace CascadeUnitTest
         }
 
         [TestMethod]
+        public void TestMethodSerArrayTwitchCommands()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+            STwitchCommand[] v1 = STwitchCommand.CreateDefaults();
+
+            string text = _serializer.SerializeToCascade(v1, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<STwitchCommand[]>(text, this);
+
+            CheckInternalErrors();
+            Assert.IsTrue(Utils.IsArrayEquals(v1, v2));
+        }
+
+        [TestMethod]
         public void TestMethodWithouDefCtor()
         {
             ResetTestState();

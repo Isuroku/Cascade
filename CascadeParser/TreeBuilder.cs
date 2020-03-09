@@ -12,7 +12,7 @@ namespace CascadeParser
             if (inLines.Count == 0)
                 return root;
 
-            CollectByDivs(root, -1, 0, inLines.Count, inLines, inSupport, root);
+            CollectByDivs(root, -1, 0, inLines.Count, inLines, inSupport, root, EKeyAddingMode.AddUnique);
 
             if (root.KeyCount == 1 && root.GetKey(0).IsArrayKey() && root.GetKey(0).KeyCount == 0)
             {
@@ -23,24 +23,50 @@ namespace CascadeParser
             return root;
         }
 
-        static Tuple<CKey, int> CreateKey(int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport, CKey inRoot)
+        static Tuple<CKey, int> CreateKey(int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport, 
+            CKey inRoot, CKey inParent, EKeyAddingMode inKeyAddingMode)
         {
             CTokenLine line = inLines[inStartLine];
             int key_rank = line.Rank;
 
             if (line.IsHeadEmpty)
             {
-                CKey arr_key = CKey.CreateArrayKey(null, line.Position);
+                CKey arr_key = CKey.CreateArrayKey(inParent, line.Position);
                 arr_key.AddTokenTail(line, inSupport.GetLogger());
                 return new Tuple<CKey, int>(arr_key, inStartLine + 1);
             }
             else
             {
-                var key = CKey.Create(null, line, inSupport.GetLogger());
+                CKey key = null;
+                if (inKeyAddingMode != EKeyAddingMode.AddUnique)
+                {
+                    key = inParent.FindChildKey(line.Head.Text);
+                    if (key == null)
+                    {
+                        inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line, $"Key name: {line.Head.Text}");
+                    }
+                    else
+                    {
+                        if (inKeyAddingMode == EKeyAddingMode.Override)
+                        {
+                            key.ClearComments();
+                            key.ClearValues();
+                        }
+
+                        if (inKeyAddingMode == EKeyAddingMode.Override || inKeyAddingMode == EKeyAddingMode.Add)
+                            key.AddTokenTail(line, inSupport.GetLogger());
+                    }
+                }
+                else if (inParent.IsKeyWithNamePresent(line.Head.Text))
+                    inSupport.GetLogger().LogError(EErrorCode.ElementWithNameAlreadyPresent, line);
+
+                if (key == null)
+                    key = CKey.Create(inParent, line, inSupport.GetLogger());
+
                 int last_line = FindNextSameRankLine(inStartLine, inEndLine, key_rank, inLines);
 
                 if (last_line > inStartLine + 1)
-                    CollectByDivs(key, key_rank, inStartLine + 1, last_line, inLines, inSupport, inRoot);
+                    CollectByDivs(key, key_rank, inStartLine + 1, last_line, inLines, inSupport, inRoot, inKeyAddingMode);
 
                 if (key.KeyCount == 0 && key.ValuesCount == 0)
                     inSupport.GetLogger().LogError(EErrorCode.HeadWithoutValues, line);
@@ -60,7 +86,8 @@ namespace CascadeParser
         }
 
         //inStartLine - next of parent line
-        static void CollectByDivs(CKey inParent, int inParentRank, int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport, CKey inRoot)
+        static void CollectByDivs(CKey inParent, int inParentRank, int inStartLine, int inEndLine, List<CTokenLine> inLines, 
+            ITreeBuildSupport inSupport, CKey inRoot, EKeyAddingMode inKeyAddingMode)
         {
             int curr_rank = inParentRank + 1;
             List<Tuple<int, int>> recs_by_divs = new List<Tuple<int, int>>();
@@ -68,6 +95,9 @@ namespace CascadeParser
 
             if (recs_by_divs.Count > 1)
             {
+                if (inKeyAddingMode == EKeyAddingMode.Override)
+                    inParent.ClearAllArrayKeys();
+
                 for (int i = 0; i < recs_by_divs.Count; i++)
                 {
                     int first_line = recs_by_divs[i].Item1;
@@ -77,14 +107,17 @@ namespace CascadeParser
                         CKey arr_key = CKey.CreateArrayKey(inParent, inLines[first_line].Position);
 
                         if(IsLinePresent(curr_rank, first_line, exlude_last_line, inLines))
-                            Collect(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport, inRoot);
+                            Collect(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport, inRoot, EKeyAddingMode.AddUnique);
                         else
-                            CollectByDivs(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport, inRoot);
+                            CollectByDivs(arr_key, curr_rank, first_line, exlude_last_line, inLines, inSupport, inRoot, EKeyAddingMode.AddUnique);
+
+                        if (arr_key.IsEmpty)
+                            arr_key.SetParent(null);
                     }
                 }
             }
             else
-                Collect(inParent, inParentRank, recs_by_divs[0].Item1, recs_by_divs[0].Item2, inLines, inSupport, inRoot);
+                Collect(inParent, inParentRank, recs_by_divs[0].Item1, recs_by_divs[0].Item2, inLines, inSupport, inRoot, inKeyAddingMode);
         }
 
         static bool IsLinePresent(int inRank, int inStartLine, int inEndLine, List<CTokenLine> inLines)
@@ -98,7 +131,8 @@ namespace CascadeParser
         }
 
         //inStartLine - next of parent line
-        static void Collect(CKey inParent, int inParentRank, int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport, CKey inRoot)
+        static void Collect(CKey inParent, int inParentRank, int inStartLine, int inEndLine, List<CTokenLine> inLines, ITreeBuildSupport inSupport, 
+            CKey inRoot, EKeyAddingMode inKeyAddingMode)
         {
             CBuildCommands command_for_next_string = null;
             int start = inStartLine;
@@ -115,7 +149,10 @@ namespace CascadeParser
                         else
                         {
                             if (inParent.IsArray && line.Rank == inParentRank)
-                                inParent.SetName(line.CommandParams[0]);
+                            {
+                                if(!inParent.SetName(line.CommandParams[0]))
+                                    inSupport.GetLogger().LogError(EErrorCode.DublicateKeyName, line);
+                            }
                             else
                             {
                                 //inSupport.GetLogger().LogError(EErrorCode.NextArrayKeyNameMissParent, line);
@@ -140,42 +177,49 @@ namespace CascadeParser
                 }
                 else if (!line.IsEmpty())
                 {
-                    Tuple<CKey, int> new_key_new_line = CreateKey(start, inEndLine, inLines, inSupport, inRoot);
+                    EKeyAddingMode adding_mode = inKeyAddingMode;
+                    if (adding_mode == EKeyAddingMode.AddUnique && line.AdditionMode != EKeyAddingMode.AddUnique)
+                        adding_mode = line.AdditionMode;
+
+                    Tuple<CKey, int> new_key_new_line = CreateKey(start, inEndLine, inLines, inSupport, inRoot, inParent, adding_mode);
 
                     CKey new_key = new_key_new_line.Item1;
 
                     if (command_for_next_string != null && command_for_next_string.IsNextArrayKeyNamePresent)
-                        new_key.SetName(command_for_next_string.PopNextArrayKeyName(inParent));
+                    { 
+                        if(!new_key.SetName(command_for_next_string.PopNextArrayKeyName(inParent)))
+                            inSupport.GetLogger().LogError(EErrorCode.DublicateKeyName, line);
+                    }
 
                     if (command_for_next_string != null && command_for_next_string.IsNextLineCommentPresent)
                         new_key.AddComments(command_for_next_string.PopNextLineComments(inParent));
 
-                    if (!new_key.IsArray && line.AdditionMode == EKeyAddingMode.AddUnique && inParent.IsKeyWithNamePresent(new_key.Name))
-                        inSupport.GetLogger().LogError(EErrorCode.ElementWithNameAlreadyPresent, inLines[start]);
+                    //if (!new_key.IsArray && line.AdditionMode == EKeyAddingMode.AddUnique && inParent.IsKeyWithNamePresent(new_key.Name))
+                    //    inSupport.GetLogger().LogError(EErrorCode.ElementWithNameAlreadyPresent, inLines[start]);
                     
-                    if(line.AdditionMode == EKeyAddingMode.AddUnique)
-                        new_key.SetParent(inParent);
-                    else if (line.AdditionMode == EKeyAddingMode.Override || line.AdditionMode == EKeyAddingMode.Add)
-                    {
-                        if (line.AdditionMode == EKeyAddingMode.Override)
-                        {
-                            var pathes = new List<List<string>>();
-                            new_key.GetTerminalPathes(pathes, new List<string>());
+                    //if(line.AdditionMode == EKeyAddingMode.AddUnique)
+                    //    new_key.SetParent(inParent);
+                    //else if (line.AdditionMode == EKeyAddingMode.Override || line.AdditionMode == EKeyAddingMode.Add)
+                    //{
+                    //    if (line.AdditionMode == EKeyAddingMode.Override)
+                    //    {
+                    //        var pathes = new List<List<string>>();
+                    //        new_key.GetTerminalPathes(pathes, new List<string>());
 
-                            //for correct deleting array elems
-                            for (int i = pathes.Count - 1; i >= 0; --i)
-                            {
-                                var path = pathes[i];
-                                RemoveKeysByPath(inParent, path);
-                            }
-                        }
+                    //        //for correct deleting array elems
+                    //        for (int i = pathes.Count - 1; i >= 0; --i)
+                    //        {
+                    //            var path = pathes[i];
+                    //            RemoveKeysByPath(inParent, path);
+                    //        }
+                    //    }
 
-                        CKey child_key = inParent.FindChildKey(new_key.Name);
-                        if (child_key != null)
-                            child_key.MergeKey(new_key);
-                        else
-                            new_key.SetParent(inParent);
-                    }
+                    //    CKey child_key = inParent.FindChildKey(new_key.Name);
+                    //    if (child_key != null)
+                    //        child_key.MergeKey(new_key);
+                    //    else
+                    //        new_key.SetParent(inParent);
+                    //}
 
                     start = new_key_new_line.Item2;
                 }
@@ -218,10 +262,19 @@ namespace CascadeParser
 
             string key_path = line.CommandParams[0];
 
+            CKey start_key = inParent;
+            int i = 0;
+            while(i < key_path.Length && key_path[i] == '<' && start_key.Parent != null)
+            {
+                start_key = start_key.Parent;
+                i++;
+            }
+            key_path = key_path.Substring(i);
+
             string[] path = key_path.Split(new char[] { '\\', '/' });
 
-            if (!RemoveKeysByPath(inParent, path))
-                inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
+            if (!RemoveKeysByPath(start_key, path))
+                inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line, $"Start key: {inParent.GetPath()}");
         }
 
         static bool RemoveKeysByPath(CKey inParent, IList<string> inPath)
@@ -275,13 +328,23 @@ namespace CascadeParser
                 }
             }
 
-            bool insert_parent = line.CommandParams.ContainsKey("parent");
+            CKey destination_key = inParent;
+            bool insert_in_parent = line.CommandParams.ContainsKey("insert_in_parent");
+            if (insert_in_parent)
+            {
+                if(inParent.Parent != null)
+                    destination_key = inParent.Parent;
+                else
+                    inSupport.GetLogger().LogError(EErrorCode.KeyMustHaveParent, line);
+            }
+
+            bool add_key = line.CommandParams.ContainsKey("add_key");
             CKey copy_key = key.GetCopy() as CKey;
-            if (insert_parent)
-                copy_key.SetParent(inParent);
+            if (add_key)
+                copy_key.SetParent(destination_key);
             else
-                inParent.TakeAllElements(copy_key, false);
-            inParent.CheckOnOneArray();
+                destination_key.TakeAllElements(copy_key, false);
+            destination_key.CheckOnOneArray();
         }
     }
 }

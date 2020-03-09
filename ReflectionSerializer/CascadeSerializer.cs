@@ -9,6 +9,12 @@ using System.Text;
 
 namespace CascadeSerializer
 {
+    public enum EReflectorType
+    {
+        Cached = 0,
+        Direct
+    }
+
     public class CCascadeSerializer
     {
         readonly IReflectionProvider _reflectionProvider;
@@ -19,23 +25,29 @@ namespace CascadeSerializer
         string _debug_file_name;
         string _debug_text;
 
-        public CCascadeSerializer(IReflectionProvider reflectionProvider, CParserManager parser)
+        public CCascadeSerializer(EReflectorType inReflectorType, CParserManager parser)
         {
-            _reflectionProvider = reflectionProvider;
+            switch (inReflectorType)
+            {
+                case EReflectorType.Cached:  _reflectionProvider = new CachedReflector(); break;
+                case EReflectorType.Direct: _reflectionProvider = new DirectReflector(); break;
+            }
             _parser = parser;
         }
 
-        public CCascadeSerializer(CParserManager parser) : this(new CachedReflector(), parser)
+        public CCascadeSerializer(CParserManager parser, EReflectorType inReflectorType = EReflectorType.Cached) 
+            : this(inReflectorType, parser)
         {
             
         }
 
-        public CCascadeSerializer(IParserOwner owner) : this(new CachedReflector(), null)
+        public CCascadeSerializer(IParserOwner owner, EReflectorType inReflectorType = EReflectorType.Cached) 
+            : this(inReflectorType, null)
         {
             _parser = new CParserManager(owner);
         }
 
-        public CCascadeSerializer() : this(new CachedReflector(), null)
+        public CCascadeSerializer(EReflectorType inReflectorType = EReflectorType.Cached) : this(inReflectorType, null)
         {
 
         }
@@ -819,11 +831,28 @@ namespace CascadeSerializer
         {
             if (instance == null)
                 key.AddValue(0);
-            else if (ReflectionHelper.IsFLOAT(instance))
-                key.AddValue(Convert.ToDecimal(instance));
-            else if (ReflectionHelper.IsINT(instance))
+
+            else if (instance is bool)
+                key.AddValue(Convert.ToBoolean(instance));
+
+            else if (instance is float)
+                key.AddValue(Convert.ToSingle(instance));
+            else if (instance is double)
+                key.AddValue(Convert.ToDouble(instance));
+
+            else if (instance is byte)
+                key.AddValue(Convert.ToByte(instance));
+            else if (instance is short)
+                key.AddValue(Convert.ToInt16(instance));
+            else if (instance is ushort)
+                key.AddValue(Convert.ToUInt16(instance));
+            else if (instance is int)
+                key.AddValue(Convert.ToInt32(instance));
+            else if (instance is uint)
+                key.AddValue(Convert.ToUInt32(instance));
+            else if (instance is long)
                 key.AddValue(Convert.ToInt64(instance));
-            else if (ReflectionHelper.IsUINT(instance))
+            else if (instance is ulong)
                 key.AddValue(Convert.ToUInt64(instance));
             else
                 key.AddValue(instance.ToString());

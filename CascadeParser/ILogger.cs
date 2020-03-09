@@ -8,6 +8,7 @@ namespace CascadeParser
         void LogError(EErrorCode inErrorCode, CKey inKey);
         void LogError(EErrorCode inErrorCode, CToken inToken);
         void LogError(EErrorCode inErrorCode, CTokenLine inLine);
+        void LogError(EErrorCode inErrorCode, CTokenLine inLine, string inText);
         void Trace(string inText);
     }
 }
