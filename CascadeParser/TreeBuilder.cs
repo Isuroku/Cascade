@@ -66,7 +66,13 @@ namespace CascadeParser
                 int last_line = FindNextSameRankLine(inStartLine, inEndLine, key_rank, inLines);
 
                 if (last_line > inStartLine + 1)
-                    CollectByDivs(key, key_rank, inStartLine + 1, last_line, inLines, inSupport, inRoot, inKeyAddingMode);
+                {
+                    EKeyAddingMode next_add_mode = inKeyAddingMode;
+                    if (next_add_mode == EKeyAddingMode.Add)
+                        next_add_mode = EKeyAddingMode.AddUnique;
+
+                    CollectByDivs(key, key_rank, inStartLine + 1, last_line, inLines, inSupport, inRoot, next_add_mode);
+                }
 
                 if (key.KeyCount == 0 && key.ValuesCount == 0)
                     inSupport.GetLogger().LogError(EErrorCode.HeadWithoutValues, line);
