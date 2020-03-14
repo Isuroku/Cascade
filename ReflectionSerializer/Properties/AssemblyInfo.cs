@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // набора атрибутов. Измените значения этих атрибутов, чтобы изменить сведения,
 // связанные со сборкой.
 [assembly: AssemblyTitle("CascadeSerializer")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("The package of Cascade library. It allows to convert text description to C# object and get data in hierarchical tree format.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("Isuroku")]
 [assembly: AssemblyProduct("CascadeSerializer")]
-[assembly: AssemblyCopyright("Copyright ©  2018")]
+[assembly: AssemblyCopyright("Copyright ©Isuroku  2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
