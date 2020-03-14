@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Reflection;
 using CascadeParser;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using CascadeSerializer;

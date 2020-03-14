@@ -31,11 +31,6 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BinarySerializeUtils.cs" />
@@ -48,7 +43,6 @@
     <Compile Include="ILogger.cs" />
     <Compile Include="Loger.cs" />
     <Compile Include="ParserManager.cs" />
-    <Compile Include="SCommandParams.cs" />
     <Compile Include="SentenseDivider.cs" />
     <Compile Include="SPosition.cs" />
     <Compile Include="Token.cs" />
