@@ -17,7 +17,6 @@
     <Company>Isuroku</Company>
     <PackageDescription>The package of Cascade library. It allows to convert text description to C# object and get data in hierarchical tree format.</PackageDescription>
     <RepositoryUrl>https://github.com/Isuroku/Cascade</RepositoryUrl>
-	<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -61,10 +60,6 @@
       <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
       <Name>CascadeParser</Name>
     </ProjectReference>
-  </ItemGroup>
+   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PostBuildEvent>
-    </PostBuildEvent>
-  </PropertyGroup>
 </Project>

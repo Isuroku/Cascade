@@ -2,7 +2,7 @@
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{0BA9965A-8201-4766-8241-322FC380CA75}</ProjectGuid>
     <OutputType>Library</OutputType>
@@ -11,6 +11,12 @@
     <AssemblyName>CascadeParser</AssemblyName>
     <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <PackageId>CascadeSerializer</PackageId>
+    <Version>1.0.0</Version>
+    <Authors>Isuroku</Authors>
+    <Company>Isuroku</Company>
+    <PackageDescription>The package of Cascade library. It allows to read text files and convert to hierarchical tree format.</PackageDescription>
+    <RepositoryUrl>https://github.com/Isuroku/Cascade</RepositoryUrl>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
