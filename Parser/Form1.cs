@@ -2,7 +2,6 @@
 using CascadeUnitTest;
 using CascadeSerializer;
 using System;
-using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Text;
@@ -14,7 +13,9 @@ namespace Parser
     {
         const string _path_to_data = "Data";
 
-        string _selected_file;
+		string _current_path;
+
+		string _selected_file;
 
         CParserManager _parser;
 
@@ -101,22 +102,43 @@ namespace Parser
         {
             _parser = new CParserManager(this);
 
-            string path = Path.Combine(Application.StartupPath, _path_to_data);
-            string[] files = Directory.GetFiles(path, "*.csc*", SearchOption.TopDirectoryOnly);
+			string path = Path.Combine(Application.StartupPath, "prev_path.txt");
+			if (File.Exists(path))
+			{
+				_current_path = File.ReadAllText(path);
+			}
+			else
+			{
+				_current_path = Application.StartupPath;
+				path = Path.Combine(Application.StartupPath, _path_to_data);
+				if (Directory.Exists(path))
+					_current_path = path;
+			}
 
-            foreach (var fn in files)
-            {
-                string only_name = Path.GetFileName(fn);
-                lbSourceFiles.Items.Add(only_name);
-            }
-
-            if (lbSourceFiles.Items.Count > 0)
-                lbSourceFiles.SelectedIndex = 0;
+			LoadFiles();
         }
 
-        public string GetTextFromFile(string inFileName, object inContextData)
+		private void LoadFiles()
+		{
+			if (!Directory.Exists(_current_path))
+				return;
+
+			string[] files = Directory.GetFiles(_current_path, "*.csc??", SearchOption.TopDirectoryOnly);
+
+			lbSourceFiles.Items.Clear();
+			foreach (var fn in files)
+			{
+				string only_name = Path.GetFileName(fn);
+				lbSourceFiles.Items.Add(only_name);
+			}
+
+			if (lbSourceFiles.Items.Count > 0)
+				lbSourceFiles.SelectedIndex = 0;
+		}
+
+		public string GetTextFromFile(string inFileName, object inContextData)
         {
-            string path = Path.Combine(Application.StartupPath, _path_to_data, inFileName);
+            string path = Path.Combine(_current_path, inFileName);
             if (!File.Exists(path))
                 return string.Empty;
             return File.ReadAllText(path);
@@ -125,7 +147,7 @@ namespace Parser
         private void lbSourceFiles_SelectedIndexChanged(object sender, EventArgs e)
         {
             string fn = lbSourceFiles.SelectedItem.ToString();
-            _selected_file = Path.Combine(Application.StartupPath, _path_to_data, fn);
+            _selected_file = Path.Combine(_current_path, fn);
 
             tbSourceText.Text = File.ReadAllText(_selected_file);
         }
@@ -143,7 +165,12 @@ namespace Parser
         {
             ClearLog();
 
-            _test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text, this, 98);
+			//FileBrowser.Url;
+
+			if (string.IsNullOrEmpty(_selected_file))
+				return;
+
+			_test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text, this, 98);
             ShowTokenLines(_test_serialize);
             AddToTree(_test_serialize);
         }
@@ -212,7 +239,7 @@ namespace Parser
             if(string.IsNullOrEmpty(Path.GetExtension(new_file_name)))
                 new_file_name = inFileName + ".cscd";
 
-            string path = Path.Combine(Application.StartupPath, _path_to_data, new_file_name);
+            string path = Path.Combine(_current_path, new_file_name);
 
             if (inCheckExists && File.Exists(path))
             {
@@ -271,5 +298,20 @@ namespace Parser
             string text = _test_serialize.SaveToString();
             SaveTextToFile(text, "SerializeTest", false);
         }
-    }
+
+		private void btnOpenNewFolder_Click(object sender, EventArgs e)
+		{
+			using(var fbd = new FolderBrowserDialog() { Description = "Select path" })
+			{
+				fbd.SelectedPath = _current_path;
+				if (fbd.ShowDialog() == DialogResult.OK)
+				{
+					_current_path = fbd.SelectedPath;
+					string path = Path.Combine(Application.StartupPath, "prev_path.txt");
+					File.WriteAllText(path, _current_path, Encoding.UTF8);
+					LoadFiles();
+				}
+			}
+		}
+	}
 }

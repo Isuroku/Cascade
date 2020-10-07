@@ -26,7 +26,29 @@ namespace CascadeUnitTest
             Assert.AreEqual(res, 6.1);
         }
 
-        [TestMethod]
+		[TestMethod]
+		public void TestMethodSimpleSumI()
+		{
+			ResetTestState();
+			Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+			CExpression exp = CExpressionBuilder.Build("1.1 + 2 + var1", this);
+
+			exp.SetArgIds(name => 0);
+
+			double res = exp.GetValue(
+				(int id, out double value) => 
+				{ 
+					value = 3; 
+					return true; 
+				}, 
+			this);
+
+			CheckInternalErrors();
+			Assert.AreEqual(res, 6.1);
+		}
+
+		[TestMethod]
         public void TestMethodSimpleAllOp()
         {
             ResetTestState();
@@ -44,7 +66,40 @@ namespace CascadeUnitTest
             Assert.AreEqual(res, 9);
         }
 
-        [TestMethod]
+		[TestMethod]
+		public void TestMethodSimpleAllOp1()
+		{
+			ResetTestState();
+			Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+			List<Tuple<string, double>> lst = new List<Tuple<string, double>>();
+			lst.Add(new Tuple<string, double>("var1", 3));
+			lst.Add(new Tuple<string, double>("var2", 4));
+
+			CExpression exp = CExpressionBuilder.Build("1 / 2 + var1 * var2 - 5.5 + 4^(1/2)", this);
+
+			exp.SetArgIds(name =>
+			{
+				return lst.FindIndex(t => t.Item1 == name);
+			});
+
+			double res = exp.GetValue(
+				(int id, out double value) =>
+				{
+					value = 0;
+					if (id < 0)
+						return false;
+
+					value = lst[id].Item2;
+					return true;
+				},
+			this);
+
+			CheckInternalErrors();
+			Assert.AreEqual(res, 9);
+		}
+
+		[TestMethod]
         public void TestMethodBracers()
         {
             ResetTestState();
@@ -52,7 +107,7 @@ namespace CascadeUnitTest
 
             CExpression exp = CExpressionBuilder.Build("(1 + 2) * ((3 + 4) - (5 + 1))", this);
 
-            double res = exp.GetValue(null, this);
+            double res = exp.GetValue(this);
 
             CheckInternalErrors();
             Assert.AreEqual(res, 3);
@@ -66,7 +121,7 @@ namespace CascadeUnitTest
 
             CExpression exp = CExpressionBuilder.Build("99", this);
 
-            double res = exp.GetValue(null, this);
+            double res = exp.GetValue(this);
 
             CheckInternalErrors();
             Assert.AreEqual(res, 99);
@@ -89,7 +144,27 @@ namespace CascadeUnitTest
             Assert.AreEqual(res, 3);
         }
 
-        [TestMethod]
+		[TestMethod]
+		public void TestMethodOneValue2I()
+		{
+			ResetTestState();
+			Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+			CExpression exp = CExpressionBuilder.Build("var1", this);
+
+			double res = exp.GetValue(
+				(int id, out double value) =>
+				{
+					value = 3;
+					return true;
+				},
+			this);
+
+			CheckInternalErrors();
+			Assert.AreEqual(res, 3);
+		}
+
+		[TestMethod]
         public void TestMethodOneInternalFunc1()
         {
             ResetTestState();
@@ -97,7 +172,7 @@ namespace CascadeUnitTest
 
             CExpression exp = CExpressionBuilder.Build("Round(3.1)", this);
 
-            double res = exp.GetValue(null, this);
+            double res = exp.GetValue(this);
 
             CheckInternalErrors();
             Assert.AreEqual(res, 3);
@@ -126,7 +201,38 @@ namespace CascadeUnitTest
             Assert.AreEqual(res, 14);
         }
 
-        [TestMethod]
+		[TestMethod]
+		public void TestMethodOneInternalFunc2I()
+		{
+			ResetTestState();
+			Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+			CExpression exp = CExpressionBuilder.Build("Min(3, 2) * (Neg(var1) + 4)", this);
+
+			double res = exp.GetValue(
+				(int id, out double value) =>
+				{
+					value = 3;
+					return true;
+				},
+			this);
+
+			CheckInternalErrors();
+			Assert.AreEqual(res, 2);
+
+			res = exp.GetValue(
+				(int id, out double value) =>
+				{
+					value = -3;
+					return true;
+				},
+			this);
+
+			CheckInternalErrors();
+			Assert.AreEqual(res, 14);
+		}
+
+		[TestMethod]
         public void TestMethodOneInternalFunc3()
         {
             ResetTestState();
@@ -134,7 +240,7 @@ namespace CascadeUnitTest
 
             CExpression exp = CExpressionBuilder.Build("Rand(1,100)", this);
 
-            double res = exp.GetValue(null, this);
+            double res = exp.GetValue(this);
 
             CheckInternalErrors();
 

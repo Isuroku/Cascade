@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<package >
+  <metadata>
+    <id>CascadeParser</id>
+    <version>1.0.0</version>
+    <title>Cascade Parser</title>
+    <authors>Isuroku</authors>
+    <owners>Isuroku</owners>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <license type="expression">MIT</license>
+    <projectUrl>https://github.com/Isuroku/Cascade</projectUrl>
+    <description>The package of Cascade library. It allows to read text files and convert to hierarchical tree format.</description>
+    <releaseNotes>First test package.</releaseNotes>
+    <copyright>Copyright 2020</copyright>
+    <tags>serializing description text parser configuration-file unity3d c-sharp configuration unity3d-games json cascade</tags>
+	<dependencies>
+      <group targetFramework=".NETFramework3.5" />
+    </dependencies>
+	<frameworkAssemblies>
+		<frameworkAssembly assemblyName="System" targetFramework="net35" />
+	</frameworkAssemblies>
+  </metadata>
+</package>
