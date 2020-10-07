@@ -26,7 +26,9 @@ namespace MathExpressionParser
         {
             switch(TokenType)
             {
-                case ETokenType.Power: return EBinOp.Power;
+				case ETokenType.And: return EBinOp.And;
+				case ETokenType.Or: return EBinOp.Or;
+				case ETokenType.Power: return EBinOp.Power;
                 case ETokenType.Mult: return EBinOp.Mult;
                 case ETokenType.Div: return EBinOp.Div;
                 case ETokenType.Sum: return EBinOp.Sum;

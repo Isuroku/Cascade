@@ -56,7 +56,9 @@ namespace MathExpressionParser
             new ETokenType[] { ETokenType.Power },
             new ETokenType[] { ETokenType.Mult, ETokenType.Div },
             new ETokenType[] { ETokenType.Sum, ETokenType.Diff },
-        };
+			new ETokenType[] { ETokenType.And },
+			new ETokenType[] { ETokenType.Or },
+		};
 
         static CArg BuildElemToArg(SBuildElem elem, ILogger inLogger)
         {

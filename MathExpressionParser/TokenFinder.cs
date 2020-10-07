@@ -41,7 +41,9 @@ namespace MathExpressionParser
             new CTokenTemplate(ETokenType.Mult, "*"),
             new CTokenTemplate(ETokenType.Div, "/"),
             new CTokenTemplate(ETokenType.Power, "^"),
-            new CTokenTemplate(ETokenType.Comma, ","),
+			new CTokenTemplate(ETokenType.And, "&"),
+			new CTokenTemplate(ETokenType.Or, "|"),
+			new CTokenTemplate(ETokenType.Comma, ","),
         };
 
         public static CToken[] GetTokens(string inSentense)
