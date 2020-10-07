@@ -10,8 +10,11 @@ namespace MathExpressionParser
         int StartLineIndex { get; }
         int EndLineIndex { get; }
 
-        double GetValue(CExpression.DTryGetValue inGetValue, ILogger inLogger);
-    }
+        double GetValue(CExpression.DTryGetValueS inGetValue, ILogger inLogger);
+		double GetValue(CExpression.DTryGetValueI inGetValue, ILogger inLogger);
+
+		void SetArgIds(CExpression.DTryGetArgId inGetArgId);
+	}
 
     public enum EBinOp
     {
@@ -47,24 +50,41 @@ namespace MathExpressionParser
             return string.Format("{0} ({1}:{2}) [{3}-{4}]", _op, _arg1, _arg2, StartLineIndex, EndLineIndex);
         }
 
-        public double GetValue(CExpression.DTryGetValue inGetValue, ILogger inLogger)
+        public double GetValue(CExpression.DTryGetValueS inGetValue, ILogger inLogger)
         {
             double v1 = _arg1.GetValue(inGetValue, inLogger);
             double v2 = _arg2.GetValue(inGetValue, inLogger);
+			return GetValue(v1, v2, inLogger);
+		}
 
-            switch(_op)
-            {
-                case EBinOp.Power: return Math.Pow(v1, v2);
-                case EBinOp.Mult: return v1 * v2;
-                case EBinOp.Div: return v1 / v2;
-                case EBinOp.Sum: return v1 + v2;
-                case EBinOp.Diff: return v1 - v2;
-            }
+		public double GetValue(CExpression.DTryGetValueI inGetValue, ILogger inLogger)
+		{
+			double v1 = _arg1.GetValue(inGetValue, inLogger);
+			double v2 = _arg2.GetValue(inGetValue, inLogger);
+			return GetValue(v1, v2, inLogger);
+		}
 
-            inLogger.LogError(string.Format("Invalid operation: {0}", _op));
-            return 0;
-        }
-    }
+		double GetValue(double v1, double v2, ILogger inLogger)
+		{
+			switch (_op)
+			{
+				case EBinOp.Power: return Math.Pow(v1, v2);
+				case EBinOp.Mult: return v1 * v2;
+				case EBinOp.Div: return v1 / v2;
+				case EBinOp.Sum: return v1 + v2;
+				case EBinOp.Diff: return v1 - v2;
+			}
+
+			inLogger.LogError(string.Format("Invalid operation: {0}", _op));
+			return 0;
+		}
+
+		public void SetArgIds(CExpression.DTryGetArgId inGetArgId)
+		{
+			_arg1.SetArgIds(inGetArgId);
+			_arg2.SetArgIds(inGetArgId);
+		}
+	}
 
     public abstract class CArg: IMathFunc
     {
@@ -84,8 +104,11 @@ namespace MathExpressionParser
             _owner = owner;
         }
 
-        public abstract double GetValue(CExpression.DTryGetValue inGetValue, ILogger inLogger);
-    }
+        public abstract double GetValue(CExpression.DTryGetValueS inGetValue, ILogger inLogger);
+		public abstract double GetValue(CExpression.DTryGetValueI inGetValue, ILogger inLogger);
+
+		public abstract void SetArgIds(CExpression.DTryGetArgId inGetArgId);
+	}
 
     public class CArg_Num: CArg
     {
@@ -102,15 +125,23 @@ namespace MathExpressionParser
             return string.Format("{0}", _value);
         }
 
-        public override double GetValue(CExpression.DTryGetValue inGetValue, ILogger inLogger)
+        public override double GetValue(CExpression.DTryGetValueS inGetValue, ILogger inLogger)
         {
             return _value;
         }
-    }
+
+		public override double GetValue(CExpression.DTryGetValueI inGetValue, ILogger inLogger)
+		{
+			return _value;
+		}
+
+		public override void SetArgIds(CExpression.DTryGetArgId inGetArgId) { }
+	}
 
     public class CArg_Var : CArg
     {
         string _name;
+		int _arg_id;
 
         public CArg_Var(string text, int start_li, int end_li) :
             base(start_li, end_li)
@@ -123,7 +154,7 @@ namespace MathExpressionParser
             return _name;
         }
 
-        public override double GetValue(CExpression.DTryGetValue inGetValue, ILogger inLogger)
+        public override double GetValue(CExpression.DTryGetValueS inGetValue, ILogger inLogger)
         {
             if (inGetValue == null)
             {
@@ -136,7 +167,26 @@ namespace MathExpressionParser
                 return val;
             return 0;
         }
-    }
+
+		public override double GetValue(CExpression.DTryGetValueI inGetValue, ILogger inLogger)
+		{
+			if (inGetValue == null)
+			{
+				inLogger.LogError(string.Format("Arg {0} needs TryGetValue!", _name));
+				return 0;
+			}
+
+			double val;
+			if (inGetValue(_arg_id, out val))
+				return val;
+			return 0;
+		}
+
+		public override void SetArgIds(CExpression.DTryGetArgId inGetArgId)
+		{
+			_arg_id = inGetArgId(_name);
+		}
+	}
 
     public class CArg_BinOp : CArg
     {
@@ -153,11 +203,21 @@ namespace MathExpressionParser
             return $"{_op}";
         }
 
-        public override double GetValue(CExpression.DTryGetValue inGetValue, ILogger inLogger)
+        public override double GetValue(CExpression.DTryGetValueS inGetValue, ILogger inLogger)
         {
             return _op.GetValue(inGetValue, inLogger);
         }
-    }
+
+		public override double GetValue(CExpression.DTryGetValueI inGetValue, ILogger inLogger)
+		{
+			return _op.GetValue(inGetValue, inLogger);
+		}
+
+		public override void SetArgIds(CExpression.DTryGetArgId inGetArgId)
+		{
+			_op.SetArgIds(inGetArgId);
+		}
+	}
 
     class CArgArray
     {
@@ -174,13 +234,25 @@ namespace MathExpressionParser
 
         public double this[int index] { get { return _values[index]; } }
 
-        public void FillValue(CExpression.DTryGetValue inGetValue, ILogger inLogger)
+        public void FillValue(CExpression.DTryGetValueS inGetValue, ILogger inLogger)
         {
             for(int i = 0; i < _args.Length; ++i)
                 _values[i] = _args[i].GetValue(inGetValue, inLogger);
         }
 
-        public override string ToString()
+		public void FillValue(CExpression.DTryGetValueI inGetValue, ILogger inLogger)
+		{
+			for (int i = 0; i < _args.Length; ++i)
+				_values[i] = _args[i].GetValue(inGetValue, inLogger);
+		}
+
+		public void SetArgIds(CExpression.DTryGetArgId inGetArgId)
+		{
+			for (int i = 0; i < _args.Length; ++i)
+				_args[i].SetArgIds(inGetArgId);
+		}
+
+		public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
             for (int i = 0; i < _args.Length; ++i)
@@ -256,33 +328,48 @@ namespace MathExpressionParser
             return string.Format("{0}({1})", _type, _args);
         }
 
-        public double GetValue(CExpression.DTryGetValue inGetValue, ILogger inLogger)
+		public void SetArgIds(CExpression.DTryGetArgId inGetArgId)
+		{
+			_args.SetArgIds(inGetArgId);
+		}
+
+		public double GetValue(CExpression.DTryGetValueS inGetValue, ILogger inLogger)
         {
             _args.FillValue(inGetValue, inLogger);
-
-            switch (_type)
-            {
-                case EInternalFunc.Neg: return -1 * _args[0];
-                case EInternalFunc.Abs: return Math.Abs(_args[0]);
-                case EInternalFunc.Sign: return Math.Sign(_args[0]);
-                case EInternalFunc.Sqrt: return Math.Sqrt(_args[0]);
-                case EInternalFunc.Round: return Math.Round(_args[0]);
-                case EInternalFunc.Min: return Math.Min(_args[0], _args[1]);
-                case EInternalFunc.Max: return Math.Max(_args[0], _args[1]);
-                case EInternalFunc.Sin: return Math.Sin(_args[0]);
-                case EInternalFunc.Cos: return Math.Cos(_args[0]);
-                case EInternalFunc.Tan: return Math.Tan(_args[0]);
-                case EInternalFunc.Asin: return Math.Asin(_args[0]);
-                case EInternalFunc.Acos: return Math.Acos(_args[0]);
-                case EInternalFunc.Atan: return Math.Atan(_args[0]);
-                case EInternalFunc.Atan2: return Math.Atan2(_args[0], _args[1]);
-                case EInternalFunc.Rand: return _args[0] + (_args[1] - _args[0]) * rnd.NextDouble();
-            }
-
-            inLogger.LogError(string.Format("Invalid func: {0}", _type));
-            return 0;
+			return GetValueFromArgs(inLogger);
         }
-    }
+
+		public double GetValue(CExpression.DTryGetValueI inGetValue, ILogger inLogger)
+		{
+			_args.FillValue(inGetValue, inLogger);
+			return GetValueFromArgs(inLogger);
+		}
+
+		double GetValueFromArgs(ILogger inLogger)
+		{
+			switch (_type)
+			{
+				case EInternalFunc.Neg: return -1 * _args[0];
+				case EInternalFunc.Abs: return Math.Abs(_args[0]);
+				case EInternalFunc.Sign: return Math.Sign(_args[0]);
+				case EInternalFunc.Sqrt: return Math.Sqrt(_args[0]);
+				case EInternalFunc.Round: return Math.Round(_args[0]);
+				case EInternalFunc.Min: return Math.Min(_args[0], _args[1]);
+				case EInternalFunc.Max: return Math.Max(_args[0], _args[1]);
+				case EInternalFunc.Sin: return Math.Sin(_args[0]);
+				case EInternalFunc.Cos: return Math.Cos(_args[0]);
+				case EInternalFunc.Tan: return Math.Tan(_args[0]);
+				case EInternalFunc.Asin: return Math.Asin(_args[0]);
+				case EInternalFunc.Acos: return Math.Acos(_args[0]);
+				case EInternalFunc.Atan: return Math.Atan(_args[0]);
+				case EInternalFunc.Atan2: return Math.Atan2(_args[0], _args[1]);
+				case EInternalFunc.Rand: return _args[0] + (_args[1] - _args[0]) * rnd.NextDouble();
+			}
+
+			inLogger.LogError(string.Format("Invalid func: {0}", _type));
+			return 0;
+		}
+	}
 
     public class CExpression
     {
@@ -293,11 +380,29 @@ namespace MathExpressionParser
             _op = op;
         }
 
-        public delegate bool DTryGetValue(string key, out double value);
+        public delegate bool DTryGetValueS(string key, out double value);
+		public delegate bool DTryGetValueI(int key, out double value);
 
-        public double GetValue(DTryGetValue inGetValue, ILogger inLogger)
+		public delegate int DTryGetArgId(string key);
+
+		public void SetArgIds(DTryGetArgId inGetArgId)
+		{
+			_op.SetArgIds(inGetArgId);
+		}
+
+		public double GetValue(DTryGetValueS inGetValue, ILogger inLogger)
         {
             return _op.GetValue(inGetValue, inLogger);
         }
-    }
+
+		public double GetValue(DTryGetValueI inGetValue, ILogger inLogger)
+		{
+			return _op.GetValue(inGetValue, inLogger);
+		}
+
+		public double GetValue(ILogger inLogger)
+		{
+			return _op.GetValue((DTryGetValueS)null, inLogger);
+		}
+	}
 }
