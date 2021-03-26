@@ -429,6 +429,21 @@ namespace CascadeUnitTest
         }
 
         [TestMethod]
+        public void TestMethod_ReadonlySerialization()
+        {
+            ResetTestState();
+            Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+            var v1 = new SReadonlyStruct(99);
+            string text = _serializer.SerializeToCascade(v1, this);
+            Console.WriteLine(text);
+            var v2 = _serializer.Deserialize<SReadonlyStruct>(text, this);
+            Assert.AreEqual(v1, v2);
+
+            CheckInternalErrors();
+        }
+
+        [TestMethod]
         public void TestMethod_StructDefault()
         {
             ResetTestState();

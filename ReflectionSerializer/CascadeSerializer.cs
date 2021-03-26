@@ -737,6 +737,8 @@ namespace CascadeSerializer
             }
         }
 
+        static readonly Type[] SpecCtorTypes = new[] { typeof(IKey), typeof(ILogPrinter) };
+
         object DeserializeClass(object inInstance, IKey inKey, Type type, int inStructDeep, ILogPrinter inLogger)
         {
             IKey type_key = inKey.GetChild("RealObjectType");
@@ -759,10 +761,20 @@ namespace CascadeSerializer
             }
 
             object instance = inInstance;
+            bool was_inited = false;
             if (instance == null)
-                instance = _reflectionProvider.Instantiate(type, inLogger);
+            {
+                ConstructorInfo ctor_info = type.GetConstructor(SpecCtorTypes);
+                if (ctor_info != null)
+                {
+                    instance = ctor_info.Invoke(new object[] { inKey, inLogger });
+                    was_inited = true;
+                }
+                else
+                    instance = _reflectionProvider.Instantiate(type, inLogger);
+            }
 
-            if (instance != null)
+            if (instance != null && !was_inited)
             {
                 //MethodInfo mi = type.GetMethod("DeserializationFromCscd", new Type[] { typeof(CascadeParser.IKey), typeof(CascadeParser.ILogPrinter) });
                 MethodInfo mi = type.GetMethod("DeserializationFromCscd", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
