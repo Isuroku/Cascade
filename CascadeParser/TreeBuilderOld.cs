@@ -1,322 +1,322 @@
-﻿using System.Collections.Generic;
+﻿//using System.Collections.Generic;
 
-namespace CascadeParser
-{
-    internal interface ITreeBuildSupport
-    {
-        IKey GetTree(string inFileName);
-        ILogger GetLogger();
-    }
+//namespace CascadeParser
+//{
+//    internal interface ITreeBuildSupport
+//    {
+//        IKey GetTree(string inFileName);
+//        ILogger GetLogger();
+//    }
 
-    internal static class CTreeBuilderOld
-    {
-        enum EMultiArrayType { NotMultiArray, List, MultiArray }
+//    internal static class CTreeBuilderOld
+//    {
+//        enum EMultiArrayType { NotMultiArray, List, MultiArray }
 
-        public static CKey Build(string inRootName, List<CTokenLine> inLines, ITreeBuildSupport inSupport)
-        {
-            var root = CKey.CreateRoot(inRootName);
+//        public static CKey Build(string inRootName, List<CTokenLine> inLines, ITreeBuildSupport inSupport)
+//        {
+//            var root = CKey.CreateRoot(inRootName);
 
-            CBuildCommands commands = new CBuildCommands(inSupport.GetLogger());
+//            CBuildCommands commands = new CBuildCommands(inSupport.GetLogger());
 
-            SCollectResult collect_res = Collect(root, -1, inLines, 0, inSupport, commands);
-            if(!collect_res.WasRecordDivider)
-                root.CheckOnOneArray();
+//            SCollectResult collect_res = Collect(root, -1, inLines, 0, inSupport, commands);
+//            if(!collect_res.WasRecordDivider)
+//                root.CheckOnOneArray();
 
-            //if(root.ValuesCount == 0 && root.KeyCount == 1 && string.IsNullOrEmpty(root.Name))
-            //{
-            //    CKey k = root.GetKey(0);
-            //    k.SetParent(null);
-            //    root = k;
-            //}
+//            //if(root.ValuesCount == 0 && root.KeyCount == 1 && string.IsNullOrEmpty(root.Name))
+//            //{
+//            //    CKey k = root.GetKey(0);
+//            //    k.SetParent(null);
+//            //    root = k;
+//            //}
 
-            return root;
-        }
+//            return root;
+//        }
 
-        struct SAddLineResult
-        {
-            public CKey current_array_key;
-            public CKey last_record_key;
-            public EKeyAddingMode last_key_add_mode;
-            public bool WasRecordDivider;
-        }
+//        struct SAddLineResult
+//        {
+//            public CKey current_array_key;
+//            public CKey last_record_key;
+//            public EKeyAddingMode last_key_add_mode;
+//            public bool WasRecordDivider;
+//        }
 
-        struct SCollectResult
-        {
-            public int CurrentLineIndex;
-            public bool WasRecordDivider;
-        }
+//        struct SCollectResult
+//        {
+//            public int CurrentLineIndex;
+//            public bool WasRecordDivider;
+//        }
 
-        static SCollectResult Collect(CKey inParent, int inParentRank, List<CTokenLine> inLines, int inStartIndex, ITreeBuildSupport inSupport, CBuildCommands inCommands)
-        {
-            SAddLineResult current_state = new SAddLineResult();
+//        static SCollectResult Collect(CKey inParent, int inParentRank, List<CTokenLine> inLines, int inStartIndex, ITreeBuildSupport inSupport, CBuildCommands inCommands)
+//        {
+//            SAddLineResult current_state = new SAddLineResult();
 
-            int curr_rank = inParentRank + 1;
+//            int curr_rank = inParentRank + 1;
 
-            bool rec_divider_was = false;
+//            bool rec_divider_was = false;
 
-            int i = inStartIndex;
-            while (i < inLines.Count)
-            {
-                int t = i;
-                CTokenLine line = inLines[i];
-                if (!line.IsEmpty() || line.Comments != null)
-                {
-                    if (line.Rank < curr_rank)
-                    {
-                        OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
-                        return new SCollectResult
-                        {
-                            CurrentLineIndex = i,
-                            WasRecordDivider = rec_divider_was
-                        };
-                    }
-                    else if (line.Rank > curr_rank)
-                    {
-                        if (current_state.last_record_key == null)
-                            current_state.last_record_key = CreateNewArrayKey(inParent, line, inCommands);
+//            int i = inStartIndex;
+//            while (i < inLines.Count)
+//            {
+//                int t = i;
+//                CTokenLine line = inLines[i];
+//                if (!line.IsEmpty() || line.Comments != null)
+//                {
+//                    if (line.Rank < curr_rank)
+//                    {
+//                        OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
+//                        return new SCollectResult
+//                        {
+//                            CurrentLineIndex = i,
+//                            WasRecordDivider = rec_divider_was
+//                        };
+//                    }
+//                    else if (line.Rank > curr_rank)
+//                    {
+//                        if (current_state.last_record_key == null)
+//                            current_state.last_record_key = CreateNewArrayKey(inParent, line, inCommands);
 
-                        SCollectResult collect_res = Collect(current_state.last_record_key, curr_rank, inLines, i, inSupport, inCommands);
-                        if(!collect_res.WasRecordDivider)
-                            current_state.last_record_key.CheckOnOneArray();
-                        i = collect_res.CurrentLineIndex;
-                    }
-                    else
-                    {
-                        OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
-                        current_state = AddLine(inParent, current_state.current_array_key, line, inSupport, inCommands);
+//                        SCollectResult collect_res = Collect(current_state.last_record_key, curr_rank, inLines, i, inSupport, inCommands);
+//                        if(!collect_res.WasRecordDivider)
+//                            current_state.last_record_key.CheckOnOneArray();
+//                        i = collect_res.CurrentLineIndex;
+//                    }
+//                    else
+//                    {
+//                        OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
+//                        current_state = AddLine(inParent, current_state.current_array_key, line, inSupport, inCommands);
 
-                        if (current_state.WasRecordDivider)
-                            rec_divider_was = true;
-                    }
-                }
+//                        if (current_state.WasRecordDivider)
+//                            rec_divider_was = true;
+//                    }
+//                }
 
-                if (t == i)
-                    i++;
-            }
+//                if (t == i)
+//                    i++;
+//            }
 
-            //if (!rec_divider_was && current_state.current_array_key != null)
-            //    current_state.current_array_key.CheckOnOneArray();
+//            //if (!rec_divider_was && current_state.current_array_key != null)
+//            //    current_state.current_array_key.CheckOnOneArray();
 
-            OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
+//            OnClosingKey(current_state.last_record_key, current_state.last_key_add_mode, inSupport);
 
-            return new SCollectResult
-            {
-                CurrentLineIndex = i,
-                WasRecordDivider = rec_divider_was
-            };
-        }
+//            return new SCollectResult
+//            {
+//                CurrentLineIndex = i,
+//                WasRecordDivider = rec_divider_was
+//            };
+//        }
 
-        static void OnClosingKey(CKey key, EKeyAddingMode inKeyAddMode, ITreeBuildSupport inSupport)
-        {
-            if (key == null)
-                return;
+//        static void OnClosingKey(CKey key, EKeyAddingMode inKeyAddMode, ITreeBuildSupport inSupport)
+//        {
+//            if (key == null)
+//                return;
 
-            if (key.IsEmpty)
-            {
-                inSupport.GetLogger().LogError(EErrorCode.HeadWithoutValues, key);
-                return;
-            }
+//            if (key.IsEmpty)
+//            {
+//                inSupport.GetLogger().LogError(EErrorCode.HeadWithoutValues, key);
+//                return;
+//            }
 
-            if (inKeyAddMode == EKeyAddingMode.AddUnique)
-                return;
+//            if (inKeyAddMode == EKeyAddingMode.AddUnique)
+//                return;
 
-            CKey parent = key.Parent;
-            if (parent == null)
-            {
-                inSupport.GetLogger().LogError(EErrorCode.KeyMustHaveParent, key);
-                return;
-            }
+//            CKey parent = key.Parent;
+//            if (parent == null)
+//            {
+//                inSupport.GetLogger().LogError(EErrorCode.KeyMustHaveParent, key);
+//                return;
+//            }
 
-            key.SetParent(null);
+//            key.SetParent(null);
 
-            if (inKeyAddMode == EKeyAddingMode.Override)
-            {
-                var pathes = new List<List<string>>();
-                key.GetTerminalPathes(pathes, new List<string>());
+//            if (inKeyAddMode == EKeyAddingMode.Override)
+//            {
+//                var pathes = new List<List<string>>();
+//                key.GetTerminalPathes(pathes, new List<string>());
 
-                //for correct deleting array elems
-                for(int i = pathes.Count - 1; i >= 0; --i)
-                {
-                    var path = pathes[i];
-                    RemoveKeysByPath(parent, path);
-                }
+//                //for correct deleting array elems
+//                for(int i = pathes.Count - 1; i >= 0; --i)
+//                {
+//                    var path = pathes[i];
+//                    RemoveKeysByPath(parent, path);
+//                }
 
-                inKeyAddMode = EKeyAddingMode.Add;
-            }
+//                inKeyAddMode = EKeyAddingMode.Add;
+//            }
             
-            if (inKeyAddMode == EKeyAddingMode.Add)
-            {
-                CKey child_key = parent.FindChildKey(key.Name);
-                if (child_key != null)
-                    child_key.MergeKey(key);
-                else
-                    key.SetParent(parent);
-            }
+//            if (inKeyAddMode == EKeyAddingMode.Add)
+//            {
+//                CKey child_key = parent.FindChildKey(key.Name);
+//                if (child_key != null)
+//                    child_key.MergeKey(key);
+//                else
+//                    key.SetParent(parent);
+//            }
             
-        }
+//        }
 
-        static CKey CreateNewArrayKey(CKey inParent, CTokenLine line, CBuildCommands inCommands)
-        {
-            var res_arr_key = CKey.CreateArrayKey(inParent, line.Position);
-            if (inCommands.IsNextArrayKeyNamePresent)
-                res_arr_key.SetName(inCommands.PopNextArrayKeyName(inParent));
-            return res_arr_key;
-        }
+//        static CKey CreateNewArrayKey(CKey inParent, CTokenLine line, CBuildCommands inCommands)
+//        {
+//            var res_arr_key = CKey.CreateArrayKey(inParent, line.Position);
+//            if (inCommands.IsNextArrayKeyNamePresent)
+//                res_arr_key.SetName(inCommands.PopNextArrayKeyName(inParent));
+//            return res_arr_key;
+//        }
 
-        static SAddLineResult AddLine(CKey inParent, CKey inCurrentArrayKey, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
-        {
-            SAddLineResult result = new SAddLineResult();
+//        static SAddLineResult AddLine(CKey inParent, CKey inCurrentArrayKey, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
+//        {
+//            SAddLineResult result = new SAddLineResult();
 
-            if (line.IsEmpty())
-            {
-                if (line.Comments != null)
-                    inCommands.SetNextLineComment(line.Comments.Text, line.Position.Line, inParent);
-                result.current_array_key = inCurrentArrayKey;
-            }
-            else if (line.IsRecordDivider())
-            {
-                result.current_array_key = null;
-                result.WasRecordDivider = true;
-            }
-            else if (line.IsCommandLine())
-            {
-                result.current_array_key = ExecuteCommand(inParent, inCurrentArrayKey, line, inSupport, inCommands);
-            }
-            else if (line.Head != null)
-            {
-                result.current_array_key = inCurrentArrayKey;
-                if (result.current_array_key == null)
-                    result.current_array_key = CreateNewArrayKey(inParent, line, inCommands);
+//            if (line.IsEmpty())
+//            {
+//                if (line.Comments != null)
+//                    inCommands.SetNextLineComment(line.Comments.Text, line.Position.Line, inParent);
+//                result.current_array_key = inCurrentArrayKey;
+//            }
+//            else if (line.IsRecordDivider())
+//            {
+//                result.current_array_key = null;
+//                result.WasRecordDivider = true;
+//            }
+//            else if (line.IsCommandLine())
+//            {
+//                result.current_array_key = ExecuteCommand(inParent, inCurrentArrayKey, line, inSupport, inCommands);
+//            }
+//            else if (line.Head != null)
+//            {
+//                result.current_array_key = inCurrentArrayKey;
+//                if (result.current_array_key == null)
+//                    result.current_array_key = CreateNewArrayKey(inParent, line, inCommands);
 
-                if (line.AdditionMode == EKeyAddingMode.AddUnique && result.current_array_key.IsKeyWithNamePresent(line.Head.Text))
-                    inSupport.GetLogger().LogError(EErrorCode.ElementWithNameAlreadyPresent, line);
+//                if (line.AdditionMode == EKeyAddingMode.AddUnique && result.current_array_key.IsKeyWithNamePresent(line.Head.Text))
+//                    inSupport.GetLogger().LogError(EErrorCode.ElementWithNameAlreadyPresent, line);
 
-                result.last_key_add_mode = line.AdditionMode;
-                result.last_record_key = CKey.Create(result.current_array_key, line, inSupport.GetLogger());
+//                result.last_key_add_mode = line.AdditionMode;
+//                result.last_record_key = CKey.Create(result.current_array_key, line, inSupport.GetLogger());
 
-                if (inCommands.IsNextLineCommentPresent)
-                    result.last_record_key.AddComments(inCommands.PopNextLineComments(inParent));
-            }
-            else if(!line.IsTailEmpty)
-            {
-                //if (!line.IsNewArrayLine && line.TailLength == 1 && !inParent.IsArray)
-                //    inParent.AddTokenTail(line, true, inSupport.GetLogger());
-                //else
-                {
-                    result.current_array_key = CreateNewArrayKey(inParent, line, inCommands);
-                    result.current_array_key.AddTokenTail(line, inSupport.GetLogger());
-                }
-            }
+//                if (inCommands.IsNextLineCommentPresent)
+//                    result.last_record_key.AddComments(inCommands.PopNextLineComments(inParent));
+//            }
+//            else if(!line.IsTailEmpty)
+//            {
+//                //if (!line.IsNewArrayLine && line.TailLength == 1 && !inParent.IsArray)
+//                //    inParent.AddTokenTail(line, true, inSupport.GetLogger());
+//                //else
+//                {
+//                    result.current_array_key = CreateNewArrayKey(inParent, line, inCommands);
+//                    result.current_array_key.AddTokenTail(line, inSupport.GetLogger());
+//                }
+//            }
 
-            return result;
-        }
+//            return result;
+//        }
 
-        static CKey ExecuteCommand(CKey inParent, CKey inArrKey, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
-        {
-            CKey arr_key = inArrKey;
+//        static CKey ExecuteCommand(CKey inParent, CKey inArrKey, CTokenLine line, ITreeBuildSupport inSupport, CBuildCommands inCommands)
+//        {
+//            CKey arr_key = inArrKey;
 
-            if (line.Command == ECommands.Name)
-            {
-                if (line.CommandParams.Length < 1)
-                    inSupport.GetLogger().LogError(EErrorCode.EmptyCommand, line);
-                else
-                    inCommands.SetNextArrayKeyName(line.CommandParams[0], line.Position.Line, inParent);
-            }
-            else if (line.Command == ECommands.Insert)
-            {
-                if (arr_key == null)
-                    arr_key = CreateNewArrayKey(inParent, line, inCommands);
+//            if (line.Command == ECommands.Name)
+//            {
+//                if (line.CommandParams.Length < 1)
+//                    inSupport.GetLogger().LogError(EErrorCode.EmptyCommand, line);
+//                else
+//                    inCommands.SetNextArrayKeyName(line.CommandParams[0], line.Position.Line, inParent);
+//            }
+//            else if (line.Command == ECommands.Insert)
+//            {
+//                if (arr_key == null)
+//                    arr_key = CreateNewArrayKey(inParent, line, inCommands);
 
-                ExecuteCommand_Insert(arr_key, line, inSupport);
-            }
-            else if (line.Command == ECommands.Delete)
-            {
-                if (arr_key != null)
-                    ExecuteCommand_Delete(arr_key, line, inSupport);
-            }
-            else if (line.Command == ECommands.ChangeValue)
-            {
-                if (arr_key != null)
-                    arr_key.ChangeValues(line.CommandParams.GetDictionary());
-            }
-            return arr_key;
-        }
+//                ExecuteCommand_Insert(arr_key, line, inSupport);
+//            }
+//            else if (line.Command == ECommands.Delete)
+//            {
+//                if (arr_key != null)
+//                    ExecuteCommand_Delete(arr_key, line, inSupport);
+//            }
+//            else if (line.Command == ECommands.ChangeValue)
+//            {
+//                if (arr_key != null)
+//                    arr_key.ChangeValues(line.CommandParams.GetDictionary());
+//            }
+//            return arr_key;
+//        }
 
-        static void ExecuteCommand_Delete(CKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
-        {
-            if (line.CommandParams.Length == 0 || string.IsNullOrEmpty(line.CommandParams[0]))
-            {
-                inSupport.GetLogger().LogError(EErrorCode.PathEmpty, line);
-                return;
-            }
+//        static void ExecuteCommand_Delete(CKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
+//        {
+//            if (line.CommandParams.Length == 0 || string.IsNullOrEmpty(line.CommandParams[0]))
+//            {
+//                inSupport.GetLogger().LogError(EErrorCode.PathEmpty, line);
+//                return;
+//            }
 
-            string key_path = line.CommandParams[0];
+//            string key_path = line.CommandParams[0];
 
-            string[] path = key_path.Split(new char[] { '\\', '/' });
+//            string[] path = key_path.Split(new char[] { '\\', '/' });
 
-            if(!RemoveKeysByPath(arr_key, path))
-                inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
-        }
+//            if(!RemoveKeysByPath(arr_key, path))
+//                inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
+//        }
 
-        static bool RemoveKeysByPath(CKey inParent, IList<string> inPath)
-        {
-            CKey key = inParent.FindKey(inPath);
-            if (key == null)
-                return false;
+//        static bool RemoveKeysByPath(CKey inParent, IList<string> inPath)
+//        {
+//            CKey key = inParent.FindKey(inPath);
+//            if (key == null)
+//                return false;
 
-            CKey parent = key.Parent;
-            key.SetParent(null);
-            while (parent != inParent && parent.IsEmpty)
-            {
-                CKey prev = parent;
-                parent = parent.Parent;
-                prev.SetParent(null);
-            }
-            return true;
-        }
+//            CKey parent = key.Parent;
+//            key.SetParent(null);
+//            while (parent != inParent && parent.IsEmpty)
+//            {
+//                CKey prev = parent;
+//                parent = parent.Parent;
+//                prev.SetParent(null);
+//            }
+//            return true;
+//        }
 
-        static void ExecuteCommand_Insert(CKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
-        {
-            string file_name = line.CommandParams["file"];
-            string key_path = line.CommandParams["key"];
+//        static void ExecuteCommand_Insert(CKey arr_key, CTokenLine line, ITreeBuildSupport inSupport)
+//        {
+//            string file_name = line.CommandParams["file"];
+//            string key_path = line.CommandParams["key"];
 
-            if (string.IsNullOrEmpty(file_name) && string.IsNullOrEmpty(key_path))
-                inSupport.GetLogger().LogError(EErrorCode.PathEmpty, line);
+//            if (string.IsNullOrEmpty(file_name) && string.IsNullOrEmpty(key_path))
+//                inSupport.GetLogger().LogError(EErrorCode.PathEmpty, line);
             
-            CKey root = null;
-            if (!string.IsNullOrEmpty(file_name))
-                root = (CKey)inSupport.GetTree(file_name);
-            else
-                root = arr_key.GetRoot();
+//            CKey root = null;
+//            if (!string.IsNullOrEmpty(file_name))
+//                root = (CKey)inSupport.GetTree(file_name);
+//            else
+//                root = arr_key.GetRoot();
 
-            if (root == null)
-            {
-                inSupport.GetLogger().LogError(EErrorCode.CantFindInsertFile, line);
-                return;
-            }
+//            if (root == null)
+//            {
+//                inSupport.GetLogger().LogError(EErrorCode.CantFindInsertFile, line);
+//                return;
+//            }
 
-            if (root.KeyCount == 1 && root.GetKey(0).IsArrayKey())
-                root = root.GetKey(0);
+//            if (root.KeyCount == 1 && root.GetKey(0).IsArrayKey())
+//                root = root.GetKey(0);
 
-            CKey key = root;
-            if (!string.IsNullOrEmpty(key_path))
-            {
-                key = (CKey)root.FindKey(key_path);
-                if (key == null)
-                {
-                    inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
-                    return;
-                }
-            }
+//            CKey key = root;
+//            if (!string.IsNullOrEmpty(key_path))
+//            {
+//                key = (CKey)root.FindKey(key_path);
+//                if (key == null)
+//                {
+//                    inSupport.GetLogger().LogError(EErrorCode.CantFindKey, line);
+//                    return;
+//                }
+//            }
 
-            bool insert_parent = line.CommandParams.ContainsKey("parent");
-            CKey copy_key = key.GetCopy() as CKey;
-            if (insert_parent)
-                copy_key.SetParent(arr_key);
-            else
-                arr_key.TakeAllElements(copy_key, false);
-            arr_key.CheckOnOneArray();
-        }
-    }
-}
+//            bool insert_parent = line.CommandParams.ContainsKey("parent");
+//            CKey copy_key = key.GetCopy() as CKey;
+//            if (insert_parent)
+//                copy_key.SetParent(arr_key);
+//            else
+//                arr_key.TakeAllElements(copy_key, false);
+//            arr_key.CheckOnOneArray();
+//        }
+//    }
+//}
 

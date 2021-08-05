@@ -167,7 +167,7 @@ namespace CascadeSerializer
             {
                 outValue = converter.ConvertFromString(null, CultureInfo.InvariantCulture, inText);
             }
-            catch (Exception ex)
+            catch //(Exception ex)
             {
                 //inLogger.LogError(ex.Message);
                 return false;

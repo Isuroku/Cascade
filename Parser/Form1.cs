@@ -167,7 +167,7 @@ namespace Parser
 
 			//FileBrowser.Url;
 
-			if (string.IsNullOrEmpty(_selected_file))
+			if (string.IsNullOrEmpty(tbSourceText.Text))
 				return;
 
 			_test_serialize = _parser.Parse(Path.GetFileName(_selected_file), tbSourceText.Text, this, 98);
@@ -247,7 +247,15 @@ namespace Parser
                 return;
             }
 
-            File.WriteAllText(path, inText, Encoding.UTF8);
+            try
+            {
+                File.WriteAllText(path, inText, Encoding.UTF8);
+            }
+            catch(Exception ex)
+            {
+                AddLogToConsole($"Can't write to {new_file_name}. Exception msg: {ex.Message}", ELogLevel.Error);
+                return;
+            }
 
             int index = lbSourceFiles.Items.IndexOf(new_file_name);
             if (index == -1)
