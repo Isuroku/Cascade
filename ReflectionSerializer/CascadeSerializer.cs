@@ -771,13 +771,17 @@ namespace CascadeSerializer
                     was_inited = true;
                 }
                 else
+                {
                     instance = _reflectionProvider.Instantiate(type, inLogger);
+                    if(instance == null)
+                        LogError(inLogger, $"Cant instantiate {type.Name}. Need default ctor");
+                }
             }
 
             if (instance != null && !was_inited)
             {
-                //MethodInfo mi = type.GetMethod("DeserializationFromCscd", new Type[] { typeof(CascadeParser.IKey), typeof(CascadeParser.ILogPrinter) });
-                MethodInfo mi = type.GetMethod("DeserializationFromCscd", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
+                MethodInfo mi = type.GetMethod("DeserializationFromCscd", SpecCtorTypes);
+                //MethodInfo mi = type.GetMethod("DeserializationFromCscd", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance);
                 if (mi != null)
                 {
                     if (inKey != null && !inKey.IsEmpty)

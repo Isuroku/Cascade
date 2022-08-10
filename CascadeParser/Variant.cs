@@ -373,7 +373,9 @@ namespace CascadeParser
             if (CheckType(EValueType.Double))
                 return (float)_double_value1;
 
-            return (float)_ulong_value1;
+            long v = (long)_ulong_value1;
+
+            return (float)v;
         }
 
         public Variant(double value)
@@ -406,7 +408,9 @@ namespace CascadeParser
             if (CheckType(EValueType.Double))
                 return (double)_double_value1;
 
-            return (double)_ulong_value1;
+            long v = (long)_ulong_value1;
+
+            return (double)v;
         }
 
         #region DateTime

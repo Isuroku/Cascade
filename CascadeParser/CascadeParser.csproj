@@ -52,6 +52,7 @@
     <Compile Include="ILogger.cs" />
     <Compile Include="ITreeBuildSupport.cs" />
     <Compile Include="Loger.cs" />
+    <Compile Include="StringId.cs" />
     <Compile Include="ParserManager.cs" />
     <Compile Include="SentenseDivider.cs" />
     <Compile Include="SPosition.cs" />
