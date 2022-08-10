@@ -1,5 +1,4 @@
-﻿
-using System;
+﻿using System;
 
 namespace CascadeParser
 {
@@ -49,9 +48,13 @@ namespace CascadeParser
         IKeyValue AddValue(float v);
         IKeyValue AddValue(double v);
         IKeyValue AddValue(string v);
+        IKeyValue AddValue(DateTime v);
+        IKeyValue AddValue(TimeSpan v);
         IKeyValue AddValue(Variant v);
 
         void RemoveValueAt(int index);
+
+        void ClearValues();
 
         string SaveToString();
         string SaveChildsToString();
@@ -59,53 +62,12 @@ namespace CascadeParser
         IKey FindKey(string key_path);
         IKey Parent { get; }
 
+        IKey CreateCopy();
+
         string GetPath();
 
         int GetMemorySize();
         int BinarySerialize(byte[] ioBuffer, int inOffset);
         int AddValue(byte[] ioBuffer, int inOffset);
-    }
-
-    public interface IKeyValue
-    {
-        IKey Parent { get; }
-        string Comments { get; }
-
-        EValueType ValueType { get; }
-
-        string ToString();
-        bool ToBool();
-        byte ToByte();
-        short ToShort();
-        ushort ToUShort();
-        int ToInt();
-        uint ToUInt();
-        long ToLong();
-        ulong ToULong();
-        float ToFloat();
-        double ToDouble();
-
-        int GetMemorySize();
-        int BinarySerialize(byte[] ioBuffer, int inOffset);
-    }
-
-    public static class IKeyFactory
-    {
-        public static IKey CreateKey(string inName)
-        {
-            return CKey.CreateRoot(inName);
-        }
-
-        public static IKey CreateArrayKey(IKey inParent)
-        {
-            return CKey.CreateArrayKey(inParent as CKey);
-        }
-
-        public static IKey CreateKey(byte[] ioBuffer, int inOffset)
-        {
-            var key = CKey.CreateRoot(string.Empty);
-            key.BinaryDeserialize(ioBuffer, inOffset);
-            return key;
-        }
     }
 }

@@ -39,6 +39,7 @@
     <Reference Include="System" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="BaseElement.cs" />
     <Compile Include="BinarySerializeUtils.cs" />
     <Compile Include="BuildCommands.cs" />
     <Compile Include="CommandParams.cs" />
@@ -46,8 +47,12 @@
     <Compile Include="EErrorCode.cs" />
     <Compile Include="EKeyAdditionMode.cs" />
     <Compile Include="ETokenType.cs" />
+    <Compile Include="IKey.cs" />
+    <Compile Include="IKeyValue.cs" />
     <Compile Include="ILogger.cs" />
+    <Compile Include="ITreeBuildSupport.cs" />
     <Compile Include="Loger.cs" />
+    <Compile Include="StringId.cs" />
     <Compile Include="ParserManager.cs" />
     <Compile Include="SentenseDivider.cs" />
     <Compile Include="SPosition.cs" />
@@ -56,9 +61,9 @@
     <Compile Include="TokenTemplate.cs" />
     <Compile Include="TreeBuilderOld.cs" />
     <Compile Include="TreeBuilder.cs" />
-    <Compile Include="TreeKeyFactory.cs" />
-    <Compile Include="TreeKeys.cs" />
-    <Compile Include="TreeTypes.cs" />
+    <Compile Include="KeyFactory.cs" />
+    <Compile Include="Key.cs" />
+    <Compile Include="Value.cs" />
     <Compile Include="Tuple.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils.cs" />

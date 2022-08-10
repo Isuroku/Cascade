@@ -246,5 +246,120 @@ namespace CascadeUnitTest
 
             Assert.IsTrue(res>= 1 && res <= 100);
         }
-    }
+
+		[TestMethod]
+		public void TestMethodLogic1()
+		{
+			ResetTestState();
+			Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+			CExpression exp = CExpressionBuilder.Build("1 & 1", this);
+			double res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 1);
+
+			exp = CExpressionBuilder.Build("1 & 0", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 0);
+
+			exp = CExpressionBuilder.Build("0 & 0", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 0);
+		}
+
+		[TestMethod]
+		public void TestMethodLogic2()
+		{
+			ResetTestState();
+			Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+			CExpression exp = CExpressionBuilder.Build("1 | 1", this);
+			double res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 1);
+
+			exp = CExpressionBuilder.Build("1 | 0", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 1);
+
+			exp = CExpressionBuilder.Build("0 | 0", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 0);
+		}
+
+		[TestMethod]
+		public void TestMethodLogic3()
+		{
+			ResetTestState();
+			Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+			CExpression exp = CExpressionBuilder.Build("1 | 1 & 0", this);
+			double res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 1);
+
+			exp = CExpressionBuilder.Build("(1 | 1) & 0", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 0);
+
+			exp = CExpressionBuilder.Build("(1 | 1) & (0 | 1)", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 1);
+		}
+
+		[TestMethod]
+		public void TestMethodLogic4()
+		{
+			ResetTestState();
+			Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+			CExpression exp = CExpressionBuilder.Build("Not(1 | 1 & 0)", this);
+			double res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 0);
+
+			exp = CExpressionBuilder.Build("Not((1 | 1) & 0)", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 1);
+
+			exp = CExpressionBuilder.Build("Not((1 | 1) & (0 | 1))", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 0);
+		}
+
+		[TestMethod]
+		public void TestMethodFactorial()
+		{
+			ResetTestState();
+			Console.WriteLine(MethodBase.GetCurrentMethod().Name);
+
+			CExpression exp = CExpressionBuilder.Build("Fact(1)", this);
+			double res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 1);
+
+			exp = CExpressionBuilder.Build("Fact(4)", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 24);
+
+			exp = CExpressionBuilder.Build("Fact(0)", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 1);
+
+			exp = CExpressionBuilder.Build("Fact(Neg(5))", this);
+			res = exp.GetValue(this);
+			CheckInternalErrors();
+			Assert.AreEqual(res, 1);
+		}
+	}
 }

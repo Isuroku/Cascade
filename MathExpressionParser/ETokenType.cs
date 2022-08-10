@@ -15,5 +15,7 @@ namespace MathExpressionParser
         Mult, // *
         Div, // /
         Power, //^
-    }
+		And, //&
+		Or, //|
+	}
 }

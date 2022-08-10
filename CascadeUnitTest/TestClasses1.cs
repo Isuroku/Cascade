@@ -90,6 +90,26 @@ namespace CascadeUnitTest
         }
     }
 
+    readonly struct SReadonlyStruct
+    {
+        public readonly float x;
+
+        public SReadonlyStruct(float in_x) { x = in_x; }
+
+        public SReadonlyStruct(IKey key, ILogPrinter inLogger): this()
+        {
+            if (key.GetValuesCount() != 1)
+                return;
+
+            x = key.GetValue(0).ToFloat();
+        }
+
+        public void SerializationToCscd(IKey key, ILogPrinter inLogger)
+        {
+            key.AddValue(x);
+        }
+    }
+
     public class VectorConverter : CascadeConverter
     {
         public bool CanConvert(Type objectType)

@@ -24,7 +24,7 @@ namespace CascadeParser
 
         IKey IKey.Parent { get { return base.Parent; } }
 
-        protected List<CBaseValue> _values = new List<CBaseValue>();
+        protected List<CValue> _values = new List<CValue>();
         protected List<CKey> _keys = new List<CKey>();
 
         public override bool IsKey() { return true; }
@@ -109,6 +109,7 @@ namespace CascadeParser
             }
         }
 
+
         public override CBaseElement GetCopy()
         {
             return CreateCopy(this);
@@ -134,7 +135,7 @@ namespace CascadeParser
             if (inElement.IsKey())
                 _keys.Add(inElement as CKey);
             else
-                _values.Add(inElement as CBaseValue);
+                _values.Add(inElement as CValue);
         }
 
         public void RemoveChild(CBaseElement inElement)
@@ -142,7 +143,7 @@ namespace CascadeParser
             if (inElement.IsKey())
                 _keys.Remove(inElement as CKey);
             else
-                _values.Remove(inElement as CBaseValue);
+                _values.Remove(inElement as CValue);
         }
 
         internal void AddTokenTail(CTokenLine line, ILogger inLoger)
@@ -157,7 +158,7 @@ namespace CascadeParser
             {
                 CToken t = line.Tail[i];
 
-                CBaseElement be = CBaseValue.CreateBaseValue(this, t);
+                CBaseElement be = CValue.CreateBaseValue(this, t);
 
                 if (be == null)
                     inLoger.LogError(EErrorCode.WrongTokenInTail, t);
@@ -169,11 +170,6 @@ namespace CascadeParser
             for (int i = _keys.Count - 1; i >= 0; i--)
                 if (_keys[i].IsArray)
                     _keys.RemoveAt(i);
-        }
-
-        public void ClearValues()
-        {
-            _values.Clear();
         }
 
         public int GetIndex()
@@ -189,6 +185,11 @@ namespace CascadeParser
         }
 
         #region IKey
+
+        public IKey CreateCopy()
+        {
+            return CreateCopy(this);
+        }
 
         bool CheckNameByParent(string inName)
         {
@@ -395,22 +396,29 @@ namespace CascadeParser
             return ind;
         }
 
-        public IKeyValue AddValue(bool v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(byte v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(short v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(ushort v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(int v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(uint v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(long v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(ulong v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(float v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(double v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(string v) { return new CBaseValue(this, new Variant(v)); }
-        public IKeyValue AddValue(Variant v) { return new CBaseValue(this, v); }
+        public IKeyValue AddValue(bool v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(byte v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(short v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(ushort v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(int v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(uint v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(long v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(ulong v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(float v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(double v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(DateTime v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(TimeSpan v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(string v) { return new CValue(this, new Variant(v)); }
+        public IKeyValue AddValue(Variant v) { return new CValue(this, v); }
 
         public void RemoveValueAt(int index)
         {
             _values.RemoveAt(index);
+        }
+
+        public void ClearValues()
+        {
+            _values.Clear();
         }
 
         public string GetName() { return Name; }
@@ -454,7 +462,7 @@ namespace CascadeParser
 
         public int AddValue(byte[] ioBuffer, int inOffset) 
         { 
-            new CBaseValue(this, ioBuffer, ref inOffset);
+            new CValue(this, ioBuffer, ref inOffset);
             return inOffset;
         }
 
@@ -593,7 +601,7 @@ namespace CascadeParser
 
         void TakeAllValues(CKey other_key, bool inClear)
         {
-            List<CBaseValue> lst = new List<CBaseValue>(other_key._values);
+            List<CValue> lst = new List<CValue>(other_key._values);
 
             if (inClear)
                 _values.Clear();
@@ -741,17 +749,17 @@ namespace CascadeParser
             return false;
         }
 
-        public bool IsEmptyWithChild()
+        public bool IsValuesPresentRecursive()
         {
             if (_values.Count > 0)
-                return false;
+                return true;
 
             for (int i = 0; i < _keys.Count; ++i)
             {
-                if (!_keys[i].IsEmptyWithChild())
-                    return false;
+                if (_keys[i].IsValuesPresentRecursive())
+                    return true;
             }
-            return true;
+            return false;
         }
 
         public bool IsAllSubKeysArrays()
@@ -783,7 +791,7 @@ namespace CascadeParser
 
         protected void SaveToString(StringBuilder sb, int intent)
         {
-            if (IsEmptyWithChild())
+            if (!IsValuesPresentRecursive())
                 return;
 
             bool was_writing = false;
@@ -876,7 +884,7 @@ namespace CascadeParser
         {
             for (int i = 0; i < _values.Count; ++i)
             {
-                CBaseValue old_val = _values[i];
+                CValue old_val = _values[i];
                 string val = old_val.ToString();
                 string new_val;
                 if (dictionary.TryGetValue(val, out new_val))
@@ -884,7 +892,7 @@ namespace CascadeParser
                     ETokenType tt = Utils.GetTokenType(new_val);
                     var t = new CToken(tt, new_val, old_val.Position);
 
-                    CBaseValue be = CBaseValue.CreateBaseValue(this, t); //_values + 1 to end
+                    CValue be = CValue.CreateBaseValue(this, t); //_values + 1 to end
                     _values[i] = _values[_values.Count - 1]; //insert to need pos
 
                     old_val.SetParent(null); //_values count same

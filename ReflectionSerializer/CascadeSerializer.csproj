@@ -41,6 +41,7 @@
   <ItemGroup>
     <Compile Include="BaseReflector.cs" />
     <Compile Include="CachedReflector.cs" />
+    <Compile Include="DeserializationFromCscdTester.cs" />
     <Compile Include="DirectReflector.cs" />
     <Compile Include="EmitHelper.cs" />
     <Compile Include="EmitReflector.cs" />
@@ -60,6 +61,6 @@
       <Project>{0ba9965a-8201-4766-8241-322fc380ca75}</Project>
       <Name>CascadeParser</Name>
     </ProjectReference>
-   </ItemGroup>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

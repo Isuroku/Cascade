@@ -18,8 +18,8 @@ namespace CascadeParser
         Long,
         ULong,
         String,
-        //DateTime,
-        //TimeSpan,
+        DateTime,
+        TimeSpan,
     }
 
     [StructLayout(LayoutKind.Explicit, Pack = 4)]
@@ -373,7 +373,9 @@ namespace CascadeParser
             if (CheckType(EValueType.Double))
                 return (float)_double_value1;
 
-            return (float)_ulong_value1;
+            long v = (long)_ulong_value1;
+
+            return (float)v;
         }
 
         public Variant(double value)
@@ -406,8 +408,73 @@ namespace CascadeParser
             if (CheckType(EValueType.Double))
                 return (double)_double_value1;
 
-            return (double)_ulong_value1;
+            long v = (long)_ulong_value1;
+
+            return (double)v;
         }
+
+        #region DateTime
+        public Variant(DateTime value)
+        {
+            _objref = null;
+            _ulong_value1 = 0;
+            _double_value1 = 0;
+            _float_value1 = 0;
+
+            _ulong_value1 = (ulong)value.ToBinary();
+
+            _flags = (byte)EValueType.DateTime;
+        }
+
+        public DateTime ToDateTime(DateTime inDefault)
+        {
+            if (IsUndefined)
+                return inDefault;
+
+            if (CheckType(EValueType.String))
+            {
+                string str = (string)_objref;
+                if (DateTime.TryParse(str, out DateTime res))
+                    return res;
+                return inDefault;
+            }
+
+            return DateTime.FromBinary((long)_ulong_value1);
+        }
+        #endregion DateTime
+
+        #region TimeSpan
+        public Variant(TimeSpan value)
+        {
+            _objref = null;
+            _ulong_value1 = 0;
+            _double_value1 = 0;
+            _float_value1 = 0;
+
+            _ulong_value1 = (ulong)value.Ticks;
+
+            _flags = (byte)EValueType.TimeSpan;
+        }
+
+        public TimeSpan ToTimeSpan(TimeSpan inDefault)
+        {
+            if (IsUndefined)
+                return inDefault;
+
+            if (CheckType(EValueType.String))
+            {
+                string str = (string)_objref;
+                if (TimeSpan.TryParse(str, out TimeSpan res))
+                    return res;
+                return inDefault;
+            }
+
+            if (CheckType(EValueType.TimeSpan) || CheckType(EValueType.Int))
+                return TimeSpan.FromTicks((long)_ulong_value1);
+
+            return inDefault;
+        }
+        #endregion TimeSpan
 
         public Variant(string value)
         {
@@ -441,6 +508,12 @@ namespace CascadeParser
             if (CheckType(EValueType.Short) || CheckType(EValueType.Int) || CheckType(EValueType.Long))
                 return ((long)_ulong_value1).ToString();
 
+            if (CheckType(EValueType.DateTime))
+                return ToDateTime(DateTime.UtcNow).ToString("o");
+
+            if (CheckType(EValueType.TimeSpan))
+                return ToTimeSpan(TimeSpan.Zero).ToString();
+
             return _ulong_value1.ToString();
         }
 
@@ -459,6 +532,8 @@ namespace CascadeParser
                 case EValueType.ULong: return res + sizeof(ulong);
                 case EValueType.Float: return res + sizeof(float);
                 case EValueType.Double: return res + sizeof(double);
+                case EValueType.DateTime: return res + sizeof(long);
+                case EValueType.TimeSpan: return res + sizeof(long);
                 case EValueType.String: return res + BinarySerializeUtils.GetStringMemorySize((string)_objref);
             }
 
@@ -488,7 +563,9 @@ namespace CascadeParser
 
                 case EValueType.Long: 
                 case EValueType.ULong: 
-                case EValueType.Double: 
+                case EValueType.Double:
+                case EValueType.DateTime:
+                case EValueType.TimeSpan:
                     offset = BinarySerializeUtils.Serialize(_ulong_value1, ioBuffer, offset); break;
 
                 case EValueType.String: 
@@ -527,6 +604,8 @@ namespace CascadeParser
                 case EValueType.Long:
                 case EValueType.ULong:
                 case EValueType.Double:
+                case EValueType.DateTime:
+                case EValueType.TimeSpan:
                     offset = BinarySerializeUtils.Deserialize(ioBuffer, offset, out ulong_value); break;
 
                 case EValueType.String: 
@@ -547,9 +626,10 @@ namespace CascadeParser
 
     public static class VariantParser
     {
+        static char[] trim_arr = new char[] { ' ', '\t' };
         public static Variant Parse(string inString)
         {
-            string in_str = inString.Trim(new char[] { ' ', '\t' });
+            string in_str = inString.Trim(trim_arr);
             if (string.Equals(in_str, "TRUE", StringComparison.InvariantCultureIgnoreCase))
                 return new Variant(true);
 
@@ -616,6 +696,25 @@ namespace CascadeParser
                             return new Variant(val);
                         }
                     }
+                }
+            }
+
+            if (in_str.StartsWith("DT:", StringComparison.InvariantCulture))
+            {
+                string dt_str = in_str.Substring(3).Trim(trim_arr); ;
+                if (DateTime.TryParse(dt_str, CultureInfo.InvariantCulture, DateTimeStyles.AssumeUniversal | DateTimeStyles.AdjustToUniversal,
+                    out DateTime dateTime))
+                {
+                    return new Variant(dateTime); // ??? тут есть сомнения, как правильно соскочить на UTC
+                }
+            }
+
+            if (in_str.StartsWith("TS:", StringComparison.InvariantCulture))
+            {
+                string ts_str = in_str.Substring(3).Trim(trim_arr); ;
+                if (TimeSpan.TryParse(ts_str, out TimeSpan timeSpan))
+                {
+                    return new Variant(timeSpan);
                 }
             }
 

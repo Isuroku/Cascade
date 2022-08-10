@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace MathExpressionParser
@@ -24,7 +25,9 @@ namespace MathExpressionParser
         Mult, // *
         Div, // /
         Power, //^
-    }
+		And, //&
+		Or, //|
+	}
 
     public sealed class CBinOp: IMathFunc
     {
@@ -73,6 +76,18 @@ namespace MathExpressionParser
 				case EBinOp.Div: return v1 / v2;
 				case EBinOp.Sum: return v1 + v2;
 				case EBinOp.Diff: return v1 - v2;
+				case EBinOp.And:
+					{
+						int i1 = v1 > 0 ? 1 : 0;
+						int i2 = v2 > 0 ? 1 : 0;
+						return i1 * i2;
+					}
+				case EBinOp.Or:
+					{
+						int i1 = v1 > 0 ? 1 : 0;
+						int i2 = v2 > 0 ? 1 : 0;
+						return (i1 + i2) > 0 ? 1 : 0;
+					}
 			}
 
 			inLogger.LogError(string.Format("Invalid operation: {0}", _op));
@@ -270,6 +285,8 @@ namespace MathExpressionParser
     {
         Undefined,
         Neg, //*-1
+		Not, //Logic Not
+		Fact, //factorial
         Abs,
         Sign,
         Sqrt,
@@ -283,7 +300,7 @@ namespace MathExpressionParser
         Acos,
         Atan,
         Atan2,
-        Rand
+        Rand,
     }
 
     public sealed class CInternalFunc : IMathFunc
@@ -364,6 +381,13 @@ namespace MathExpressionParser
 				case EInternalFunc.Atan: return Math.Atan(_args[0]);
 				case EInternalFunc.Atan2: return Math.Atan2(_args[0], _args[1]);
 				case EInternalFunc.Rand: return _args[0] + (_args[1] - _args[0]) * rnd.NextDouble();
+				case EInternalFunc.Not: return _args[0] > 0 ? 0 : 1;
+				case EInternalFunc.Fact:
+					{
+						int num = _args[0] >= 0 ? (int)_args[0] : 0;
+						int res = Enumerable.Range(1, num).Aggregate(1, (p, item) => p * item);
+						return res;
+					}
 			}
 
 			inLogger.LogError(string.Format("Invalid func: {0}", _type));
